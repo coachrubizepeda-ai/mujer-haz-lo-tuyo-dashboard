@@ -26,7 +26,7 @@
   <nav class="tabs">
     <button class="tab-btn active" data-tab="t-resumen">Resumen</button>
     <button class="tab-btn" data-tab="t-formularios">Formularios recibidos</button>
-    <button class="tab-btn" data-tab="t-directorio">Directorio de ponentes</button>
+    <button class="tab-btn" data-tab="t-directorio">Directorio de facilitadores</button>
     <button class="tab-btn" data-tab="t-calendario">Calendario maestro</button>
     <button class="tab-btn" data-tab="t-financiero">Modelo financiero</button>
     <button class="tab-btn" data-tab="t-checklist">Checklist de lanzamiento</button>
@@ -53,7 +53,7 @@
     </div>
     <div id="course-progress" class="course-progress"></div>
     <div class="callout">
-      Este dashboard es 100% estático (para Netlify). Los formularios de asistentes y ponentes se guardan directo en el panel de <b>Netlify Forms</b> de tu sitio — no aquí. En la pestaña "Formularios recibidos" tienes las ligas directas.
+      Este dashboard es 100% estático (para Netlify). Los formularios de asistentes y facilitadores se guardan directo en el panel de <b>Netlify Forms</b> de tu sitio — no aquí. En la pestaña "Formularios recibidos" tienes las ligas directas.
     </div>
   </section>
 
@@ -76,12 +76,12 @@
       <ul class="link-list" id="form-links">
         <li><a href="#" data-form="registro-asistentes" target="_blank">Registro de asistentes <small>Nombre, contacto, empresa</small><span>→</span></a></li>
         <li><a href="#" data-form="semblanzas" target="_blank">Semblanzas de asistentes <small>Directorio del grupo</small><span>→</span></a></li>
-        <li><a href="#" data-form="semblanzas-ponentes" target="_blank">Semblanzas de ponentes <small>Directorio de especialistas</small><span>→</span></a></li>
+        <li><a href="#" data-form="semblanzas-ponentes" target="_blank">Semblanzas de facilitadores <small>Directorio de especialistas</small><span>→</span></a></li>
         <li><a href="#" data-form="test-confirmacion" target="_blank">Confirmaciones del test de estilo <small>Talent Insight</small><span>→</span></a></li>
         <li><a href="#" data-form="cuestionario-previo" target="_blank">Cuestionarios previos <small>Por módulo</small><span>→</span></a></li>
         <li><a href="#" data-form="feedback-sesion" target="_blank">Feedback de sesión <small>Calificaciones y comentarios</small><span>→</span></a></li>
-        <li><a href="#" data-form="materiales-ponente" target="_blank">Materiales de ponentes <small>Presentaciones y ligas</small><span>→</span></a></li>
-        <li><a href="#" data-form="asistencia-modulo" target="_blank">Asistencia por módulo <small>Reporte de lista pasada por cada ponente</small><span>→</span></a></li>
+        <li><a href="#" data-form="materiales-ponente" target="_blank">Materiales de facilitadores <small>Presentaciones y ligas</small><span>→</span></a></li>
+        <li><a href="#" data-form="asistencia-modulo" target="_blank">Asistencia por módulo <small>Reporte de lista pasada por cada facilitador</small><span>→</span></a></li>
       </ul>
     </div>
   </section>
@@ -90,7 +90,7 @@
   <section class="tab-panel" id="t-directorio">
     <div class="section-head">
       <span class="eyebrow">Especialistas</span>
-      <h2>Directorio de ponentes</h2>
+      <h2>Directorio de facilitadores</h2>
       <p>Se genera automáticamente desde <code>assets/js/data.js</code>. Las semblanzas completas están en Netlify Forms.</p>
     </div>
     <div id="directorio-list" class="grid grid-2"></div>
@@ -111,7 +111,7 @@
     </div>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>No.</th><th>Fecha</th><th>Módulo</th><th>Eje</th><th>Ponente</th><th>Presentación</th></tr></thead>
+        <thead><tr><th>No.</th><th>Fecha</th><th>Módulo</th><th>Eje</th><th>Facilitador</th><th>Presentación</th></tr></thead>
         <tbody id="cal-body"></tbody>
       </table>
     </div>
@@ -122,7 +122,7 @@
     <div class="section-head">
       <span class="eyebrow">Solo para ti</span>
       <h2>Modelo financiero — edición CANACINTRA</h2>
-      <p>Esta pestaña vive detrás de tu contraseña de administradora; asistentes y ponentes no tienen acceso a esta información.</p>
+      <p>Esta pestaña vive detrás de tu contraseña de administradora; asistentes y facilitadores no tienen acceso a esta información.</p>
     </div>
 
     <div class="two-col">
@@ -333,8 +333,8 @@
     ["vespertino", "Abrir simultáneamente el grupo vespertino público", "Condición del modelo — costos ya cubiertos."],
     ["sede", "Confirmar sede y fechas con el Club de Empresarios (CCE)", "Viernes 9:00–14:00, 4 sep – 13 nov."],
     ["ponentes", "Confirmar a los 9 especialistas + sommelier de cierre", "Fechas y honorarios acordados."],
-    ["contratos", "Enviar acuerdo de colaboración a cada ponente", "Incluye fecha, horario y honorarios."],
-    ["materiales", "Solicitar semblanza y presentación a cada ponente", "Vía el portal de ponentes de este dashboard."],
+    ["contratos", "Enviar acuerdo de colaboración a cada facilitador", "Incluye fecha, horario y honorarios."],
+    ["materiales", "Solicitar semblanza y presentación a cada facilitador", "Vía el portal de facilitadores de este dashboard."],
     ["test", "Contratar/activar las ligas del test Talent Insight", "Una por participante."],
     ["certificados", "Diseñar y preparar certificados", "Para la experiencia de cierre del 13 de nov."],
     ["marketing", "Lanzar marketing específico del grupo matutino", "Presupuesto: $3,000."],

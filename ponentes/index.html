@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Portal de Ponentes — Mujer, Haz lo Tuyo</title>
+<title>Portal de Facilitadores — Mujer, Haz lo Tuyo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -19,7 +19,7 @@
       <span class="word"><b>Mujer,</b> haz lo tuyo<small>The Ok People</small></span>
     </a>
     <div style="display:flex;align-items:center;gap:12px;">
-      <span class="role-pill ponente">Ponente</span>
+      <span class="role-pill ponente">Facilitador</span>
       <button class="btn btn-ghost btn-sm" onclick="mjhtLogout()">Salir</button>
     </div>
   </div>
@@ -27,6 +27,7 @@
     <button class="tab-btn active" data-tab="t-inicio">Inicio</button>
     <button class="tab-btn" data-tab="t-modulo">Mi módulo</button>
     <button class="tab-btn" data-tab="t-asistencia">Pasar lista</button>
+    <button class="tab-btn" data-tab="t-perfiles">Perfiles de asistentes</button>
     <button class="tab-btn" data-tab="t-semblanza">Mi semblanza</button>
     <button class="tab-btn" data-tab="t-materiales">Compartir materiales</button>
     <button class="tab-btn" data-tab="t-calendario">Calendario general</button>
@@ -82,7 +83,7 @@
         <p class="hp-field"><label>No llenar: <input name="bot-field"></label></p>
         <div class="form-msg"></div>
         <div class="field-row">
-          <div><label>Tu nombre (ponente) *</label><input type="text" name="ponente_nombre" required></div>
+          <div><label>Tu nombre (facilitador) *</label><input type="text" name="ponente_nombre" required></div>
           <div><label>Módulo *</label>
             <select name="modulo" id="sel-modulo-asistencia" required></select>
           </div>
@@ -97,6 +98,16 @@
         <button class="btn btn-primary" type="submit">Enviar lista de asistencia</button>
       </form>
     </div>
+  </section>
+
+  <!-- PERFILES DE ASISTENTES (confidencial, solo facilitadores) -->
+  <section class="tab-panel" id="t-perfiles">
+    <div class="section-head">
+      <span class="eyebrow">Confidencial · solo para facilitadores</span>
+      <h2>Perfiles de asistentes</h2>
+      <p>Respuestas del diagnóstico inicial de cada participante, para que conozcas su momento y sus expectativas antes de tu sesión. Esta información no es visible para las asistentes ni en el panel de administración general.</p>
+    </div>
+    <div id="perfiles-list"></div>
   </section>
 
   <!-- SEMBLANZA -->
@@ -183,7 +194,7 @@
     </div>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>No.</th><th>Fecha</th><th>Módulo</th><th>Eje</th><th>Ponente</th></tr></thead>
+        <thead><tr><th>No.</th><th>Fecha</th><th>Módulo</th><th>Eje</th><th>Facilitador</th></tr></thead>
         <tbody id="cal-body"></tbody>
       </table>
     </div>
@@ -241,6 +252,7 @@
 <script>mjhtGuard("ponente");</script>
 <script src="../assets/js/data.js"></script>
 <script src="../assets/js/roster.js"></script>
+<script src="../assets/js/perfiles.js"></script>
 <script src="../assets/js/app.js"></script>
 <script>
   renderCourseProgress("course-progress");
@@ -305,6 +317,37 @@
   } else {
     asistenciaHint.textContent = "Rubí aún no ha cargado el directorio de asistentes — escribe aquí los nombres de las presentes, uno por línea.";
     asistenciaChecks.innerHTML = `<textarea name="presentes_texto" placeholder="Nombre de cada asistente presente, uno por línea"></textarea>`;
+  }
+
+  // Perfiles de asistentes (confidencial — solo este portal)
+  const perfilesWrap = document.getElementById("perfiles-list");
+  if(typeof ASISTENTES !== "undefined" && ASISTENTES.length){
+    const conPerfil = ASISTENTES.filter(a => typeof PERFILES !== "undefined" && PERFILES[a.perfil || a.nombre]);
+    if(!conPerfil.length){
+      perfilesWrap.innerHTML = `<div class="callout">Todavía no hay respuestas del diagnóstico cargadas. En cuanto Rubí las suba, aparecen aquí.</div>`;
+    } else {
+      perfilesWrap.innerHTML = conPerfil.map((a,i)=>{
+        const perfil = PERFILES[a.perfil || a.nombre];
+        const resumen = perfil.resumen ? Object.entries(perfil.resumen).map(([k,v])=>`<span class="tag">${v}</span>`).join(" ") : "";
+        const camposHTML = perfil.campos.map(c=>`
+          <div class="perfil-campo">
+            <span class="mtag">M${c.modulo}</span>
+            <span class="txt"><b>${c.label}:</b> ${c.valor}</span>
+          </div>`).join("");
+        return `
+          <div class="acc-item perfil">
+            <button class="acc-head">
+              <span class="num">${a.nombre.split(" ").map(w=>w[0]).slice(0,2).join("").toUpperCase()}</span>
+              <span class="meta"><h4>${a.nombre}</h4><small>${resumen}</small></span>
+              <span class="chev">▾</span>
+            </button>
+            <div class="acc-body"><div class="acc-body-inner">${camposHTML}</div></div>
+          </div>`;
+      }).join("");
+      initAccordion();
+    }
+  } else {
+    perfilesWrap.innerHTML = `<div class="callout">Todavía no hay directorio de asistentes cargado.</div>`;
   }
 </script>
 </body>

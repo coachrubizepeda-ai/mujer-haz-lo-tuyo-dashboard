@@ -13,7 +13,7 @@
 
 const ACCESOS = {
   asistente: { pass: "HAZLOTUYO2026", label: "Asistente", home: "asistentes/index.html" },
-  ponente:   { pass: "PONENTE2026",   label: "Ponente",   home: "ponentes/index.html" },
+  ponente:   { pass: "PONENTE2026",   label: "Facilitador",   home: "ponentes/index.html" },
   admin:     { pass: "RUBI2026",      label: "Administradora", home: "admin/index.html" }
 };
 

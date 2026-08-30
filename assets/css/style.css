@@ -182,9 +182,16 @@ td svg{width:16px;height:16px;vertical-align:-3px;}
 .acc-item.open .chev{transform:rotate(180deg);}
 .acc-body{max-height:0;overflow:hidden;transition:max-height .28s ease;}
 .acc-item.open .acc-body{max-height:900px;}
+.acc-item.perfil.open .acc-body{max-height:6000px;}
 .acc-body-inner{padding:0 20px 22px 72px;}
 .acc-body-inner h5{font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--gris-claro);margin:14px 0 6px;}
 .acc-body-inner h5:first-child{margin-top:0;}
+
+/* ---------- Perfil de asistente (campos del diagnóstico) ---------- */
+.perfil-campo{display:flex;gap:12px;margin-bottom:8px;align-items:baseline;}
+.perfil-campo .mtag{flex:0 0 30px;color:var(--gris-claro);font-weight:700;font-size:.72rem;}
+.perfil-campo .txt{flex:1;font-size:.86rem;line-height:1.45;}
+.perfil-campo .txt b{color:var(--gris-oscuro);}
 
 /* ---------- Forms ---------- */
 label{display:block;font-size:.85rem;font-weight:600;margin-bottom:6px;color:var(--gris-oscuro);}

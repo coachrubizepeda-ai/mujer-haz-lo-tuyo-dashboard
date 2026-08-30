@@ -30,7 +30,7 @@
     <button class="tab-btn" data-tab="t-test">Test de estilo</button>
     <button class="tab-btn" data-tab="t-calendario">Calendario</button>
     <button class="tab-btn" data-tab="t-modulos">Módulos y materiales</button>
-    <button class="tab-btn" data-tab="t-ponentes">Ponentes</button>
+    <button class="tab-btn" data-tab="t-ponentes">Facilitadores</button>
     <button class="tab-btn" data-tab="t-cuestionario">Cuestionario previo</button>
     <button class="tab-btn" data-tab="t-feedback">Feedback</button>
     <button class="tab-btn" data-tab="t-contacto">Contacto</button>
@@ -64,7 +64,7 @@
     </div>
 
     <div class="callout" style="margin-top:20px;">
-      Antes de tu primera sesión: completa tu <b>registro</b>, tu <b>semblanza</b> y el <b>test de estilo</b> en las pestañas de arriba. Le sirve a Rubí y a los ponentes para conocerte mejor.
+      Antes de tu primera sesión: completa tu <b>registro</b>, tu <b>semblanza</b> y el <b>test de estilo</b> en las pestañas de arriba. Le sirve a Rubí y a los facilitadores para conocerte mejor.
     </div>
   </section>
 
@@ -172,7 +172,7 @@
     </div>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>No.</th><th>Fecha</th><th>Módulo</th><th>Eje</th><th>Ponente</th></tr></thead>
+        <thead><tr><th>No.</th><th>Fecha</th><th>Módulo</th><th>Eje</th><th>Facilitador</th></tr></thead>
         <tbody id="cal-body"></tbody>
       </table>
     </div>
@@ -192,7 +192,7 @@
   <section class="tab-panel" id="t-ponentes">
     <div class="section-head">
       <span class="eyebrow">Especialistas del diplomado</span>
-      <h2>Ponentes</h2>
+      <h2>Facilitadores</h2>
       <p>Conoce a quienes facilitan cada módulo y síguelos en redes si quieres seguir aprendiendo de ellos.</p>
     </div>
     <div id="ponentes-list" class="grid grid-2"></div>
@@ -203,7 +203,7 @@
     <div class="section-head">
       <span class="eyebrow">Antes de cada módulo</span>
       <h2>Cuestionario previo</h2>
-      <p>Ayuda al ponente de cada sesión a enfocar su tema en lo que más te sirve. Tómate 3 minutos antes de cada viernes.</p>
+      <p>Ayuda al facilitador de cada sesión a enfocar su tema en lo que más te sirve. Tómate 3 minutos antes de cada viernes.</p>
     </div>
     <div class="card">
       <form name="cuestionario-previo" method="POST" data-netlify="true" netlify-honeypot="bot-field">
@@ -218,7 +218,7 @@
         </div>
         <label>¿Qué esperas de esta sesión?</label>
         <textarea name="expectativas"></textarea>
-        <label>¿En qué te gustaría que se enfocara el ponente?</label>
+        <label>¿En qué te gustaría que se enfocara el facilitador?</label>
         <textarea name="enfoque"></textarea>
         <label>¿Alguna duda puntual que quieras que se resuelva?</label>
         <textarea name="dudas"></textarea>
@@ -232,7 +232,7 @@
     <div class="section-head">
       <span class="eyebrow">Después de cada módulo</span>
       <h2>Feedback de la sesión</h2>
-      <p>Tu opinión ayuda a mejorar cada edición del diplomado y es el termómetro que usa Rubí con cada ponente.</p>
+      <p>Tu opinión ayuda a mejorar cada edición del diplomado y es el termómetro que usa Rubí con cada facilitador.</p>
     </div>
     <div class="card">
       <form name="feedback-sesion" method="POST" data-netlify="true" netlify-honeypot="bot-field">
