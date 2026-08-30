@@ -2,28 +2,35 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#007DA5">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Portal de Facilitadores — Mujer, Haz lo Tuyo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%2732%27 fill=%27%23007DA5%27/%3E%3Ctext x=%2732%27 y=%2743%27 font-family=%27Arial,Helvetica,sans-serif%27 font-weight=%27700%27 font-size=%2732%27 fill=%27%23ffffff%27 text-anchor=%27middle%27%3EM%3C/text%3E%3C/svg%3E">
 <link rel="stylesheet" href="../assets/css/style.css">
+<script src="../assets/js/theme.js"></script>
 </head>
 <body>
 
-<div class="topbar">
-  <div class="topbar-inner">
+<div class="app-shell">
+<aside class="sidebar">
+  <div class="sidebar-top">
     <a class="logo" href="../index.html">
       <span class="mark">Ok</span>
       <span class="word"><b>Mujer,</b> haz lo tuyo<small>The Ok People</small></span>
     </a>
-    <div style="display:flex;align-items:center;gap:12px;">
-      <span class="role-pill ponente">Facilitador</span>
-      <button class="btn btn-ghost btn-sm" onclick="mjhtLogout()">Salir</button>
-    </div>
   </div>
-  <nav class="tabs">
+  <div class="sidebar-role">
+    <span class="role-pill ponente">Facilitador</span>
+    <div style="display:flex;align-items:center;gap:8px;"><button class="theme-toggle" onclick="mjhtToggleTheme()" title="Cambiar tema" aria-label="Cambiar tema claro/oscuro"><svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg></button>
+      <button class="btn btn-ghost btn-sm" onclick="mjhtLogout()">Salir</button></div>
+  </div>
+  <nav class="side-nav">
     <button class="tab-btn active" data-tab="t-inicio">Inicio</button>
     <button class="tab-btn" data-tab="t-modulo">Mi módulo</button>
     <button class="tab-btn" data-tab="t-asistencia">Pasar lista</button>
@@ -34,8 +41,9 @@
     <button class="tab-btn" data-tab="t-lineamientos">Lineamientos</button>
     <button class="tab-btn" data-tab="t-contacto">Contacto</button>
   </nav>
-</div>
+</aside>
 
+<div class="main-col">
 <main class="wrap">
 
   <!-- INICIO -->
@@ -108,7 +116,21 @@
       <p>Respuestas del diagnóstico inicial de cada participante, para que conozcas su momento y sus expectativas antes de tu sesión. Esta información no es visible para las asistentes ni en el panel de administración general.</p>
     </div>
     <div id="perfiles-list"></div>
+
+    <div class="section-head" style="margin-top:34px;">
+      <span class="eyebrow">Vista general</span>
+      <h2>Perfil general del grupo</h2>
+      <p>Se arma automáticamente con las respuestas que ya estén cargadas.</p>
+    </div>
+    <div id="perfil-grupal"></div>
   </section>
+
+  <!-- Formulario oculto: guarda en Netlify Forms cada respuesta pegada, para el registro de Rubí -->
+  <form name="perfil-asistente-pegado" method="POST" data-netlify="true" netlify-honeypot="bot-field" id="form-perfil-pegado" style="display:none;">
+    <input type="hidden" name="form-name" value="perfil-asistente-pegado">
+    <input type="hidden" name="nombre">
+    <textarea name="texto"></textarea>
+  </form>
 
   <!-- SEMBLANZA -->
   <section class="tab-panel" id="t-semblanza">
@@ -166,8 +188,10 @@
             <select name="modulo" id="sel-modulo-materiales" required></select>
           </div>
         </div>
-        <label>Sube tu presentación (PDF)</label>
+        <label>Sube tu(s) presentación(es) (PDF, PPT, etc.)</label>
         <input type="file" name="archivo" accept=".pdf,.ppt,.pptx,.key">
+        <div id="pdfs-extra"></div>
+        <button type="button" class="btn btn-outline btn-sm" style="margin:6px 0 4px;" onclick="mjhtAgregarPDF()">+ Agregar otro PDF</button>
         <p class="file-hint">Los envíos con archivo llegan al panel de formularios de Netlify; si tu archivo es muy pesado, mejor comparte la liga de Drive/Canva abajo.</p>
         <label>Ligas que quieras compartir (todas opcionales)</label>
         <div class="field-row">
@@ -180,7 +204,9 @@
         </div>
         <label class="field-icon-label"><svg class="icon-inline" viewBox="0 0 24 24" fill="currentColor"><path d="M6.94 5a2 2 0 1 1-4-.002 2 2 0 0 1 4 .002zM7 8.48H3V21h4zm6.32 0H9.34V21h3.94v-6.57c0-1.74.33-3.42 2.48-3.42 2.12 0 2.15 1.98 2.15 3.53V21H22v-7.18c0-3.86-.83-6.83-5.34-6.83-2.16 0-3.6 1.19-4.2 2.31h-.06z"/></svg>LinkedIn</label>
         <input type="text" name="link_linkedin" placeholder="https://linkedin.com/in/...">
-        <button class="btn btn-primary" type="submit">Enviar material</button>
+        <div id="links-extra"></div>
+        <button type="button" class="btn btn-outline btn-sm" style="margin:6px 0 4px;" onclick="mjhtAgregarLiga()">+ Agregar otra liga</button>
+        <button class="btn btn-primary" type="submit" style="margin-top:14px;">Enviar material</button>
       </form>
     </div>
   </section>
@@ -247,6 +273,8 @@
     <span><a href="mailto:hazlotuyo@theokpeople.com">hazlotuyo@theokpeople.com</a> · 222 114 1168</span>
   </div>
 </footer>
+</div>
+</div>
 
 <script src="../assets/js/auth.js"></script>
 <script>mjhtGuard("ponente");</script>
@@ -289,7 +317,11 @@
         <p style="color:var(--gris-claro);margin-bottom:14px;">${m.subtitulo}</p>
         <p style="margin-bottom:4px;"><b>Fecha:</b> ${m.fechaLabel} · 9:00–14:00 hrs</p>
         <p style="margin-bottom:4px;"><b>Sede:</b> Club de Empresarios (CCE), Torre Inxignia</p>
-        <p style="margin-bottom:0;"><b>Descripción:</b> ${m.descripcion}</p>
+        <p style="margin-bottom:14px;"><b>Descripción:</b> ${m.descripcion}</p>
+        <div class="location-actions">
+          <a class="btn btn-outline btn-sm" href="https://maps.app.goo.gl/ztEceM1G5nqtjuRw8" target="_blank" rel="noopener">Google Maps</a>
+          <a class="btn btn-outline btn-sm" href="https://waze.com/ul?q=Club%20de%20Empresarios%20Torre%20Inxignia" target="_blank" rel="noopener">Waze</a>
+        </div>
       </div>`).join("");
   });
 
@@ -319,17 +351,44 @@
     asistenciaChecks.innerHTML = `<textarea name="presentes_texto" placeholder="Nombre de cada asistente presente, uno por línea"></textarea>`;
   }
 
-  // Perfiles de asistentes (confidencial — solo este portal)
+  // ---------- Perfiles de asistentes (confidencial — solo este portal) ----------
   const perfilesWrap = document.getElementById("perfiles-list");
-  if(typeof ASISTENTES !== "undefined" && ASISTENTES.length){
-    const conPerfil = ASISTENTES.filter(a => typeof PERFILES !== "undefined" && PERFILES[a.perfil || a.nombre]);
-    if(!conPerfil.length){
-      perfilesWrap.innerHTML = `<div class="callout">Todavía no hay respuestas del diagnóstico cargadas. En cuanto Rubí las suba, aparecen aquí.</div>`;
-    } else {
-      perfilesWrap.innerHTML = conPerfil.map((a,i)=>{
-        const perfil = PERFILES[a.perfil || a.nombre];
-        const resumen = perfil.resumen ? Object.entries(perfil.resumen).map(([k,v])=>`<span class="tag">${v}</span>`).join(" ") : "";
-        const camposHTML = perfil.campos.map(c=>`
+  const grupalWrap = document.getElementById("perfil-grupal");
+  const LS_KEY_PERFILES = "mjht_perfiles_pegados";
+
+  function getPerfilesPegados(){
+    try { return JSON.parse(localStorage.getItem(LS_KEY_PERFILES) || "{}"); }
+    catch(e){ return {}; }
+  }
+  function guardarPerfilPegado(nombre, perfil){
+    const todos = getPerfilesPegados();
+    todos[nombre] = perfil;
+    try { localStorage.setItem(LS_KEY_PERFILES, JSON.stringify(todos)); } catch(e){}
+  }
+  // Perfil "vigente" de una asistente: lo pegado en este navegador tiene prioridad,
+  // y si no existe, se usa el precargado por Rubí en assets/js/perfiles.js
+  function perfilDe(a){
+    const pegados = getPerfilesPegados();
+    const llave = a.perfil || a.nombre;
+    if(pegados[a.nombre]) return pegados[a.nombre];
+    if(typeof PERFILES !== "undefined" && PERFILES[llave]) return PERFILES[llave];
+    return null;
+  }
+
+  function renderPerfilesYGrupal(){
+    if(typeof ASISTENTES === "undefined" || !ASISTENTES.length){
+      perfilesWrap.innerHTML = `<div class="callout">Todavía no hay directorio de asistentes cargado (assets/js/roster.js).</div>`;
+      grupalWrap.innerHTML = "";
+      return;
+    }
+
+    perfilesWrap.innerHTML = ASISTENTES.map((a,i)=>{
+      const perfil = perfilDe(a);
+      const iniciales = a.nombre.split(" ").map(w=>w[0]).slice(0,2).join("").toUpperCase();
+
+      if(perfil){
+        const resumen = perfil.resumen ? Object.values(perfil.resumen).filter(Boolean).join(" · ") : "";
+        const camposHTML = (perfil.campos||[]).map(c=>`
           <div class="perfil-campo">
             <span class="mtag">M${c.modulo}</span>
             <span class="txt"><b>${c.label}:</b> ${c.valor}</span>
@@ -337,18 +396,82 @@
         return `
           <div class="acc-item perfil">
             <button class="acc-head">
-              <span class="num">${a.nombre.split(" ").map(w=>w[0]).slice(0,2).join("").toUpperCase()}</span>
+              <span class="num">${iniciales}</span>
               <span class="meta"><h4>${a.nombre}</h4><small>${resumen}</small></span>
               <span class="chev">▾</span>
             </button>
-            <div class="acc-body"><div class="acc-body-inner">${camposHTML}</div></div>
+            <div class="acc-body"><div class="acc-body-inner">${camposHTML || "<p>Sin respuestas registradas.</p>"}</div></div>
           </div>`;
-      }).join("");
-      initAccordion();
-    }
-  } else {
-    perfilesWrap.innerHTML = `<div class="callout">Todavía no hay directorio de asistentes cargado.</div>`;
+      }
+
+      // Sin perfil todavía: ventana para pegar sus respuestas
+      return `
+        <div class="acc-item">
+          <button class="acc-head">
+            <span class="num">${iniciales}</span>
+            <span class="meta"><h4>${a.nombre}</h4><small>Sin respuestas cargadas todavía</small></span>
+            <span class="chev">▾</span>
+          </button>
+          <div class="acc-body"><div class="acc-body-inner">
+            <p class="file-hint">Pega aquí exactamente el texto de sus respuestas al formulario (tal cual lo copias de Google Forms) y pulsa "Cargar".</p>
+            <textarea id="pegar-${i}" placeholder="Nombre&#10;${a.nombre}&#10;Rango edad&#10;...&#10;M1 motivacion&#10;..."></textarea>
+            <p class="perfil-msg" id="pegar-msg-${i}" style="font-size:.82rem;margin-top:4px;"></p>
+            <button type="button" class="btn btn-primary btn-sm" data-idx="${i}" data-nombre="${a.nombre}" onclick="mjhtCargarPerfil(this)">Cargar</button>
+          </div></div>
+        </div>`;
+    }).join("");
+    initAccordion();
+
+    const cargados = ASISTENTES.map(perfilDe).filter(Boolean);
+    grupalWrap.innerHTML = renderPerfilGrupalHTML(computePerfilGrupal(cargados));
   }
+
+  window.mjhtCargarPerfil = function(btn){
+    const idx = btn.dataset.idx;
+    const nombre = btn.dataset.nombre;
+    const textarea = document.getElementById("pegar-"+idx);
+    const msg = document.getElementById("pegar-msg-"+idx);
+    const raw = textarea.value;
+    const perfil = parsePerfilPegado(raw);
+    if(!perfil){
+      msg.textContent = "No pude reconocer respuestas en ese texto. Revisa que sea el mismo formato del formulario y vuelve a intentar.";
+      msg.style.color = "var(--warn)";
+      return;
+    }
+    guardarPerfilPegado(nombre, perfil);
+    // Deja constancia en Netlify Forms para el registro de Rubí
+    const form = document.getElementById("form-perfil-pegado");
+    form.nombre.value = nombre;
+    form.texto.value = raw;
+    fetch("/", { method:"POST", headers:{"Content-Type":"application/x-www-form-urlencoded"}, body:new URLSearchParams(new FormData(form)).toString() }).catch(()=>{});
+    setTimeout(renderPerfilesYGrupal, 0);
+  };
+
+  renderPerfilesYGrupal();
+
+  // Compartir materiales: permite agregar más PDFs y más ligas dinámicamente
+  let pdfExtraCount = 0;
+  window.mjhtAgregarPDF = function(){
+    pdfExtraCount++;
+    const wrap = document.createElement("div");
+    wrap.style.display = "flex";
+    wrap.style.gap = "8px";
+    wrap.style.alignItems = "center";
+    wrap.style.marginTop = "8px";
+    wrap.innerHTML = `<input type="file" name="archivo_extra[]" accept=".pdf,.ppt,.pptx,.key" style="flex:1;margin:0;">
+      <button type="button" class="btn btn-ghost btn-sm" onclick="this.parentElement.remove()">Quitar</button>`;
+    document.getElementById("pdfs-extra").appendChild(wrap);
+  };
+  window.mjhtAgregarLiga = function(){
+    const wrap = document.createElement("div");
+    wrap.style.display = "flex";
+    wrap.style.gap = "8px";
+    wrap.style.alignItems = "center";
+    wrap.style.marginTop = "8px";
+    wrap.innerHTML = `<input type="text" name="link_extra[]" placeholder="https://" style="flex:1;margin:0;">
+      <button type="button" class="btn btn-ghost btn-sm" onclick="this.parentElement.remove()">Quitar</button>`;
+    document.getElementById("links-extra").appendChild(wrap);
+  };
 </script>
 </body>
 </html>

@@ -35,11 +35,17 @@ function initTabs(){
   }
 }
 
+// Delegado a nivel documento e idempotente: se puede llamar tantas veces como
+// se quiera después de reconstruir listas dinámicas (perfiles, roster, etc.)
+// sin duplicar listeners ni cancelar el toggle.
 function initAccordion(){
-  document.querySelectorAll(".acc-head").forEach(head=>{
-    head.addEventListener("click", ()=>{
-      head.closest(".acc-item").classList.toggle("open");
-    });
+  if(initAccordion._bound) return;
+  initAccordion._bound = true;
+  document.addEventListener("click", (e)=>{
+    const head = e.target.closest(".acc-head");
+    if(!head) return;
+    const item = head.closest(".acc-item");
+    if(item) item.classList.toggle("open");
   });
 }
 
@@ -110,4 +116,167 @@ function socialChipsHTML(redes){
   if(redes.x) items.push(`<a class="social-chip" href="${redes.x}" target="_blank" rel="noopener">${ICONS.x}X</a>`);
   if(!items.length) return "";
   return `<div class="social-row">${items.join("")}</div>`;
+}
+
+/* ============================================================
+   Perfiles de asistentes: parser del formulario pegado
+   ============================================================ */
+const PERFIL_FIELD_DEFS = [
+  { raw: "rango edad", resumen: "edad" },
+  { raw: "anos experiencia", resumen: "experiencia" },
+  { raw: "grado estudios", resumen: "estudios" },
+  { raw: "m1 motivacion", modulo: 1, label: "Motivación" },
+  { raw: "m1 momento actual", modulo: 1, label: "Momento actual" },
+  { raw: "m1 area atencion", modulo: 1, label: "Área de atención" },
+  { raw: "m1 claridad direccion", modulo: 1, label: "Claridad de dirección" },
+  { raw: "m1 valio la pena", modulo: 1, label: "¿Qué haría que valiera la pena?" },
+  { raw: "m2 estado civil", modulo: 2, label: "Estado civil" },
+  { raw: "m2 padres viven", modulo: 2, label: "¿Padres viven?" },
+  { raw: "m2 num hijos", modulo: 2, label: "Número de hijos" },
+  { raw: "m2 influencia historia", modulo: 2, label: "Influencia de su historia" },
+  { raw: "m2 limites", modulo: 2, label: "Pone límites" },
+  { raw: "m2 patrones", modulo: 2, label: "Reconoce patrones" },
+  { raw: "m2 temas impacto", modulo: 2, label: "Temas con más impacto" },
+  { raw: "m2 resignificar", modulo: 2, label: "Qué le gustaría resignificar" },
+  { raw: "m3 alineacion imagen", modulo: 3, label: "Alineación con su imagen (1–5)" },
+  { raw: "m3 seguridad profesional", modulo: 3, label: "Seguridad profesional" },
+  { raw: "m3 presencia fortalecer", modulo: 3, label: "Presencia a fortalecer" },
+  { raw: "m3 impacto espacio", modulo: 3, label: "Impacto al entrar a un espacio" },
+  { raw: "m4 decision vestir", modulo: 4, label: "Decisión al vestir" },
+  { raw: "m4 asesoria imagen", modulo: 4, label: "Asesoría de imagen que le interesa" },
+  { raw: "m4 frecuencia compra", modulo: 4, label: "Frecuencia de compra" },
+  { raw: "m4 closet", modulo: 4, label: "Su clóset" },
+  { raw: "m4 proyectar", modulo: 4, label: "Qué quiere proyectar" },
+  { raw: "m5 relacion alimentacion", modulo: 5, label: "Relación con la alimentación" },
+  { raw: "m5 relacion comer sentir", modulo: 5, label: "Relación comer / sentir" },
+  { raw: "m5 factor habitos", modulo: 5, label: "Factores en sus hábitos" },
+  { raw: "m5 senales cuerpo", modulo: 5, label: "Escucha señales del cuerpo" },
+  { raw: "m5 transformar", modulo: 5, label: "Qué le gustaría transformar" },
+  { raw: "m6 forma comunicar", modulo: 6, label: "Forma de comunicar" },
+  { raw: "m6 consciencia tono", modulo: 6, label: "Consciencia de su tono" },
+  { raw: "m6 dificultad comunicar", modulo: 6, label: "Dificultad al comunicar" },
+  { raw: "m6 reaccion desacuerdo", modulo: 6, label: "Reacción ante el desacuerdo" },
+  { raw: "m6 meta comunicacion", modulo: 6, label: "Meta de comunicación" },
+  { raw: "m7 conocimiento finanzas", modulo: 7, label: "Conocimiento de finanzas" },
+  { raw: "m7 curso finanzas", modulo: 7, label: "¿Ha tomado curso de finanzas?" },
+  { raw: "m7 control finanzas", modulo: 7, label: "Control de sus finanzas" },
+  { raw: "m7 retos financieros", modulo: 7, label: "Retos financieros" },
+  { raw: "m7 retos otros", modulo: 7, label: "Otros retos financieros" },
+  { raw: "m7 decisiones alineadas", modulo: 7, label: "Decisiones alineadas a sus metas" },
+  { raw: "m7 esperado modulo", modulo: 7, label: "Qué espera del módulo" },
+  { raw: "m7 tema profundizar", modulo: 7, label: "Temas a profundizar" },
+  { raw: "m7 frase dinero", modulo: 7, label: "Frase sobre el dinero" },
+  { raw: "m7 cambiar finanzas", modulo: 7, label: "Qué quiere cambiar en sus finanzas" },
+  { raw: "m8 marca personal clara", modulo: 8, label: "Claridad de marca personal" },
+  { raw: "m8 alineacion identidad", modulo: 8, label: "Alineación con su identidad" },
+  { raw: "m8 construccion marca", modulo: 8, label: "Trabajo en su marca" },
+  { raw: "m8 elementos comunican", modulo: 8, label: "Elementos que la comunican" },
+  { raw: "m8 percepcion deseada", modulo: 8, label: "Percepción deseada" },
+  { raw: "m9 cambiar redes", modulo: 9, label: "Qué cambiaría de sus redes" },
+  { raw: "m9 consciencia compartir", modulo: 9, label: "Consciencia al compartir en redes" },
+  { raw: "m9 tiempo redes", modulo: 9, label: "Tiempo en redes" },
+  { raw: "m9 impacto bienestar", modulo: 9, label: "Impacto en su bienestar" },
+  { raw: "m9 contenido consumido", modulo: 9, label: "Contenido que más consume" },
+  { raw: "m10 familiaridad ia", modulo: 10, label: "Familiaridad con la IA" },
+  { raw: "m10 uso ia", modulo: 10, label: "Uso actual de IA" },
+  { raw: "m10 sensacion ia", modulo: 10, label: "Sensación frente a la IA" },
+  { raw: "m10 meta ia", modulo: 10, label: "Meta con la IA" }
+];
+// clave técnica derivada del texto crudo, para poder agregar/comparar entre perfiles
+PERFIL_FIELD_DEFS.forEach(f=>{ f.key = f.raw.replace(/\s+/g,"_"); });
+
+function normalizaEtiqueta(s){
+  return s.replace(/\[\]\s*$/,"").trim().toLowerCase()
+    .normalize("NFD").replace(/[̀-ͯ]/g,""); // quita acentos para comparar
+}
+
+const PERFIL_LOOKUP = {};
+PERFIL_FIELD_DEFS.forEach(f=>{ PERFIL_LOOKUP[normalizaEtiqueta(f.raw)] = f; });
+
+// Convierte el texto pegado del formulario (Google Forms) en {resumen, campos}
+function parsePerfilPegado(raw){
+  const lines = raw.split("\n").map(l=>l.trim()).filter(l=>l.length);
+  const resumen = {};
+  const campos = [];
+  let i = 0;
+  while(i < lines.length){
+    const norm = normalizaEtiqueta(lines[i].replace(/^\d+\.\s*/,""));
+    const def = PERFIL_LOOKUP[norm];
+    if(!def){ i++; continue; }
+    let valor = "";
+    if(i+1 < lines.length){
+      const siguienteEsEtiqueta = !!PERFIL_LOOKUP[normalizaEtiqueta(lines[i+1].replace(/^\d+\.\s*/,""))];
+      if(!siguienteEsEtiqueta){ valor = lines[i+1]; i += 2; }
+      else { i += 1; }
+    } else { i += 1; }
+    if(!valor) continue;
+    if(def.resumen){ resumen[def.resumen] = valor; }
+    else { campos.push({ modulo: def.modulo, label: def.label, valor, key: def.key }); }
+  }
+  if(!campos.length && !Object.keys(resumen).length) return null;
+  return { resumen, campos };
+}
+
+function extraeNumero(str){
+  if(!str) return null;
+  const m = String(str).match(/\d+/);
+  return m ? parseInt(m[0], 10) : null;
+}
+
+// Agrupa los perfiles cargados (base + pegados) en un resumen del grupo
+function computePerfilGrupal(perfiles){
+  const edades = perfiles.map(p=>extraeNumero(p.resumen && p.resumen.edad)).filter(n=>n!==null);
+  const experiencias = perfiles.map(p=>extraeNumero(p.resumen && p.resumen.experiencia)).filter(n=>n!==null);
+  const estudiosCount = {};
+  perfiles.forEach(p=>{
+    const e = p.resumen && p.resumen.estudios;
+    if(e) estudiosCount[e] = (estudiosCount[e]||0) + 1;
+  });
+
+  const clavesInteres = [
+    ["m1_momento_actual", "Momento actual"],
+    ["m1_claridad_direccion", "Claridad de dirección"],
+    ["m7_conocimiento_finanzas", "Conocimiento de finanzas"],
+    ["m8_marca_personal_clara", "Claridad de marca personal"],
+    ["m9_tiempo_redes", "Tiempo en redes"],
+    ["m10_familiaridad_ia", "Familiaridad con la IA"]
+  ];
+  const distribuciones = clavesInteres.map(([key,label])=>{
+    const counts = {};
+    perfiles.forEach(p=>{
+      const campo = (p.campos||[]).find(c=>c.key===key);
+      if(campo) counts[campo.valor] = (counts[campo.valor]||0) + 1;
+    });
+    const entradas = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+    return { label, entradas };
+  }).filter(d=>d.entradas.length);
+
+  return { n: perfiles.length, edades, experiencias, estudiosCount, distribuciones };
+}
+
+function renderPerfilGrupalHTML(g){
+  if(!g.n){
+    return `<div class="callout">Todavía no hay respuestas suficientes para armar el perfil general del grupo.</div>`;
+  }
+  const edadTxt = g.edades.length ? `${Math.min(...g.edades)}–${Math.max(...g.edades)} años` : "sin datos suficientes";
+  const expProm = g.experiencias.length ? Math.round(g.experiencias.reduce((a,b)=>a+b,0)/g.experiencias.length) : null;
+  const estudiosTxt = Object.entries(g.estudiosCount).sort((a,b)=>b[1]-a[1])
+    .map(([k,v])=>`${k} (${v})`).join(", ") || "sin datos suficientes";
+
+  const distHTML = g.distribuciones.map(d=>`
+    <div class="perfil-campo">
+      <span class="mtag">·</span>
+      <span class="txt"><b>${d.label}:</b> ${d.entradas.map(([v,c])=>`${v} (${c})`).join(", ")}</span>
+    </div>`).join("");
+
+  return `
+    <div class="card">
+      <h4>Perfil general del grupo <small style="font-weight:400;color:var(--gris-claro);">— con base en ${g.n} respuesta${g.n===1?"":"s"}</small></h4>
+      <div class="grid grid-3" style="margin:14px 0 18px;">
+        <div class="stat"><b>${edadTxt}</b><span>rango de edad</span></div>
+        <div class="stat"><b>${expProm!==null?expProm+" años":"—"}</b><span>experiencia promedio</span></div>
+        <div class="stat"><b style="font-size:1rem;line-height:1.3;">${estudiosTxt}</b><span>grado de estudios</span></div>
+      </div>
+      ${distHTML}
+    </div>`;
 }
