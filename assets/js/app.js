@@ -107,6 +107,39 @@ function moduloNum(m){
   return typeof m.id === "number" ? String(m.id).padStart(2,"0") : ICONS.grad;
 }
 
+/* ============================================================
+   Calendario: filas combinadas (módulos + sesión especial) y
+   color por rango de fechas (reemplaza el coloreado por "eje").
+   ============================================================ */
+function buildCalendarRows(){
+  const rows = (typeof MODULOS !== "undefined" ? MODULOS : []).map(m=>Object.assign({tipo:"modulo"}, m));
+  if(typeof SESION_ESPECIAL !== "undefined"){
+    rows.push(Object.assign({tipo:"especial"}, SESION_ESPECIAL));
+  }
+  rows.sort((a,b)=> a.fecha < b.fecha ? -1 : a.fecha > b.fecha ? 1 : 0);
+  return rows;
+}
+
+const RANGO_LABEL = {
+  a: "4 – 25 de septiembre",
+  b: "2 – 23 de octubre",
+  c: "30 de octubre – 13 de noviembre"
+};
+
+function rangoDeFecha(fechaISO){
+  if(fechaISO <= "2026-09-25") return "a";
+  if(fechaISO <= "2026-10-23") return "b";
+  return "c";
+}
+
+function calendarLegendHTML(){
+  return `<div class="cal-legend">
+    <span class="cal-legend-item"><span class="dot dot-a"></span>${RANGO_LABEL.a}</span>
+    <span class="cal-legend-item"><span class="dot dot-b"></span>${RANGO_LABEL.b}</span>
+    <span class="cal-legend-item"><span class="dot dot-c"></span>${RANGO_LABEL.c}</span>
+  </div>`;
+}
+
 /* ---------- Chips de redes sociales de un ponente ---------- */
 function socialChipsHTML(redes){
   if(!redes) return "";
