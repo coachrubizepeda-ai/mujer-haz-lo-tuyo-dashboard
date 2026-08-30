@@ -173,6 +173,8 @@ tr.past td{color:var(--gris-claro);}
   display:flex;align-items:center;justify-content:center;font-weight:700;flex:none;font-size:.95rem;
 }
 .acc-head .num.cierre{background:var(--amarillo);color:var(--gris-oscuro);}
+.acc-head .num svg{width:19px;height:19px;}
+td svg{width:16px;height:16px;vertical-align:-3px;}
 .acc-head .meta{flex:1;min-width:0;}
 .acc-head .meta h4{font-size:1rem;margin:0 0 2px;}
 .acc-head .meta small{color:var(--gris-claro);font-size:.82rem;}
@@ -233,8 +235,22 @@ fieldset{border:none;padding:0;margin:0 0 16px;}
 .role-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg);}
 .role-card .icon{
   width:56px;height:56px;border-radius:16px;display:flex;align-items:center;justify-content:center;
-  margin:0 auto 16px;font-size:26px;background:rgba(0,173,187,.12);
+  margin:0 auto 16px;background:rgba(0,173,187,.12);color:var(--azul-oscuro);
 }
+.role-card .icon svg{width:28px;height:28px;}
+.icon-inline{width:16px;height:16px;vertical-align:-3px;margin-right:6px;flex:none;}
+.contact-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.contact-row .icon-inline{width:18px;height:18px;margin-right:0;color:var(--azul-oscuro);}
+.field-icon-label{display:flex;align-items:center;gap:6px;font-weight:400;font-size:.82rem;}
+.field-icon-label .icon-inline{margin-right:0;color:var(--azul-oscuro);}
+.check-row{display:flex;align-items:center;gap:8px;padding:6px 0;font-weight:400;border-bottom:1px solid var(--border);}
+.check-row:last-child{border-bottom:none;}
+.check-row input{margin:0;width:auto;}
+.avatar-circle{
+  width:38px;height:38px;border-radius:50%;background:var(--azul-oscuro);color:#fff;
+  display:flex;align-items:center;justify-content:center;flex:none;
+}
+.avatar-circle svg{width:18px;height:18px;}
 .role-card h3{font-size:1.15rem;}
 .role-card p{color:var(--gris-claro);font-size:.88rem;min-height:56px;}
 .role-card .pass-box{display:none;margin-top:14px;text-align:left;}
@@ -269,10 +285,36 @@ footer.site a:hover{color:var(--azul-oscuro);}
   height:10px;background:#EFEAE0;border-radius:999px;overflow:hidden;margin-bottom:8px;
 }
 .progress-fill{
-  height:100%;background:linear-gradient(90deg,var(--azul-claro),var(--azul-oscuro));
-  border-radius:999px;transition:width .35s ease;width:0%;
+  height:100%;background:linear-gradient(90deg,var(--azul-claro),var(--azul-oscuro) 65%,var(--amarillo));
+  border-radius:999px;transition:width .5s ease;width:0%;
 }
 .progress-label{font-size:.82rem;color:var(--gris-claro);margin-bottom:18px;display:block;}
+
+/* ---------- Barra de avance del diplomado ---------- */
+.course-progress{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:22px 24px;box-shadow:var(--shadow);margin-bottom:20px;
+}
+.course-progress .cp-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;gap:12px;flex-wrap:wrap;}
+.course-progress .cp-top b{font-size:1rem;}
+.course-progress .cp-top span{font-size:.82rem;color:var(--gris-claro);}
+.course-progress .progress-track{height:14px;margin-bottom:6px;}
+.course-progress .cp-modulos{display:flex;gap:4px;margin-top:10px;}
+.course-progress .cp-dot{
+  flex:1;height:6px;border-radius:999px;background:#EFEAE0;
+}
+.course-progress .cp-dot.done{background:var(--azul-oscuro);}
+.course-progress .cp-dot.next{background:var(--amarillo);}
+
+/* ---------- Redes sociales (chips) ---------- */
+.social-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+.social-chip{
+  display:inline-flex;align-items:center;gap:6px;font-size:.8rem;font-weight:600;
+  padding:6px 13px;border-radius:999px;text-decoration:none;background:rgba(61,69,67,.06);color:var(--gris-oscuro);
+  transition:background .15s;
+}
+.social-chip:hover{background:rgba(0,173,187,.16);color:var(--azul-oscuro);}
+.social-chip svg{width:14px;height:14px;margin-right:0;}
 
 .copy-row{display:flex;gap:8px;margin-bottom:20px;}
 .copy-row input{margin:0;flex:1;}

@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E%F0%9F%92%9B%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%2732%27 fill=%27%23007DA5%27/%3E%3Ctext x=%2732%27 y=%2743%27 font-family=%27Arial,Helvetica,sans-serif%27 font-weight=%27700%27 font-size=%2732%27 fill=%27%23ffffff%27 text-anchor=%27middle%27%3EM%3C/text%3E%3C/svg%3E">
 <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body>
@@ -51,6 +51,7 @@
       <div class="stat"><b id="prox-fecha">—</b><span id="prox-modulo">próxima sesión</span></div>
       <div class="stat"><b>CCE</b><span>Club de Empresarios, Torre Inxignia</span></div>
     </div>
+    <div id="course-progress" class="course-progress"></div>
     <div class="callout">
       Este dashboard es 100% estático (para Netlify). Los formularios de asistentes y ponentes se guardan directo en el panel de <b>Netlify Forms</b> de tu sitio — no aquí. En la pestaña "Formularios recibidos" tienes las ligas directas.
     </div>
@@ -80,6 +81,7 @@
         <li><a href="#" data-form="cuestionario-previo" target="_blank">Cuestionarios previos <small>Por módulo</small><span>→</span></a></li>
         <li><a href="#" data-form="feedback-sesion" target="_blank">Feedback de sesión <small>Calificaciones y comentarios</small><span>→</span></a></li>
         <li><a href="#" data-form="materiales-ponente" target="_blank">Materiales de ponentes <small>Presentaciones y ligas</small><span>→</span></a></li>
+        <li><a href="#" data-form="asistencia-modulo" target="_blank">Asistencia por módulo <small>Reporte de lista pasada por cada ponente</small><span>→</span></a></li>
       </ul>
     </div>
   </section>
@@ -92,6 +94,13 @@
       <p>Se genera automáticamente desde <code>assets/js/data.js</code>. Las semblanzas completas están en Netlify Forms.</p>
     </div>
     <div id="directorio-list" class="grid grid-2"></div>
+
+    <div class="section-head" style="margin-top:34px;">
+      <span class="eyebrow">Grupo</span>
+      <h2>Directorio de asistentes</h2>
+      <p>Se genera desde <code>assets/js/roster.js</code>. Súbelo ahí cuando tengas la información completa del grupo.</p>
+    </div>
+    <div id="asistentes-list" class="grid grid-2"></div>
   </section>
 
   <!-- CALENDARIO -->
@@ -230,8 +239,11 @@
 <script src="../assets/js/auth.js"></script>
 <script>mjhtGuard("admin");</script>
 <script src="../assets/js/data.js"></script>
+<script src="../assets/js/roster.js"></script>
 <script src="../assets/js/app.js"></script>
 <script>
+  renderCourseProgress("course-progress");
+
   function pill(m){
     if(m.eje==="cierre") return '<span class="tag cierre">Cierre</span>';
     return '<span class="tag eje'+m.eje+'">'+EJE_LABEL[m.eje]+'</span>';
@@ -241,13 +253,13 @@
   const hoy = new Date();
   let proximo = null;
   MODULOS.forEach(m=>{ if(!proximo && new Date(m.fecha+"T09:00:00") >= hoy) proximo = m; });
-  document.getElementById("prox-fecha").textContent = proximo ? proximo.fechaLabel : "🎉";
+  document.getElementById("prox-fecha").textContent = proximo ? proximo.fechaLabel : "✓";
   document.getElementById("prox-modulo").textContent = proximo ? proximo.tema : "diplomado completado";
 
   // Calendario maestro
   const calBody = document.getElementById("cal-body");
   MODULOS.forEach(m=>{
-    const num = typeof m.id === "number" ? String(m.id).padStart(2,"0") : "🍷";
+    const num = moduloNum(m);
     const tr = document.createElement("tr");
     tr.innerHTML = `<td>${num}</td><td>${m.fechaLabel}</td>
       <td><b>${m.tema}</b><br><small style="color:var(--gris-claro)">${m.subtitulo}</small></td>
@@ -271,6 +283,25 @@
       ${sesiones.map(s=>`<p style="margin-bottom:4px;"><b>${s.tema}</b> — ${s.subtitulo}</p>`).join("")}`;
     dirWrap.appendChild(el);
   });
+
+  // Directorio de asistentes (roster.js)
+  const asisWrap = document.getElementById("asistentes-list");
+  if(typeof ASISTENTES !== "undefined" && ASISTENTES.length){
+    ASISTENTES.forEach(a=>{
+      const iniciales = a.nombre.split(" ").map(w=>w[0]).slice(0,2).join("").toUpperCase();
+      const el = document.createElement("div");
+      el.className = "card";
+      el.innerHTML = `<div style="display:flex;gap:14px;align-items:center;margin-bottom:8px;">
+          <span class="avatar-init">${iniciales}</span>
+          <div><h4 style="margin:0;">${a.nombre}</h4><small style="color:var(--gris-claro)">${[a.cargo,a.empresa].filter(Boolean).join(" · ")}</small></div>
+        </div>
+        ${a.semblanza ? `<p style="margin-bottom:0;">${a.semblanza}</p>` : ""}
+        ${socialChipsHTML(a.linkedin ? {linkedin:a.linkedin} : null)}`;
+      asisWrap.appendChild(el);
+    });
+  } else {
+    asisWrap.innerHTML = `<div class="callout">Aún no has cargado el directorio de asistentes. Agrégalas en <code>assets/js/roster.js</code> (o pídeme que las suba cuando me compartas la información).</div>`;
+  }
 
   // Ligas a Netlify Forms
   const siteInput = document.getElementById("site-url");
@@ -320,7 +351,7 @@
     document.getElementById("progress-fill").style.width = pct+"%";
     document.getElementById("progress-label").textContent =
       done === CHECK_ITEMS.length
-        ? `¡Listo! ${done} de ${CHECK_ITEMS.length} completados 🎉`
+        ? `¡Listo! ${done} de ${CHECK_ITEMS.length} completados`
         : `${done} de ${CHECK_ITEMS.length} completados`;
   }
   CHECK_ITEMS.forEach(([key,title,desc])=>{

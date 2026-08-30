@@ -34,7 +34,8 @@ const MODULOS = [
     descripcion: "Arranque del diplomado: diagnóstico inicial y el encuadre del viaje que viene. Aquí se aplica el test de comportamiento y motivadores.",
     lectura: "Rubí compartirá la lectura previa antes de esta sesión.",
     tarea: "Contestar el test de comportamiento y motivadores (liga en la pestaña Test).",
-    presentacion: "../assets/presentaciones/modulo-01.pdf"
+    presentacion: "../assets/presentaciones/modulo-01.pdf",
+    redes: { linkedin: "", instagram: "", x: "" }
   },
   {
     id: 2,
@@ -47,7 +48,8 @@ const MODULOS = [
     descripcion: "Un espacio para mirar la historia personal con honestidad y soltar lo que ya no sirve, sin juicio.",
     lectura: "Por confirmar — se actualizará antes del módulo.",
     tarea: "Por confirmar — se actualizará antes del módulo.",
-    presentacion: "../assets/presentaciones/modulo-02.pdf"
+    presentacion: "../assets/presentaciones/modulo-02.pdf",
+    redes: { linkedin: "", instagram: "", x: "" }
   },
   {
     id: 3,
@@ -60,7 +62,8 @@ const MODULOS = [
     descripcion: "Cómo la presencia habla antes que las palabras: coherencia entre quién soy y cómo me proyecto en espacios de poder.",
     lectura: "Por confirmar — se actualizará antes del módulo.",
     tarea: "Por confirmar — se actualizará antes del módulo.",
-    presentacion: "../assets/presentaciones/modulo-03.pdf"
+    presentacion: "../assets/presentaciones/modulo-03.pdf",
+    redes: { linkedin: "", instagram: "", x: "" }
   },
   {
     id: 4,
@@ -73,7 +76,8 @@ const MODULOS = [
     descripcion: "Imagen ejecutiva como herramienta de comunicación: los detalles que refuerzan (o restan) tu mensaje.",
     lectura: "Por confirmar — se actualizará antes del módulo.",
     tarea: "Por confirmar — se actualizará antes del módulo.",
-    presentacion: "../assets/presentaciones/modulo-04.pdf"
+    presentacion: "../assets/presentaciones/modulo-04.pdf",
+    redes: { linkedin: "", instagram: "", x: "" }
   },
   {
     id: 5,
@@ -86,7 +90,8 @@ const MODULOS = [
     descripcion: "Bienestar físico como base de la energía y la claridad para liderar.",
     lectura: "Por confirmar — se actualizará antes del módulo.",
     tarea: "Por confirmar — se actualizará antes del módulo.",
-    presentacion: "../assets/presentaciones/modulo-05.pdf"
+    presentacion: "../assets/presentaciones/modulo-05.pdf",
+    redes: { linkedin: "", instagram: "", x: "" }
   },
   {
     id: 6,
@@ -99,7 +104,8 @@ const MODULOS = [
     descripcion: "Comunicación con propósito: cómo suena una mujer que decide cada palabra, no la que le sale por default.",
     lectura: "Por confirmar — se actualizará antes del módulo.",
     tarea: "Por confirmar — se actualizará antes del módulo.",
-    presentacion: "../assets/presentaciones/modulo-06.pdf"
+    presentacion: "../assets/presentaciones/modulo-06.pdf",
+    redes: { linkedin: "", instagram: "", x: "" }
   },
   {
     id: 7,
@@ -112,7 +118,8 @@ const MODULOS = [
     descripcion: "Construcción de marca personal: propuesta de valor clara y posicionamiento consistente.",
     lectura: "Por confirmar — se actualizará antes del módulo.",
     tarea: "Por confirmar — se actualizará antes del módulo.",
-    presentacion: "../assets/presentaciones/modulo-07.pdf"
+    presentacion: "../assets/presentaciones/modulo-07.pdf",
+    redes: { linkedin: "", instagram: "", x: "" }
   },
   {
     id: 8,
@@ -125,7 +132,8 @@ const MODULOS = [
     descripcion: "Finanzas personales y empresariales como pilar de libertad e independencia.",
     lectura: "Por confirmar — se actualizará antes del módulo.",
     tarea: "Por confirmar — se actualizará antes del módulo.",
-    presentacion: "../assets/presentaciones/modulo-08.pdf"
+    presentacion: "../assets/presentaciones/modulo-08.pdf",
+    redes: { linkedin: "", instagram: "", x: "" }
   },
   {
     id: 9,
@@ -138,7 +146,8 @@ const MODULOS = [
     descripcion: "Redes sociales y tecnología puestas al servicio de tu marca y tu negocio, con intención.",
     lectura: "Por confirmar — se actualizará antes del módulo.",
     tarea: "Por confirmar — se actualizará antes del módulo.",
-    presentacion: "../assets/presentaciones/modulo-09.pdf"
+    presentacion: "../assets/presentaciones/modulo-09.pdf",
+    redes: { linkedin: "", instagram: "", x: "" }
   },
   {
     id: 10,
@@ -151,7 +160,8 @@ const MODULOS = [
     descripcion: "Inteligencia artificial como herramienta de apalancamiento personal y de negocio.",
     lectura: "Por confirmar — se actualizará antes del módulo.",
     tarea: "Por confirmar — se actualizará antes del módulo.",
-    presentacion: "../assets/presentaciones/modulo-10.pdf"
+    presentacion: "../assets/presentaciones/modulo-10.pdf",
+    redes: { linkedin: "", instagram: "", x: "" }
   },
   {
     id: "cierre",
@@ -164,7 +174,8 @@ const MODULOS = [
     descripcion: "Cierre de generación: celebración, integración del grupo y entrega de certificados.",
     lectura: "—",
     tarea: "—",
-    presentacion: null
+    presentacion: null,
+    redes: { linkedin: "", instagram: "", x: "" }
   }
 ];
 
