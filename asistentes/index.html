@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portal de Asistentes — Mujer, Haz lo Tuyo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E%F0%9F%92%9B%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a class="logo" href="../index.html">
+      <span class="mark">Ok</span>
+      <span class="word"><b>Mujer,</b> haz lo tuyo<small>The Ok People</small></span>
+    </a>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span class="role-pill">Asistente</span>
+      <button class="btn btn-ghost btn-sm" onclick="mjhtLogout()">Salir</button>
+    </div>
+  </div>
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="t-inicio">Inicio</button>
+    <button class="tab-btn" data-tab="t-perfil">Mi registro</button>
+    <button class="tab-btn" data-tab="t-semblanza">Mi semblanza</button>
+    <button class="tab-btn" data-tab="t-test">Test de estilo</button>
+    <button class="tab-btn" data-tab="t-calendario">Calendario</button>
+    <button class="tab-btn" data-tab="t-modulos">Módulos y materiales</button>
+    <button class="tab-btn" data-tab="t-cuestionario">Cuestionario previo</button>
+    <button class="tab-btn" data-tab="t-feedback">Feedback</button>
+    <button class="tab-btn" data-tab="t-contacto">Contacto</button>
+  </nav>
+</div>
+
+<main class="wrap">
+
+  <!-- INICIO -->
+  <section class="tab-panel active" id="t-inicio">
+    <div class="section-head">
+      <span class="eyebrow">Bienvenida</span>
+      <h2>Hola, qué gusto tenerte aquí 💛</h2>
+      <p>Este es tu espacio dentro del diplomado <b>Mujer, Haz lo Tuyo</b>. Aquí vas a encontrar todo lo que necesitas para cada sesión: tu registro, calendario, materiales, cuestionarios y espacio de feedback.</p>
+    </div>
+
+    <div class="grid grid-3" style="margin-bottom:24px;">
+      <div class="stat"><b>10</b><span>módulos + cierre de generación</span></div>
+      <div class="stat"><b>50</b><span>horas totales del programa</span></div>
+      <div class="stat"><b id="prox-fecha">—</b><span id="prox-modulo">próxima sesión</span></div>
+    </div>
+
+    <div class="card">
+      <h4>Datos generales de tu grupo</h4>
+      <p style="margin-bottom:4px;"><b>Formato:</b> Matutina · CANACINTRA / Club de Empresarios</p>
+      <p style="margin-bottom:4px;"><b>Horario:</b> Viernes de 9:00 a 14:00 hrs</p>
+      <p style="margin-bottom:4px;"><b>Sede:</b> Club de Empresarios (CCE), Torre Inxignia</p>
+      <p style="margin-bottom:0;"><b>Duración:</b> 4 de septiembre al 13 de noviembre de 2026</p>
+    </div>
+
+    <div class="callout" style="margin-top:20px;">
+      Antes de tu primera sesión: completa tu <b>registro</b>, tu <b>semblanza</b> y el <b>test de estilo</b> en las pestañas de arriba. Le sirve a Rubí y a los ponentes para conocerte mejor.
+    </div>
+  </section>
+
+  <!-- MI REGISTRO -->
+  <section class="tab-panel" id="t-perfil">
+    <div class="section-head">
+      <span class="eyebrow">Paso 1</span>
+      <h2>Mi registro</h2>
+      <p>Regístrate una sola vez al inicio del diplomado. Esta información le sirve a la coordinación para tu certificado, tu kit de bienvenida y la logística de cada sesión.</p>
+    </div>
+    <div class="card">
+      <form name="registro-asistentes" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+        <input type="hidden" name="form-name" value="registro-asistentes">
+        <p class="hp-field"><label>No llenar: <input name="bot-field"></label></p>
+        <div class="form-msg"></div>
+        <div class="field-row">
+          <div><label>Nombre completo *</label><input type="text" name="nombre" required></div>
+          <div><label>Correo electrónico *</label><input type="email" name="email" required></div>
+        </div>
+        <div class="field-row">
+          <div><label>Empresa / negocio</label><input type="text" name="empresa"></div>
+          <div><label>Cargo / rol</label><input type="text" name="cargo"></div>
+        </div>
+        <div class="field-row">
+          <div><label>Teléfono / WhatsApp *</label><input type="tel" name="telefono" required></div>
+          <div><label>¿Cómo te enteraste del diplomado?</label>
+            <select name="entero">
+              <option value="">Selecciona…</option>
+              <option>CANACINTRA / Club de Empresarios</option>
+              <option>Recomendación de una participante</option>
+              <option>Redes sociales</option>
+              <option>Rubí / The Ok People</option>
+              <option>Otro</option>
+            </select>
+          </div>
+        </div>
+        <label>¿Algo que quieras que sepamos antes de empezar? (alergias, necesidades, comentarios)</label>
+        <textarea name="comentarios" placeholder="Opcional"></textarea>
+        <button class="btn btn-primary" type="submit">Enviar mi registro</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- SEMBLANZA -->
+  <section class="tab-panel" id="t-semblanza">
+    <div class="section-head">
+      <span class="eyebrow">Paso 2</span>
+      <h2>Mi semblanza</h2>
+      <p>Una breve presentación tuya para el directorio del grupo. No necesita ser perfecta — con 4 o 5 líneas es suficiente.</p>
+    </div>
+    <div class="card">
+      <form name="semblanzas" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+        <input type="hidden" name="form-name" value="semblanzas">
+        <input type="hidden" name="perfil" value="asistente">
+        <p class="hp-field"><label>No llenar: <input name="bot-field"></label></p>
+        <div class="form-msg"></div>
+        <label>Nombre *</label><input type="text" name="nombre" required>
+        <label>Semblanza *</label>
+        <textarea name="semblanza" required placeholder="Cuéntanos quién eres, a qué te dedicas y qué te trae a este diplomado."></textarea>
+        <div class="field-row">
+          <div><label>Liga a foto (Drive, Canva, etc.) — opcional</label><input type="text" name="foto_url" placeholder="https://"></div>
+          <div><label>Redes / LinkedIn — opcional</label><input type="text" name="redes" placeholder="@usuario o liga"></div>
+        </div>
+        <button class="btn btn-primary" type="submit">Enviar mi semblanza</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- TEST -->
+  <section class="tab-panel" id="t-test">
+    <div class="section-head">
+      <span class="eyebrow">Paso 3 · Diagnóstico inicial</span>
+      <h2>Test de comportamiento y motivadores</h2>
+      <p>Cada participante inicia el diplomado con un test de comportamiento y motivadores (Talent Insight) para identificar su estilo de liderazgo, sus impulsores principales y sus áreas de oportunidad.</p>
+    </div>
+    <div class="card">
+      <p><b>¿Cómo funciona?</b> Rubí te compartirá la liga personal de tu test por correo o WhatsApp antes del Módulo 1. Tus resultados son confidenciales: se revisan contigo de forma individual, no se comparten con el grupo.</p>
+      <a class="btn btn-accent" href="mailto:hazlotuyo@theokpeople.com?subject=No%20he%20recibido%20mi%20liga%20del%20test">Aún no recibo mi liga →</a>
+    </div>
+    <div class="card">
+      <h4>Ya contesté mi test</h4>
+      <p>Avísanos aquí para llevar el control de quién ya lo completó.</p>
+      <form name="test-confirmacion" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+        <input type="hidden" name="form-name" value="test-confirmacion">
+        <p class="hp-field"><label>No llenar: <input name="bot-field"></label></p>
+        <div class="form-msg"></div>
+        <div class="field-row">
+          <div><label>Nombre *</label><input type="text" name="nombre" required></div>
+          <div><label>Estilo que te arrojó el test (si lo recuerdas)</label><input type="text" name="estilo" placeholder="Opcional"></div>
+        </div>
+        <button class="btn btn-primary" type="submit">Confirmar que ya lo contesté</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- CALENDARIO -->
+  <section class="tab-panel" id="t-calendario">
+    <div class="section-head">
+      <span class="eyebrow">Planeación</span>
+      <h2>Calendario del diplomado</h2>
+      <p>10 módulos + experiencia de cierre. Viernes de 9:00 a 14:00 hrs en el Club de Empresarios (CCE), Torre Inxignia.</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>No.</th><th>Fecha</th><th>Módulo</th><th>Eje</th><th>Ponente</th></tr></thead>
+        <tbody id="cal-body"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- MODULOS -->
+  <section class="tab-panel" id="t-modulos">
+    <div class="section-head">
+      <span class="eyebrow">Contenido</span>
+      <h2>Módulos y materiales</h2>
+      <p>Lecturas previas, tareas y presentación de cada sesión. Rubí actualiza este espacio antes de cada módulo.</p>
+    </div>
+    <div id="modulos-acc"></div>
+  </section>
+
+  <!-- CUESTIONARIO -->
+  <section class="tab-panel" id="t-cuestionario">
+    <div class="section-head">
+      <span class="eyebrow">Antes de cada módulo</span>
+      <h2>Cuestionario previo</h2>
+      <p>Ayuda al ponente de cada sesión a enfocar su tema en lo que más te sirve. Tómate 3 minutos antes de cada viernes.</p>
+    </div>
+    <div class="card">
+      <form name="cuestionario-previo" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+        <input type="hidden" name="form-name" value="cuestionario-previo">
+        <p class="hp-field"><label>No llenar: <input name="bot-field"></label></p>
+        <div class="form-msg"></div>
+        <div class="field-row">
+          <div><label>Nombre *</label><input type="text" name="nombre" required></div>
+          <div><label>Módulo *</label>
+            <select name="modulo" id="sel-modulo-cuestionario" required></select>
+          </div>
+        </div>
+        <label>¿Qué esperas de esta sesión?</label>
+        <textarea name="expectativas"></textarea>
+        <label>¿En qué te gustaría que se enfocara el ponente?</label>
+        <textarea name="enfoque"></textarea>
+        <label>¿Alguna duda puntual que quieras que se resuelva?</label>
+        <textarea name="dudas"></textarea>
+        <button class="btn btn-primary" type="submit">Enviar cuestionario</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- FEEDBACK -->
+  <section class="tab-panel" id="t-feedback">
+    <div class="section-head">
+      <span class="eyebrow">Después de cada módulo</span>
+      <h2>Feedback de la sesión</h2>
+      <p>Tu opinión ayuda a mejorar cada edición del diplomado y es el termómetro que usa Rubí con cada ponente.</p>
+    </div>
+    <div class="card">
+      <form name="feedback-sesion" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+        <input type="hidden" name="form-name" value="feedback-sesion">
+        <p class="hp-field"><label>No llenar: <input name="bot-field"></label></p>
+        <div class="form-msg"></div>
+        <div class="field-row">
+          <div><label>Nombre (opcional, puedes dejarlo en blanco)</label><input type="text" name="nombre"></div>
+          <div><label>Módulo *</label>
+            <select name="modulo" id="sel-modulo-feedback" required></select>
+          </div>
+        </div>
+        <label>¿Cómo calificarías esta sesión? *</label>
+        <div class="rating">
+          <input type="radio" name="calificacion" value="1" id="r1"><label for="r1">1</label>
+          <input type="radio" name="calificacion" value="2" id="r2"><label for="r2">2</label>
+          <input type="radio" name="calificacion" value="3" id="r3"><label for="r3">3</label>
+          <input type="radio" name="calificacion" value="4" id="r4"><label for="r4">4</label>
+          <input type="radio" name="calificacion" value="5" id="r5"><label for="r5">5</label>
+        </div>
+        <label>¿Qué te llevas de esta sesión?</label>
+        <textarea name="me_llevo"></textarea>
+        <label>¿Qué mejorarías?</label>
+        <textarea name="mejoraria"></textarea>
+        <button class="btn btn-primary" type="submit">Enviar feedback</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- CONTACTO -->
+  <section class="tab-panel" id="t-contacto">
+    <div class="section-head">
+      <span class="eyebrow">Comunidad</span>
+      <h2>Contacto y comunidad</h2>
+    </div>
+    <div class="card">
+      <p><b>Rubí Zepeda · The OK People</b></p>
+      <p style="margin-bottom:4px;">✉️ <a href="mailto:hazlotuyo@theokpeople.com">hazlotuyo@theokpeople.com</a></p>
+      <p style="margin-bottom:4px;">📱 222 114 1168</p>
+      <p style="margin-bottom:0;">📷 @MujerHazLoTuyo</p>
+    </div>
+    <div class="callout dark" style="margin-top:16px;">
+      Rubí compartirá aquí (o por WhatsApp) la liga del grupo de comunidad del diplomado.
+    </div>
+  </section>
+
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <span>© 2026 The Ok People · Mujer, Haz lo Tuyo</span>
+    <span><a href="mailto:hazlotuyo@theokpeople.com">hazlotuyo@theokpeople.com</a> · 222 114 1168</span>
+  </div>
+</footer>
+
+<script src="../assets/js/auth.js"></script>
+<script>mjhtGuard("asistente");</script>
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/app.js"></script>
+<script>
+  function pill(m){
+    if(m.eje==="cierre") return '<span class="tag cierre">Cierre</span>';
+    return '<span class="tag eje'+m.eje+'">'+EJE_LABEL[m.eje]+'</span>';
+  }
+
+  // Calendario
+  const hoy = new Date();
+  const calBody = document.getElementById("cal-body");
+  let proximo = null;
+  MODULOS.forEach(m=>{
+    const fecha = new Date(m.fecha+"T09:00:00");
+    const esPasado = fecha < hoy;
+    if(!proximo && !esPasado) proximo = m;
+    const tr = document.createElement("tr");
+    tr.className = esPasado ? "past" : "";
+    tr.innerHTML = `<td>${typeof m.id === "number" ? String(m.id).padStart(2,"0") : "🍷"}</td>
+      <td>${m.fechaLabel}</td>
+      <td><b>${m.tema}</b><br><small style="color:var(--gris-claro)">${m.subtitulo}</small></td>
+      <td>${pill(m)}</td>
+      <td>${m.ponente}</td>`;
+    calBody.appendChild(tr);
+  });
+  if(proximo){
+    document.getElementById("prox-fecha").textContent = proximo.fechaLabel;
+    document.getElementById("prox-modulo").textContent = proximo.tema;
+  } else {
+    document.getElementById("prox-fecha").textContent = "🎉";
+    document.getElementById("prox-modulo").textContent = "¡Diplomado completado!";
+  }
+
+  // Acordeón de módulos
+  const accWrap = document.getElementById("modulos-acc");
+  MODULOS.forEach(m=>{
+    const num = typeof m.id === "number" ? String(m.id).padStart(2,"0") : "🍷";
+    const el = document.createElement("div");
+    el.className = "acc-item";
+    el.innerHTML = `
+      <button class="acc-head">
+        <span class="num ${m.eje==='cierre'?'cierre':''}">${num}</span>
+        <span class="meta"><h4>${m.tema}</h4><small>${m.subtitulo} · ${m.fechaLabel} · ${m.ponente}</small></span>
+        <span class="chev">▾</span>
+      </button>
+      <div class="acc-body"><div class="acc-body-inner">
+        <p>${m.descripcion}</p>
+        <h5>Lectura previa</h5><p>${m.lectura}</p>
+        <h5>Tarea</h5><p>${m.tarea}</p>
+        ${m.presentacion ? `<a class="btn btn-outline btn-sm" href="${m.presentacion}" target="_blank">Descargar presentación ↓</a>` : ""}
+      </div></div>`;
+    accWrap.appendChild(el);
+  });
+  initAccordion();
+
+  // Selects de módulo en formularios
+  ["sel-modulo-cuestionario","sel-modulo-feedback"].forEach(id=>{
+    const sel = document.getElementById(id);
+    MODULOS.forEach(m=>{
+      const opt = document.createElement("option");
+      opt.value = `${m.id} - ${m.tema}`;
+      opt.textContent = `${typeof m.id==="number"?"Módulo "+m.id:"Cierre"} · ${m.tema}`;
+      sel.appendChild(opt);
+    });
+  });
+</script>
+</body>
+</html>

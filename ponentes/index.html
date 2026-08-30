@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portal de Ponentes — Mujer, Haz lo Tuyo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E%F0%9F%92%9B%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a class="logo" href="../index.html">
+      <span class="mark">Ok</span>
+      <span class="word"><b>Mujer,</b> haz lo tuyo<small>The Ok People</small></span>
+    </a>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span class="role-pill ponente">Ponente</span>
+      <button class="btn btn-ghost btn-sm" onclick="mjhtLogout()">Salir</button>
+    </div>
+  </div>
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="t-inicio">Inicio</button>
+    <button class="tab-btn" data-tab="t-modulo">Mi módulo</button>
+    <button class="tab-btn" data-tab="t-semblanza">Mi semblanza</button>
+    <button class="tab-btn" data-tab="t-materiales">Compartir materiales</button>
+    <button class="tab-btn" data-tab="t-calendario">Calendario general</button>
+    <button class="tab-btn" data-tab="t-lineamientos">Lineamientos</button>
+    <button class="tab-btn" data-tab="t-contacto">Contacto</button>
+  </nav>
+</div>
+
+<main class="wrap">
+
+  <!-- INICIO -->
+  <section class="tab-panel active" id="t-inicio">
+    <div class="section-head">
+      <span class="eyebrow">Bienvenida</span>
+      <h2>Gracias por ser parte de Mujer, Haz lo Tuyo 💛</h2>
+      <p>Este espacio es para ti como especialista del diplomado. Aquí encuentras la información de tu módulo, el calendario completo del programa, y el lugar para compartir tu semblanza y tu presentación.</p>
+    </div>
+    <div class="grid grid-3">
+      <div class="stat"><b>10</b><span>módulos · 9 especialistas</span></div>
+      <div class="stat"><b>5 hrs</b><span>por módulo, viernes 9:00–14:00</span></div>
+      <div class="stat"><b>CCE</b><span>Club de Empresarios, Torre Inxignia</span></div>
+    </div>
+    <div class="callout" style="margin-top:20px;">
+      Empieza por la pestaña <b>Mi módulo</b> para confirmar tu fecha, y no olvides dejar tu <b>semblanza</b> para el directorio del grupo.
+    </div>
+  </section>
+
+  <!-- MI MODULO -->
+  <section class="tab-panel" id="t-modulo">
+    <div class="section-head">
+      <span class="eyebrow">Tu sesión</span>
+      <h2>Mi módulo</h2>
+      <p>Selecciona tu nombre para ver los datos de tu sesión.</p>
+    </div>
+    <div class="card">
+      <label>¿Quién eres?</label>
+      <select id="sel-ponente"></select>
+      <div id="modulo-detalle" style="margin-top:18px;"></div>
+    </div>
+  </section>
+
+  <!-- SEMBLANZA -->
+  <section class="tab-panel" id="t-semblanza">
+    <div class="section-head">
+      <span class="eyebrow">Directorio de especialistas</span>
+      <h2>Mi semblanza</h2>
+      <p>Comparte tu semblanza profesional para el directorio del grupo y las participantes.</p>
+    </div>
+    <div class="card">
+      <form name="semblanzas-ponentes" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+        <input type="hidden" name="form-name" value="semblanzas-ponentes">
+        <input type="hidden" name="perfil" value="ponente">
+        <p class="hp-field"><label>No llenar: <input name="bot-field"></label></p>
+        <div class="form-msg"></div>
+        <div class="field-row">
+          <div><label>Nombre *</label><input type="text" name="nombre" required></div>
+          <div><label>Módulo que impartes *</label>
+            <select name="modulo" id="sel-modulo-semblanza" required></select>
+          </div>
+        </div>
+        <label>Semblanza profesional *</label>
+        <textarea name="semblanza" required placeholder="Trayectoria, especialidad, un par de logros representativos."></textarea>
+        <div class="field-row">
+          <div><label>Liga a foto (Drive, Canva, etc.)</label><input type="text" name="foto_url" placeholder="https://"></div>
+          <div><label>Redes / LinkedIn / sitio web</label><input type="text" name="redes"></div>
+        </div>
+        <button class="btn btn-primary" type="submit">Enviar mi semblanza</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- MATERIALES -->
+  <section class="tab-panel" id="t-materiales">
+    <div class="section-head">
+      <span class="eyebrow">Tu presentación</span>
+      <h2>Compartir materiales</h2>
+      <p>Sube tu presentación (PDF, máx. ~8 MB) o pega la liga a tu material en Drive/Canva. Rubí lo publica en el módulo correspondiente para las asistentes.</p>
+    </div>
+    <div class="card">
+      <form name="materiales-ponente" method="POST" data-netlify="true" netlify-honeypot="bot-field" enctype="multipart/form-data">
+        <input type="hidden" name="form-name" value="materiales-ponente">
+        <p class="hp-field"><label>No llenar: <input name="bot-field"></label></p>
+        <div class="form-msg"></div>
+        <div class="field-row">
+          <div><label>Nombre *</label><input type="text" name="nombre" required></div>
+          <div><label>Módulo *</label>
+            <select name="modulo" id="sel-modulo-materiales" required></select>
+          </div>
+        </div>
+        <label>Liga a tu material (Drive, Canva, etc.) — opcional si subes archivo</label>
+        <input type="text" name="link" placeholder="https://">
+        <label>O sube tu archivo</label>
+        <input type="file" name="archivo" accept=".pdf,.ppt,.pptx,.key">
+        <p class="file-hint">Los envíos con archivo llegan al panel de formularios de Netlify; si tu archivo es muy pesado, mejor comparte la liga.</p>
+        <button class="btn btn-primary" type="submit">Enviar material</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- CALENDARIO -->
+  <section class="tab-panel" id="t-calendario">
+    <div class="section-head">
+      <span class="eyebrow">Programa completo</span>
+      <h2>Calendario general</h2>
+      <p>Así se ve el diplomado completo — te ayuda a ubicar tu sesión dentro del recorrido general del grupo.</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>No.</th><th>Fecha</th><th>Módulo</th><th>Eje</th><th>Ponente</th></tr></thead>
+        <tbody id="cal-body"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- LINEAMIENTOS -->
+  <section class="tab-panel" id="t-lineamientos">
+    <div class="section-head">
+      <span class="eyebrow">Logística</span>
+      <h2>Lineamientos para tu sesión</h2>
+    </div>
+    <div class="grid grid-2">
+      <div class="card">
+        <h4>Formato de la sesión</h4>
+        <p>Cada módulo dura <b>5 horas</b>, viernes de <b>9:00 a 14:00 hrs</b>, en el Club de Empresarios (CCE), Torre Inxignia. El grupo es de hasta 20 mujeres.</p>
+      </div>
+      <div class="card">
+        <h4>Antes de tu sesión</h4>
+        <p>Comparte tu semblanza y tu presentación al menos <b>5 días antes</b> de tu módulo, para que Rubí pueda publicarlos a tiempo para el grupo.</p>
+      </div>
+      <div class="card">
+        <h4>El día de tu sesión</h4>
+        <p>Llega 20 minutos antes. Hay coffee break programado a media sesión. Rubí o la coordinadora te reciben y te acompañan con el setup.</p>
+      </div>
+      <div class="card">
+        <h4>Después de tu sesión</h4>
+        <p>El feedback de las participantes se recopila por este mismo dashboard. Rubí te comparte un resumen de tu sesión por correo o WhatsApp en los días siguientes.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACTO -->
+  <section class="tab-panel" id="t-contacto">
+    <div class="section-head">
+      <span class="eyebrow">¿Dudas?</span>
+      <h2>Contacto</h2>
+    </div>
+    <div class="card">
+      <p><b>Rubí Zepeda · The OK People</b></p>
+      <p style="margin-bottom:4px;">✉️ <a href="mailto:hazlotuyo@theokpeople.com">hazlotuyo@theokpeople.com</a></p>
+      <p style="margin-bottom:0;">📱 222 114 1168</p>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <span>© 2026 The Ok People · Mujer, Haz lo Tuyo</span>
+    <span><a href="mailto:hazlotuyo@theokpeople.com">hazlotuyo@theokpeople.com</a> · 222 114 1168</span>
+  </div>
+</footer>
+
+<script src="../assets/js/auth.js"></script>
+<script>mjhtGuard("ponente");</script>
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/app.js"></script>
+<script>
+  function pill(m){
+    if(m.eje==="cierre") return '<span class="tag cierre">Cierre</span>';
+    return '<span class="tag eje'+m.eje+'">'+EJE_LABEL[m.eje]+'</span>';
+  }
+
+  // Calendario general
+  const calBody = document.getElementById("cal-body");
+  MODULOS.forEach(m=>{
+    const num = typeof m.id === "number" ? String(m.id).padStart(2,"0") : "🍷";
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${num}</td><td>${m.fechaLabel}</td>
+      <td><b>${m.tema}</b><br><small style="color:var(--gris-claro)">${m.subtitulo}</small></td>
+      <td>${pill(m)}</td><td>${m.ponente}</td>`;
+    calBody.appendChild(tr);
+  });
+
+  // Selector "Mi módulo"
+  const ponentesUnicos = [...new Set(MODULOS.map(m=>m.ponente))];
+  const selPonente = document.getElementById("sel-ponente");
+  selPonente.innerHTML = '<option value="">Selecciona tu nombre…</option>' +
+    ponentesUnicos.map(p=>`<option value="${p}">${p}</option>`).join("");
+  selPonente.addEventListener("change", ()=>{
+    const detalle = document.getElementById("modulo-detalle");
+    const sesiones = MODULOS.filter(m=>m.ponente===selPonente.value);
+    if(!sesiones.length){ detalle.innerHTML=""; return; }
+    detalle.innerHTML = sesiones.map(m=>`
+      <div class="card">
+        ${pill(m)}
+        <h3 style="margin-top:10px;">${m.tema}</h3>
+        <p style="color:var(--gris-claro);margin-bottom:14px;">${m.subtitulo}</p>
+        <p style="margin-bottom:4px;"><b>Fecha:</b> ${m.fechaLabel} · 9:00–14:00 hrs</p>
+        <p style="margin-bottom:4px;"><b>Sede:</b> Club de Empresarios (CCE), Torre Inxignia</p>
+        <p style="margin-bottom:0;"><b>Descripción:</b> ${m.descripcion}</p>
+      </div>`).join("");
+  });
+
+  // Selects de módulo en formularios
+  ["sel-modulo-semblanza","sel-modulo-materiales"].forEach(id=>{
+    const sel = document.getElementById(id);
+    MODULOS.forEach(m=>{
+      const opt = document.createElement("option");
+      opt.value = `${m.id} - ${m.tema}`;
+      opt.textContent = `${typeof m.id==="number"?"Módulo "+m.id:"Cierre"} · ${m.tema} (${m.ponente})`;
+      sel.appendChild(opt);
+    });
+  });
+</script>
+</body>
+</html>

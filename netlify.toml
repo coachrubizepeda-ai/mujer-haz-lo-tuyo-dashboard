@@ -1,0 +1,13 @@
+[build]
+  publish = "."
+
+# Sitio 100% estático — no requiere comando de build.
+# Los formularios (data-netlify="true") se detectan automáticamente
+# al desplegar porque están escritos como HTML plano en cada página
+# y replicados en index.html para que Netlify los indexe siempre.
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"

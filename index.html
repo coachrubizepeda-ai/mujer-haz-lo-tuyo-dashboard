@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mujer, Haz lo Tuyo — Dashboard del diplomado</title>
+<meta name="description" content="Acceso al dashboard del diplomado Mujer, Haz lo Tuyo · The Ok People">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E%F0%9F%92%9B%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<header style="padding:26px 0;">
+  <div class="wrap" style="display:flex;justify-content:space-between;align-items:center;">
+    <a class="logo" href="index.html">
+      <span class="mark">Ok</span>
+      <span class="word"><b>Mujer,</b> haz lo tuyo<small>The Ok People</small></span>
+    </a>
+    <a class="btn btn-outline btn-sm" href="https://theokpeople.com/hazlotuyo" target="_blank" rel="noopener">Sitio público ↗</a>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap-narrow">
+      <span class="tag">Diplomado · Edición Matutina CANACINTRA</span>
+      <h1>Identidad, presencia y estrategia para mujeres que lideran.</h1>
+      <p class="lead">Este es el espacio del diplomado: aquí encuentras tu calendario, materiales, cuestionarios y todo lo que necesitas — sin importar si eres asistente, ponente o parte de la organización.</p>
+      <div class="eje-strip">
+        <span class="tag eje1">Identidad y presencia</span>
+        <span class="tag eje2">Comunicación y marca personal</span>
+        <span class="tag eje3">Finanzas, tecnología e IA</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap">
+    <div class="role-grid">
+
+      <!-- ASISTENTE -->
+      <div class="role-card" data-role="asistente">
+        <div class="icon">🌿</div>
+        <h3>Soy asistente</h3>
+        <p>Registro, semblanza, calendario, materiales, cuestionarios y feedback de cada sesión.</p>
+        <button class="btn btn-primary btn-block toggle-pass" data-role="asistente">Entrar</button>
+        <div class="pass-box" id="box-asistente">
+          <form class="login-form" data-role="asistente">
+            <input type="password" placeholder="Contraseña de asistentes" required>
+            <p class="role-error" id="err-asistente">Contraseña incorrecta. Intenta de nuevo.</p>
+            <button type="submit" class="btn btn-accent btn-block">Ingresar al portal</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- PONENTE -->
+      <div class="role-card" data-role="ponente">
+        <div class="icon">🎤</div>
+        <h3>Soy ponente</h3>
+        <p>Tu módulo, tu semblanza, lineamientos de sesión y espacio para compartir tu presentación.</p>
+        <button class="btn btn-primary btn-block toggle-pass" data-role="ponente">Entrar</button>
+        <div class="pass-box" id="box-ponente">
+          <form class="login-form" data-role="ponente">
+            <input type="password" placeholder="Contraseña de ponentes" required>
+            <p class="role-error" id="err-ponente">Contraseña incorrecta. Intenta de nuevo.</p>
+            <button type="submit" class="btn btn-accent btn-block">Ingresar al portal</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- ADMIN -->
+      <div class="role-card" data-role="admin">
+        <div class="icon">🗂️</div>
+        <h3>Soy Rubí (admin)</h3>
+        <p>Resumen del programa, formularios recibidos, directorio, modelo financiero y checklist.</p>
+        <button class="btn btn-primary btn-block toggle-pass" data-role="admin">Entrar</button>
+        <div class="pass-box" id="box-admin">
+          <form class="login-form" data-role="admin">
+            <input type="password" placeholder="Contraseña de administradora" required>
+            <p class="role-error" id="err-admin">Contraseña incorrecta. Intenta de nuevo.</p>
+            <button type="submit" class="btn btn-accent btn-block">Ingresar al portal</button>
+          </form>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="callout" style="max-width:640px;margin:0 auto 40px;text-align:center;">
+      ¿Se te olvidó tu contraseña? Escribe a <a href="mailto:hazlotuyo@theokpeople.com">hazlotuyo@theokpeople.com</a> o al 222&nbsp;114&nbsp;1168.
+    </div>
+  </section>
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <span>© 2026 The Ok People · Mujer, Haz lo Tuyo</span>
+    <span><a href="mailto:hazlotuyo@theokpeople.com">hazlotuyo@theokpeople.com</a> · 222 114 1168 · @MujerHazLoTuyo</span>
+  </div>
+</footer>
+
+<!-- Formularios ocultos: réplica estática para que Netlify los detecte al desplegar -->
+<div style="display:none" aria-hidden="true">
+  <form name="registro-asistentes" data-netlify="true" netlify-honeypot="bot-field"><input name="nombre"><input name="empresa"><input name="cargo"><input name="telefono"><input name="email"><input name="entero"><textarea name="comentarios"></textarea></form>
+  <form name="semblanzas" data-netlify="true" netlify-honeypot="bot-field"><input name="perfil"><input name="nombre"><textarea name="semblanza"></textarea><input name="foto_url"><input name="redes"></form>
+  <form name="test-confirmacion" data-netlify="true" netlify-honeypot="bot-field"><input name="nombre"><input name="estilo"></form>
+  <form name="cuestionario-previo" data-netlify="true" netlify-honeypot="bot-field"><input name="nombre"><input name="modulo"><textarea name="expectativas"></textarea><textarea name="enfoque"></textarea><textarea name="dudas"></textarea></form>
+  <form name="feedback-sesion" data-netlify="true" netlify-honeypot="bot-field"><input name="nombre"><input name="modulo"><input name="calificacion"><textarea name="me_llevo"></textarea><textarea name="mejoraria"></textarea></form>
+  <form name="materiales-ponente" data-netlify="true" netlify-honeypot="bot-field" enctype="multipart/form-data"><input name="nombre"><input name="modulo"><input name="link"><input type="file" name="archivo"></form>
+</div>
+
+<script src="assets/js/auth.js"></script>
+<script>
+  // Abre la caja de contraseña del rol correspondiente
+  document.querySelectorAll(".toggle-pass").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const box = document.getElementById("box-"+btn.dataset.role);
+      const isOpen = box.classList.contains("show");
+      document.querySelectorAll(".pass-box").forEach(b=>b.classList.remove("show"));
+      if(!isOpen){ box.classList.add("show"); box.querySelector("input").focus(); }
+    });
+  });
+
+  document.querySelectorAll(".login-form").forEach(form=>{
+    form.addEventListener("submit", (e)=>{
+      e.preventDefault();
+      const rol = form.dataset.role;
+      const pass = form.querySelector("input[type=password]").value;
+      const err = document.getElementById("err-"+rol);
+      if(mjhtLogin(rol, pass)){
+        location.href = ACCESOS[rol].home;
+      }else{
+        err.classList.add("show");
+      }
+    });
+  });
+
+  // Si venimos de un portal por falta de sesión, abre directo su caja
+  const params = new URLSearchParams(location.search);
+  const rolParam = params.get("rol");
+  if(rolParam && document.getElementById("box-"+rolParam)){
+    document.getElementById("box-"+rolParam).classList.add("show");
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+Sube aquí los PDF de cada presentación con este nombre exacto
+(coincide con lo que apunta assets/js/data.js):
+
+modulo-01.pdf
+modulo-02.pdf
+modulo-03.pdf
+modulo-04.pdf
+modulo-05.pdf
+modulo-06.pdf
+modulo-07.pdf
+modulo-08.pdf
+modulo-09.pdf
+modulo-10.pdf
+
+Si un módulo no tiene presentación todavía, no pasa nada:
+el botón de descarga solo se muestra cuando el archivo existe
+en data.js. Puedes subir los PDF después, en cualquier momento,
+sin tocar el resto del sitio.
