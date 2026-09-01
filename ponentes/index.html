@@ -123,6 +123,31 @@
       <p>Se arma automáticamente con las respuestas que ya estén cargadas.</p>
     </div>
     <div id="perfil-grupal"></div>
+
+    <div class="section-head" style="margin-top:34px;">
+      <span class="eyebrow">Test Trimetrix</span>
+      <h2>Subir resultado de test de una asistente</h2>
+      <p>Cuando tengas el archivo de resultados de una participante, súbelo aquí para que quede registrado.</p>
+    </div>
+    <div class="card">
+      <div class="callout" style="margin-bottom:16px;">
+        Los archivos subidos aquí los gestiona la administradora para publicarlos en el resultado de cada asistente — Netlify Forms no expone los archivos automáticamente en este portal.
+      </div>
+      <form name="resultado-test-asistente" method="POST" data-netlify="true" netlify-honeypot="bot-field" enctype="multipart/form-data">
+        <input type="hidden" name="form-name" value="resultado-test-asistente">
+        <p class="hp-field"><label>No llenar: <input name="bot-field"></label></p>
+        <div class="form-msg"></div>
+        <div class="field-row">
+          <div><label>Tu nombre (facilitador) *</label><input type="text" name="ponente_nombre" required></div>
+          <div><label>Nombre de la asistente *</label>
+            <select name="nombre_asistente" id="sel-asistente-resultado" required></select>
+          </div>
+        </div>
+        <label>Archivo de resultados (PDF) *</label>
+        <input type="file" name="archivo" accept=".pdf" required>
+        <button class="btn btn-primary" type="submit">Enviar resultado</button>
+      </form>
+    </div>
   </section>
 
   <!-- Formulario oculto: guarda en Netlify Forms cada respuesta pegada, para el registro de Rubí -->
@@ -221,7 +246,7 @@
     <div id="cal-legend"></div>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>No.</th><th>Fecha</th><th>Módulo</th><th>Eje</th><th>Facilitador</th></tr></thead>
+        <thead><tr><th>No.</th><th>Fecha</th><th>Módulo</th><th>Grupo</th><th>Facilitador</th></tr></thead>
         <tbody id="cal-body"></tbody>
       </table>
     </div>
@@ -282,27 +307,22 @@
   renderCourseProgress("course-progress");
 
   function pill(m){
-    if(m.eje==="cierre") return '<span class="tag cierre">Cierre</span>';
-    return '<span class="tag eje'+m.eje+'">'+EJE_LABEL[m.eje]+'</span>';
+    return '<span class="tag grp-'+m.grupo+'">'+GRUPO_LABEL[m.grupo]+'</span>';
   }
 
   // Calendario general
   const calBody = document.getElementById("cal-body");
   document.getElementById("cal-legend").innerHTML = calendarLegendHTML();
-  buildCalendarRows().forEach(m=>{
-    const tr = document.createElement("tr");
-    tr.className = "rango-"+rangoDeFecha(m.fecha);
+  renderCalendarBody(calBody, m=>{
     if(m.tipo==="especial"){
-      tr.innerHTML = `<td>—</td><td>${m.fechaLabel}<br><small style="color:var(--gris-claro)">${m.horario}</small></td>
-        <td><b>${m.tema}</b></td><td>Sesión especial</td><td>Facilitadora: ${m.facilitadora}</td>`;
-    } else {
-      const num = moduloNum(m);
-      tr.innerHTML = `<td>${num}</td><td>${m.fechaLabel}</td>
-        <td><b>${m.tema}</b><br><small style="color:var(--gris-claro)">${m.subtitulo}</small></td>
-        <td>${m.eje==="cierre"?"Cierre":EJE_LABEL[m.eje]}</td><td>${m.ponente}</td>`;
+      return `<td>—</td><td>${m.fechaLabel}<br><small style="color:var(--gris-claro)">${m.horario}</small></td>
+        <td><b>${m.tema}</b></td><td>${GRUPO_LABEL[m.grupo]}</td><td>Facilitadora: ${m.facilitadora}</td>`;
     }
-    calBody.appendChild(tr);
-  });
+    const num = moduloNum(m);
+    return `<td>${num}</td><td>${m.fechaLabel}</td>
+        <td><b>${m.tema}</b><br><small style="color:var(--gris-claro)">${m.subtitulo}</small></td>
+        <td>${GRUPO_LABEL[m.grupo]}</td><td>${m.ponente}</td>`;
+  }, 5);
 
   // Selector "Mi módulo"
   const ponentesUnicos = [...new Set(MODULOS.map(m=>m.ponente))];
@@ -327,6 +347,15 @@
         </div>
       </div>`).join("");
   });
+
+  // Select de asistentes para "Subir resultado de test"
+  const selAsistenteResultado = document.getElementById("sel-asistente-resultado");
+  if(typeof ASISTENTES !== "undefined" && ASISTENTES.length){
+    selAsistenteResultado.innerHTML = '<option value="">Selecciona…</option>' +
+      ASISTENTES.map(a=>`<option value="${a.nombre}">${a.nombre}</option>`).join("");
+  } else {
+    selAsistenteResultado.outerHTML = '<input type="text" name="nombre_asistente" id="sel-asistente-resultado" placeholder="Nombre de la asistente" required>';
+  }
 
   // Selects de módulo en formularios
   ["sel-modulo-semblanza","sel-modulo-materiales","sel-modulo-asistencia"].forEach(id=>{

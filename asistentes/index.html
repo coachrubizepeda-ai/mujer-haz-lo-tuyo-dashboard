@@ -41,7 +41,7 @@
     <button class="tab-btn" data-tab="t-ponentes">Facilitadores</button>
     <button class="tab-btn" data-tab="t-cuestionario">Cuestionario previo</button>
     <button class="tab-btn" data-tab="t-feedback">Feedback</button>
-    <button class="tab-btn" data-tab="t-acceso">Acceso</button>
+    <button class="tab-btn" data-tab="t-acceso">Acceso a instalaciones</button>
     <button class="tab-btn" data-tab="t-contacto">Contacto</button>
   </nav>
 </aside>
@@ -49,21 +49,16 @@
 <div class="main-col">
 <main class="wrap">
 
-  <!-- INICIO -->
+  <!-- INICIO: solo avance del diplomado + datos generales del grupo -->
   <section class="tab-panel active" id="t-inicio">
     <div class="section-head">
-      <span class="eyebrow">Bienvenida</span>
-      <h2>Hola, qué gusto tenerte aquí</h2>
-      <p>Este es tu espacio dentro del diplomado <b>Mujer, Haz lo Tuyo</b>. Aquí vas a encontrar todo lo que necesitas para cada sesión: tu registro, calendario, materiales, cuestionarios y espacio de feedback.</p>
+      <span class="eyebrow">Tu espacio</span>
+      <h2>Mujer, Haz lo Tuyo</h2>
     </div>
 
     <div id="course-progress" class="course-progress"></div>
 
-    <div class="grid grid-3" style="margin-bottom:24px;">
-      <div class="stat"><b>10</b><span>módulos + cierre de generación</span></div>
-      <div class="stat"><b>50</b><span>horas totales del programa</span></div>
-      <div class="stat"><b id="prox-fecha">—</b><span id="prox-modulo">próxima sesión</span></div>
-    </div>
+    <div class="stat" style="margin-bottom:24px;"><b id="prox-fecha">—</b><span id="prox-modulo">próxima sesión</span></div>
 
     <div class="card">
       <h4>Datos generales de tu grupo</h4>
@@ -75,10 +70,6 @@
         <a class="btn btn-outline btn-sm" href="https://maps.app.goo.gl/ztEceM1G5nqtjuRw8" target="_blank" rel="noopener"><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>Abrir en Google Maps</a>
         <a class="btn btn-outline btn-sm" href="https://waze.com/ul?q=Club%20de%20Empresarios%20Torre%20Inxignia" target="_blank" rel="noopener"><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>Abrir en Waze</a>
       </div>
-    </div>
-
-    <div class="callout" style="margin-top:20px;">
-      Antes de tu primera sesión: completa tu <b>registro</b>, tu <b>semblanza</b> y el <b>Test Trimetrix</b> en las pestañas de arriba. Le sirve a Rubí y a los facilitadores para conocerte mejor.
     </div>
   </section>
 
@@ -115,6 +106,8 @@
             </select>
           </div>
         </div>
+        <label>Redes sociales</label>
+        <input type="text" name="redes_sociales" placeholder="Instagram, LinkedIn, etc.">
         <label>¿Algo que quieras que sepamos antes de empezar? (alergias, necesidades, comentarios)</label>
         <textarea name="comentarios" placeholder="Opcional"></textarea>
         <button class="btn btn-primary" type="submit">Enviar mi registro</button>
@@ -126,25 +119,18 @@
   <section class="tab-panel" id="t-semblanza">
     <div class="section-head">
       <span class="eyebrow">Paso 2</span>
-      <h2>Mi semblanza y perfil</h2>
-      <p>Una breve presentación tuya para el directorio del grupo. No necesita ser perfecta — con 4 o 5 líneas es suficiente. Si tienes tu currículum a la mano, puedes subirlo también.</p>
+      <h2>Mi semblanza</h2>
+      <p>Una breve presentación tuya para el directorio del grupo. No necesita ser perfecta — con 4 o 5 líneas es suficiente.</p>
     </div>
     <div class="card">
-      <form name="semblanzas" method="POST" data-netlify="true" netlify-honeypot="bot-field" enctype="multipart/form-data">
+      <form name="semblanzas" method="POST" data-netlify="true" netlify-honeypot="bot-field">
         <input type="hidden" name="form-name" value="semblanzas">
         <input type="hidden" name="perfil" value="asistente">
         <p class="hp-field"><label>No llenar: <input name="bot-field"></label></p>
         <div class="form-msg"></div>
         <label>Nombre *</label><input type="text" name="nombre" required>
         <label>Semblanza *</label>
-        <textarea name="semblanza" required placeholder="Cuéntanos quién eres, a qué te dedicas y qué te trae a este diplomado."></textarea>
-        <div class="field-row">
-          <div><label>Liga a foto (Drive, Canva, etc.) — opcional</label><input type="text" name="foto_url" placeholder="https://"></div>
-          <div><label>LinkedIn — opcional</label><input type="text" name="redes" placeholder="https://linkedin.com/in/..."></div>
-        </div>
-        <label>Subir currículum (PDF) — opcional</label>
-        <input type="file" name="cv" accept=".pdf,.doc,.docx">
-        <p class="file-hint">Si Rubí ya tiene tu información porque se la compartiste por otro medio, no necesitas volver a subirla aquí.</p>
+        <textarea name="semblanza" required placeholder="Escribe aquí tu semblanza"></textarea>
         <button class="btn btn-primary" type="submit">Enviar mi semblanza</button>
       </form>
     </div>
@@ -158,30 +144,11 @@
       <p>Cada participante inicia el diplomado con un test de análisis de comportamiento, motivadores e inteligencia emocional para ampliar su autoconocimiento en estos conceptos.</p>
     </div>
     <div class="card">
-      <h4>¿Cómo funciona?</h4>
-      <p>Se te compartirá la liga de acceso de tu test por correo antes del Módulo 1. Tus resultados son confidenciales. Al realizarlo se te envían por el mismo medio para que puedas realizar una lectura de las siguientes secciones:</p>
-      <ol style="padding-left:20px;margin:0 0 6px;">
-        <li>Introducción – Comportamientos (pág. 5)</li>
-        <li>Características Generales (pág. 6–7)</li>
-        <li>Valores que Aporta a la Organización (pág. 8)
-          <p style="font-style:italic;font-size:.82rem;color:var(--gris-claro);margin:6px 0 0;">Aquí "organización" no se refiere solo a un trabajo formal: aplica a cualquier sistema al que perteneces — tu empresa, tu familia, tu comunidad. Todas estamos inmersas en algún entorno social donde esto aplica.</p>
-        </li>
-        <li>Percepciones – Cómo te Ven los Demás (pág. 12)</li>
-        <li>Descriptores (pág. 14)</li>
-      </ol>
-      <p style="font-size:.82rem;color:var(--gris-claro);margin:8px 0 18px;">Nota: Las páginas pueden variar en cada test, son solo como referencia. Es mejor que te bases en los títulos.</p>
-      <a class="btn btn-accent" href="mailto:hazlotuyo@theokpeople.com?subject=No%20he%20recibido%20mi%20liga%20del%20test">Aún no recibo mi liga →</a>
-    </div>
-    <div class="card">
-      <h4>Ya contesté mi test</h4>
-      <p>Avísanos aquí para llevar el control de quién ya lo completó.</p>
-      <form name="test-confirmacion" method="POST" data-netlify="true" netlify-honeypot="bot-field">
-        <input type="hidden" name="form-name" value="test-confirmacion">
-        <p class="hp-field"><label>No llenar: <input name="bot-field"></label></p>
-        <div class="form-msg"></div>
-        <label>Nombre *</label><input type="text" name="nombre" required>
-        <button class="btn btn-primary" type="submit">Confirmar que ya lo contesté</button>
-      </form>
+      <h4>Tus resultados</h4>
+      <p>Rubí te comparte por correo, antes del Módulo 1, la liga para contestar tu test y la guía de lectura de tus resultados. Cuando tu facilitadora suba tu archivo de resultados, lo vas a poder descargar aquí.</p>
+      <label>¿Quién eres?</label>
+      <select id="sel-nombre-resultado"></select>
+      <div id="resultado-test" style="margin-top:14px;"></div>
     </div>
   </section>
 
@@ -195,7 +162,7 @@
     <div id="cal-legend"></div>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>No.</th><th>Fecha</th><th>Módulo</th><th>Eje</th><th>Facilitador</th></tr></thead>
+        <thead><tr><th>No.</th><th>Fecha</th><th>Módulo</th><th>Grupo</th><th>Facilitador</th></tr></thead>
         <tbody id="cal-body"></tbody>
       </table>
     </div>
@@ -230,7 +197,7 @@
   <section class="tab-panel" id="t-ponentes">
     <div class="section-head">
       <span class="eyebrow">Especialistas del diplomado</span>
-      <h2>Facilitadores</h2>
+      <h2>Semblanza de facilitadores</h2>
       <p>Conoce a quienes facilitan cada módulo y síguelos en redes si quieres seguir aprendiendo de ellos.</p>
     </div>
     <div id="ponentes-list" class="grid grid-2"></div>
@@ -304,7 +271,7 @@
   <section class="tab-panel" id="t-acceso">
     <div class="section-head">
       <span class="eyebrow">Antes de llegar</span>
-      <h2>Estacionamiento y acceso a instalaciones</h2>
+      <h2>Acceso a instalaciones</h2>
     </div>
     <div class="card">
       <h4>Estacionamiento</h4>
@@ -364,26 +331,20 @@
     const fecha = new Date(m.fecha+"T09:00:00");
     if(!proximo && fecha >= hoy) proximo = m;
   });
-  buildCalendarRows().forEach(m=>{
-    const tr = document.createElement("tr");
-    const rango = rangoDeFecha(m.fecha);
-    const esPasado = m.tipo==="modulo" && new Date(m.fecha+"T09:00:00") < hoy;
-    tr.className = "rango-"+rango + (esPasado ? " past" : "");
+  renderCalendarBody(calBody, m=>{
     if(m.tipo==="especial"){
-      tr.innerHTML = `<td>—</td>
+      return `<td>—</td>
         <td>${m.fechaLabel}<br><small style="color:var(--gris-claro)">${m.horario}</small></td>
         <td><b>${m.tema}</b></td>
-        <td>Sesión especial</td>
+        <td>${GRUPO_LABEL[m.grupo]}</td>
         <td>Facilitadora: ${m.facilitadora}</td>`;
-    } else {
-      tr.innerHTML = `<td>${moduloNum(m)}</td>
+    }
+    return `<td>${moduloNum(m)}</td>
         <td>${m.fechaLabel}</td>
         <td><b>${m.tema}</b><br><small style="color:var(--gris-claro)">${m.subtitulo}</small></td>
-        <td>${m.eje==="cierre"?"Cierre":EJE_LABEL[m.eje]}</td>
+        <td>${GRUPO_LABEL[m.grupo]}</td>
         <td>${m.ponente}</td>`;
-    }
-    calBody.appendChild(tr);
-  });
+  }, 5);
   if(proximo){
     document.getElementById("prox-fecha").textContent = proximo.fechaLabel;
     document.getElementById("prox-modulo").textContent = proximo.tema;
@@ -454,6 +415,37 @@
       sel.appendChild(opt);
     });
   });
+
+  // ---------- Test Trimetrix: "Tus resultados" ----------
+  // Lee de RESULTADOS_TEST (assets/js/data.js), keyed por nombre exacto del
+  // roster. La administradora la llena a mano una vez que el facilitador le
+  // hace llegar el archivo (ver el formulario "resultado-test-asistente"
+  // en el portal de facilitadores). Mientras tanto, muestra el aviso de
+  // pendiente para cada asistente.
+  const selNombreResultado = document.getElementById("sel-nombre-resultado");
+  const resultadoTestWrap = document.getElementById("resultado-test");
+  const nombresRoster = (typeof ASISTENTES !== "undefined" && ASISTENTES.length)
+    ? ASISTENTES.map(a=>a.nombre)
+    : [];
+  if(nombresRoster.length){
+    selNombreResultado.innerHTML = '<option value="">Selecciona tu nombre…</option>' +
+      nombresRoster.map(n=>`<option value="${n}">${n}</option>`).join("");
+  } else {
+    selNombreResultado.outerHTML = '<input type="text" id="sel-nombre-resultado" placeholder="Escribe tu nombre completo">';
+  }
+  function mostrarResultadoTest(){
+    const el = document.getElementById("sel-nombre-resultado");
+    const nombre = el.value.trim();
+    if(!nombre){ resultadoTestWrap.innerHTML = ""; return; }
+    const liga = typeof RESULTADOS_TEST !== "undefined" ? RESULTADOS_TEST[nombre] : null;
+    resultadoTestWrap.innerHTML = liga
+      ? `<a class="btn btn-primary" href="${liga}" target="_blank" rel="noopener">Descargar mi resultado ↓</a>`
+      : `<div class="callout warn">Aún no se ha subido tu resultado. En cuanto tu facilitadora lo suba, vas a poder descargarlo aquí.</div>`;
+  }
+  document.getElementById("sel-nombre-resultado").addEventListener(
+    document.getElementById("sel-nombre-resultado").tagName === "SELECT" ? "change" : "input",
+    mostrarResultadoTest
+  );
 </script>
 </body>
 </html>

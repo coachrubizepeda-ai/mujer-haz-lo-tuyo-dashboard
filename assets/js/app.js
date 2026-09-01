@@ -108,8 +108,10 @@ function moduloNum(m){
 }
 
 /* ============================================================
-   Calendario: filas combinadas (módulos + sesión especial) y
-   color por rango de fechas (reemplaza el coloreado por "eje").
+   Calendario: filas combinadas (módulos + sesión especial),
+   agrupadas visualmente por "grupo" (Identidad Interna / Proyección
+   y marca personal / Estrategia / Experiencia de cierre) en lugar
+   del antiguo "Eje 1/2/3" o el color por rango de fechas.
    ============================================================ */
 function buildCalendarRows(){
   const rows = (typeof MODULOS !== "undefined" ? MODULOS : []).map(m=>Object.assign({tipo:"modulo"}, m));
@@ -120,24 +122,45 @@ function buildCalendarRows(){
   return rows;
 }
 
-const RANGO_LABEL = {
-  a: "4 – 25 de septiembre",
-  b: "2 – 23 de octubre",
-  c: "30 de octubre – 13 de noviembre"
-};
-
-function rangoDeFecha(fechaISO){
-  if(fechaISO <= "2026-09-25") return "a";
-  if(fechaISO <= "2026-10-23") return "b";
-  return "c";
+function calendarLegendHTML(){
+  const grupos = typeof GRUPO_LABEL !== "undefined" ? GRUPO_LABEL : {};
+  return `<div class="cal-legend">
+    <span class="cal-legend-item"><span class="dot dot-identidad"></span>${grupos.identidad||""}</span>
+    <span class="cal-legend-item"><span class="dot dot-proyeccion"></span>${grupos.proyeccion||""}</span>
+    <span class="cal-legend-item"><span class="dot dot-estrategia"></span>${grupos.estrategia||""}</span>
+    <span class="cal-legend-item"><span class="dot dot-cierre"></span>${grupos.cierre||""}</span>
+  </div>`;
 }
 
-function calendarLegendHTML(){
-  return `<div class="cal-legend">
-    <span class="cal-legend-item"><span class="dot dot-a"></span>${RANGO_LABEL.a}</span>
-    <span class="cal-legend-item"><span class="dot dot-b"></span>${RANGO_LABEL.b}</span>
-    <span class="cal-legend-item"><span class="dot dot-c"></span>${RANGO_LABEL.c}</span>
-  </div>`;
+// Dibuja el cuerpo de una tabla de calendario con un encabezado de grupo
+// (con borde/fondo de color de marca) cada vez que cambia el grupo, y una
+// clase por fila para el marco de color y la tipografía distinta de la
+// sesión especial. `buildCells(fila)` regresa el HTML interno de las <td>
+// de esa fila (sin la etiqueta <tr>).
+function renderCalendarBody(tbody, buildCells, colspan){
+  if(!tbody) return;
+  tbody.innerHTML = "";
+  const hoy = new Date();
+  let lastGrupo = null;
+  buildCalendarRows().forEach(m=>{
+    const grupo = m.grupo || "identidad";
+    if(grupo !== lastGrupo){
+      const divider = document.createElement("tr");
+      divider.className = "cal-group-row cal-grp-"+grupo;
+      const label = (typeof GRUPO_LABEL !== "undefined" && GRUPO_LABEL[grupo]) || "";
+      divider.innerHTML = `<td colspan="${colspan}">${label}</td>`;
+      tbody.appendChild(divider);
+      lastGrupo = grupo;
+    }
+    const tr = document.createElement("tr");
+    const esPasado = m.tipo==="modulo" && new Date(m.fecha+"T09:00:00") < hoy;
+    let cls = "cal-grp-"+grupo;
+    if(esPasado) cls += " past";
+    if(m.tipo==="especial") cls += " cal-especial";
+    tr.className = cls;
+    tr.innerHTML = buildCells(m);
+    tbody.appendChild(tr);
+  });
 }
 
 /* ---------- Chips de redes sociales de un ponente ---------- */

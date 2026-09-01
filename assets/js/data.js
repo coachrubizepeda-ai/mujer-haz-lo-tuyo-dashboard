@@ -21,7 +21,9 @@ const PROGRAMA = {
   }
 };
 
-// eje: 1 = Identidad y presencia · 2 = Comunicación y marca personal · 3 = Finanzas, tecnología e IA
+// eje: campo histórico (1/2/3/"cierre"), ya no se muestra en pantalla — se
+// conserva solo por compatibilidad de datos. El agrupamiento visible en el
+// calendario usa el campo "grupo" (ver GRUPO_LABEL más abajo).
 const MODULOS = [
   {
     id: 1,
@@ -31,6 +33,7 @@ const MODULOS = [
     subtitulo: "Punto de partida",
     ponente: "Rubí Zepeda",
     eje: 1,
+    grupo: "identidad",
     descripcion: "Arranque del diplomado: diagnóstico inicial y el encuadre del viaje que viene, a partir de los resultados del Test Trimetrix (comportamiento, motivadores e inteligencia emocional).",
     lectura: "1. Introducción – Comportamientos (pág. 5)<br>2. Características Generales (pág. 6–7)<br>3. Valores que Aporta a la Organización (pág. 8)<br><i style=\"font-size:.82rem;color:var(--gris-claro)\">Aquí \"organización\" no se refiere solo a un trabajo formal: aplica a cualquier sistema al que perteneces — tu empresa, tu familia, tu comunidad. Todas estamos inmersas en algún entorno social donde esto aplica.</i><br>4. Percepciones – Cómo te Ven los Demás (pág. 12)<br>5. Descriptores (pág. 14)<br><br><small style=\"color:var(--gris-claro)\">Nota: Las páginas pueden variar en cada test, son solo como referencia. Es mejor que te bases en los títulos.</small>",
     tarea: "No aplica porque el test es previo al módulo.",
@@ -46,6 +49,7 @@ const MODULOS = [
     subtitulo: "Sanar para avanzar",
     ponente: "Rocío González",
     eje: 1,
+    grupo: "identidad",
     descripcion: "Un espacio para mirar la historia personal con honestidad y soltar lo que ya no sirve, sin juicio.",
     lectura: "Por confirmar — se actualizará antes del módulo.",
     tarea: "Por confirmar — se actualizará antes del módulo.",
@@ -61,6 +65,7 @@ const MODULOS = [
     subtitulo: "Mi presencia y proyección",
     ponente: "Rubí Zepeda",
     eje: 1,
+    grupo: "identidad",
     descripcion: "Cómo la presencia habla antes que las palabras: coherencia entre quién soy y cómo me proyecto en espacios de poder.",
     lectura: "Por confirmar — se actualizará antes del módulo.",
     tarea: "Por confirmar — se actualizará antes del módulo.",
@@ -76,6 +81,7 @@ const MODULOS = [
     subtitulo: "El cuidado de mi imagen",
     ponente: "Fernanda Domínguez",
     eje: 1,
+    grupo: "proyeccion",
     descripcion: "Imagen ejecutiva como herramienta de comunicación: los detalles que refuerzan (o restan) tu mensaje.",
     lectura: "Por confirmar — se actualizará antes del módulo.",
     tarea: "Por confirmar — se actualizará antes del módulo.",
@@ -91,6 +97,7 @@ const MODULOS = [
     subtitulo: "Transforma tu vida",
     ponente: "Luzmy Flores",
     eje: 1,
+    grupo: "proyeccion",
     descripcion: "Bienestar físico como base de la energía y la claridad para liderar.",
     lectura: "Por confirmar — se actualizará antes del módulo.",
     tarea: "Por confirmar — se actualizará antes del módulo.",
@@ -106,6 +113,7 @@ const MODULOS = [
     subtitulo: "Mi voz consciente",
     ponente: "Felipe Ávila",
     eje: 2,
+    grupo: "proyeccion",
     descripcion: "Comunicación con propósito: cómo suena una mujer que decide cada palabra, no la que le sale por default.",
     lectura: "Por confirmar — se actualizará antes del módulo.",
     tarea: "Por confirmar — se actualizará antes del módulo.",
@@ -121,6 +129,7 @@ const MODULOS = [
     subtitulo: "Propuesta de valor y posicionamiento",
     ponente: "María Eugenia Ramos",
     eje: 2,
+    grupo: "proyeccion",
     descripcion: "Construcción de marca personal: propuesta de valor clara y posicionamiento consistente.",
     lectura: "Por confirmar — se actualizará antes del módulo.",
     tarea: "Por confirmar — se actualizará antes del módulo.",
@@ -136,6 +145,7 @@ const MODULOS = [
     subtitulo: "Decisiones que sostienen tu autonomía",
     ponente: "Georgette Hernández",
     eje: 3,
+    grupo: "estrategia",
     descripcion: "Finanzas personales y empresariales como pilar de libertad e independencia.",
     lectura: "Por confirmar — se actualizará antes del módulo.",
     tarea: "Por confirmar — se actualizará antes del módulo.",
@@ -151,6 +161,7 @@ const MODULOS = [
     subtitulo: "Uso consciente de redes y tecnología",
     ponente: "Doledt Castillo",
     eje: 3,
+    grupo: "estrategia",
     descripcion: "Redes sociales y tecnología puestas al servicio de tu marca y tu negocio, con intención.",
     lectura: "Por confirmar — se actualizará antes del módulo.",
     tarea: "Por confirmar — se actualizará antes del módulo.",
@@ -166,6 +177,7 @@ const MODULOS = [
     subtitulo: "Inteligencia artificial aplicada",
     ponente: "Alfonso Vélez",
     eje: 3,
+    grupo: "estrategia",
     descripcion: "Inteligencia artificial como herramienta de apalancamiento personal y de negocio.",
     lectura: "Por confirmar — se actualizará antes del módulo.",
     tarea: "Por confirmar — se actualizará antes del módulo.",
@@ -179,16 +191,21 @@ const MODULOS = [
     fechaLabel: "Viernes 13 nov",
     tema: "Experiencia de cierre",
     subtitulo: "Cata de vinos",
-    ponente: "Sommelier consultor María José Navarrete",
+    ponente: "María José Navarrete Sánchez",
     eje: "cierre",
+    grupo: "cierre",
     descripcion: "Cierre de generación: celebración, integración del grupo y entrega de certificados.",
     lectura: "—",
     tarea: "—",
     presentacion: null,
+    semblanza: "Sommelier consultor y educadora en vinos, certificada con el nivel 3 en vinos de la WSET con distinción. Como consultora independiente diseña cartas de vino para hoteles y restaurantes, capacita equipos de servicio y guía catas privadas y corporativas en español e inglés. Desde 2024 es docente de Enología en la Licenciatura en Gastronomía de ISU Universidad, en Puebla, y en 2025 formó parte del panel de jueces del concurso México Selection by CMB.",
     redes: { linkedin: "", instagram: "", x: "" }
   }
 ];
 
+// EJE_LABEL: campo histórico, ya no se usa para mostrar texto en pantalla
+// (se dejó de usar la palabra "Eje" + número por pedido de Rubí). Se
+// mantiene solo por si algún dato viejo lo referencia.
 const EJE_LABEL = {
   1: "Eje 1 · Identidad y presencia",
   2: "Eje 2 · Comunicación y marca personal",
@@ -196,11 +213,42 @@ const EJE_LABEL = {
   cierre: "Cierre de generación"
 };
 
+// ------------------------------------------------------------------
+// Agrupamiento visible del calendario (reemplaza "Eje 1/2/3" + número).
+// Confirmado por Rubí:
+//   - Módulos 1, 2, 3 + Sesión especial "Taller con Caballos" → Identidad Interna
+//   - Módulos 4, 5, 6, 7                                       → Proyección y marca personal
+//   - Módulos 8, 9, 10                                         → Estrategia
+//   - Sesión de cierre (cata de vinos)                         → Experiencia de cierre
+//
+// NOTA SIN RESOLVER: en el mensaje donde Rubí confirmó estos grupos también
+// mencionó la frase "Presencia que conecta", sin que quedara claro a qué
+// grupo o módulo corresponde. No se usó en este agrupamiento por no poder
+// confirmarlo con certeza — hay que preguntarle a Rubí a qué se refería
+// antes de dar esto por cerrado.
+// ------------------------------------------------------------------
+const GRUPO_LABEL = {
+  identidad: "Identidad Interna",
+  proyeccion: "Proyección y marca personal",
+  estrategia: "Estrategia",
+  cierre: "Experiencia de cierre"
+};
+
+// Resultados del Test Trimetrix por asistente. Se llena a mano (o vía el
+// formulario "resultado-test-asistente" que sube el facilitador en su
+// portal — Netlify Forms no expone archivos al frontend automáticamente,
+// así que la administradora copia aquí la liga de descarga una vez que
+// tiene el archivo). Clave = nombre exacto tal como aparece en roster.js.
+const RESULTADOS_TEST = {
+  // "Liz Perez": "https://drive.google.com/tu-liga-aqui"
+};
+
 // Sesión especial fuera del programa numerado de módulos — se muestra en el
 // calendario de los 3 portales, pero no cuenta como módulo ni afecta el
 // avance del diplomado (renderCourseProgress solo usa MODULOS).
 const SESION_ESPECIAL = {
   tema: "Sesión especial: Taller con Caballos",
+  grupo: "identidad",
   fecha: "2026-09-19",
   fechaLabel: "Sábado 19 sep",
   horario: "Por confirmar",

@@ -85,12 +85,31 @@
         <li><a href="#" data-form="registro-asistentes" target="_blank">Registro de asistentes <small>Nombre, contacto, empresa</small><span>→</span></a></li>
         <li><a href="#" data-form="semblanzas" target="_blank">Semblanzas de asistentes <small>Directorio del grupo</small><span>→</span></a></li>
         <li><a href="#" data-form="semblanzas-ponentes" target="_blank">Semblanzas de facilitadores <small>Directorio de especialistas</small><span>→</span></a></li>
-        <li><a href="#" data-form="test-confirmacion" target="_blank">Confirmaciones del Test Trimetrix <small>Comportamiento, motivadores e IE</small><span>→</span></a></li>
         <li><a href="#" data-form="cuestionario-previo" target="_blank">Cuestionarios previos <small>Por módulo</small><span>→</span></a></li>
+        <li><a href="#" data-form="cuestionario-previo-modulo" target="_blank">Cuestionario previo al módulo (admin) <small>Archivo por módulo, lo suben las participantes antes de la sesión</small><span>→</span></a></li>
         <li><a href="#" data-form="feedback-sesion" target="_blank">Feedback de sesión <small>Calificaciones y comentarios</small><span>→</span></a></li>
         <li><a href="#" data-form="materiales-ponente" target="_blank">Materiales de facilitadores <small>Presentaciones y ligas</small><span>→</span></a></li>
+        <li><a href="#" data-form="resultado-test-asistente" target="_blank">Resultados del Test Trimetrix <small>Archivo subido por el facilitador, por asistente</small><span>→</span></a></li>
         <li><a href="#" data-form="asistencia-modulo" target="_blank">Asistencia por módulo <small>Reporte de lista pasada por cada facilitador</small><span>→</span></a></li>
       </ul>
+    </div>
+
+    <div class="section-head" style="margin-top:34px;">
+      <span class="eyebrow">Antes de cada sesión</span>
+      <h2>Cuestionario previo al módulo</h2>
+      <p>Sube aquí el archivo del cuestionario previo de cada módulo. Las participantes deberán contestarlo antes de esa sesión — se los compartes por el medio que uses (correo, WhatsApp, etc.) una vez que lo tengas cargado.</p>
+    </div>
+    <div class="card">
+      <form name="cuestionario-previo-modulo" method="POST" data-netlify="true" netlify-honeypot="bot-field" enctype="multipart/form-data" id="form-cuestionario-modulo">
+        <input type="hidden" name="form-name" value="cuestionario-previo-modulo">
+        <p class="hp-field"><label>No llenar: <input name="bot-field"></label></p>
+        <div class="form-msg"></div>
+        <label>Módulo *</label>
+        <select name="modulo" id="sel-modulo-cuestionario-admin" required></select>
+        <label>Cuestionario previo al módulo (PDF) *</label>
+        <input type="file" name="archivo" accept=".pdf" required>
+        <button class="btn btn-primary" type="submit">Subir cuestionario</button>
+      </form>
     </div>
   </section>
 
@@ -120,7 +139,7 @@
     <div id="cal-legend"></div>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>No.</th><th>Fecha</th><th>Módulo</th><th>Eje</th><th>Facilitador</th><th>Presentación</th></tr></thead>
+        <thead><tr><th>No.</th><th>Fecha</th><th>Módulo</th><th>Grupo</th><th>Facilitador</th><th>Presentación</th></tr></thead>
         <tbody id="cal-body"></tbody>
       </table>
     </div>
@@ -265,22 +284,18 @@
   // Calendario maestro
   const calBody = document.getElementById("cal-body");
   document.getElementById("cal-legend").innerHTML = calendarLegendHTML();
-  buildCalendarRows().forEach(m=>{
-    const tr = document.createElement("tr");
-    tr.className = "rango-"+rangoDeFecha(m.fecha);
+  renderCalendarBody(calBody, m=>{
     if(m.tipo==="especial"){
-      tr.innerHTML = `<td>—</td><td>${m.fechaLabel}<br><small style="color:var(--gris-claro)">${m.horario}</small></td>
-        <td><b>${m.tema}</b></td><td>Sesión especial</td><td>Facilitadora: ${m.facilitadora}</td>
+      return `<td>—</td><td>${m.fechaLabel}<br><small style="color:var(--gris-claro)">${m.horario}</small></td>
+        <td><b>${m.tema}</b></td><td>${GRUPO_LABEL[m.grupo]}</td><td>Facilitadora: ${m.facilitadora}</td>
         <td>—</td>`;
-    } else {
-      const num = moduloNum(m);
-      tr.innerHTML = `<td>${num}</td><td>${m.fechaLabel}</td>
-        <td><b>${m.tema}</b><br><small style="color:var(--gris-claro)">${m.subtitulo}</small></td>
-        <td>${m.eje==="cierre"?"Cierre":EJE_LABEL[m.eje]}</td><td>${m.ponente}</td>
-        <td>${m.presentacion ? `<a href="${m.presentacion}" target="_blank">ver ↗</a>` : "—"}</td>`;
     }
-    calBody.appendChild(tr);
-  });
+    const num = moduloNum(m);
+    return `<td>${num}</td><td>${m.fechaLabel}</td>
+        <td><b>${m.tema}</b><br><small style="color:var(--gris-claro)">${m.subtitulo}</small></td>
+        <td>${GRUPO_LABEL[m.grupo]}</td><td>${m.ponente}</td>
+        <td>${m.presentacion ? `<a href="${m.presentacion}" target="_blank">ver ↗</a>` : "—"}</td>`;
+  }, 6);
 
   // Directorio de ponentes
   const dirWrap = document.getElementById("directorio-list");
@@ -318,6 +333,15 @@
   } else {
     asisWrap.innerHTML = `<div class="callout">Aún no has cargado el directorio de asistentes. Agrégalas en <code>assets/js/roster.js</code> (o pídeme que las suba cuando me compartas la información).</div>`;
   }
+
+  // Select de módulo para "Cuestionario previo al módulo"
+  const selModuloCuestionarioAdmin = document.getElementById("sel-modulo-cuestionario-admin");
+  MODULOS.forEach(m=>{
+    const opt = document.createElement("option");
+    opt.value = `${m.id} - ${m.tema}`;
+    opt.textContent = `${typeof m.id==="number"?"Módulo "+m.id:"Cierre"} · ${m.tema}`;
+    selModuloCuestionarioAdmin.appendChild(opt);
+  });
 
   // Ligas a Netlify Forms
   const siteInput = document.getElementById("site-url");

@@ -115,14 +115,15 @@
 
 <!-- Formularios ocultos: réplica estática para que Netlify los detecte al desplegar -->
 <div style="display:none" aria-hidden="true">
-  <form name="registro-asistentes" data-netlify="true" netlify-honeypot="bot-field"><input name="nombre"><input name="empresa"><input name="cargo"><input name="telefono"><input name="email"><input name="entero"><textarea name="comentarios"></textarea></form>
-  <form name="semblanzas" data-netlify="true" netlify-honeypot="bot-field"><input name="perfil"><input name="nombre"><textarea name="semblanza"></textarea><input name="foto_url"><input name="redes"></form>
-  <form name="test-confirmacion" data-netlify="true" netlify-honeypot="bot-field"><input name="nombre"></form>
+  <form name="registro-asistentes" data-netlify="true" netlify-honeypot="bot-field"><input name="nombre"><input name="empresa"><input name="cargo"><input name="telefono"><input name="email"><input name="entero"><input name="redes_sociales"><textarea name="comentarios"></textarea></form>
+  <form name="semblanzas" data-netlify="true" netlify-honeypot="bot-field"><input name="perfil"><input name="nombre"><textarea name="semblanza"></textarea></form>
   <form name="cuestionario-previo" data-netlify="true" netlify-honeypot="bot-field"><input name="nombre"><input name="modulo"><textarea name="expectativas"></textarea><textarea name="enfoque"></textarea><textarea name="dudas"></textarea></form>
   <form name="feedback-sesion" data-netlify="true" netlify-honeypot="bot-field"><input name="nombre"><input name="modulo"><input name="calificacion"><textarea name="me_llevo"></textarea><textarea name="mejoraria"></textarea></form>
   <form name="materiales-ponente" data-netlify="true" netlify-honeypot="bot-field" enctype="multipart/form-data"><input name="nombre"><input name="modulo"><input name="link_web"><input name="link_spotify"><input name="link_instagram"><input name="link_x"><input name="link_linkedin"><input type="file" name="archivo"></form>
   <form name="semblanzas-ponentes" data-netlify="true" netlify-honeypot="bot-field"><input name="perfil"><input name="nombre"><input name="modulo"><textarea name="semblanza"></textarea><input name="foto_url"><input name="linkedin"><input name="instagram"><input name="x"></form>
   <form name="asistencia-modulo" data-netlify="true" netlify-honeypot="bot-field"><input name="ponente_nombre"><input name="modulo"><input name="presentes"><textarea name="presentes_texto"></textarea><textarea name="extras"></textarea></form>
+  <form name="resultado-test-asistente" data-netlify="true" netlify-honeypot="bot-field" enctype="multipart/form-data"><input name="ponente_nombre"><input name="nombre_asistente"><input type="file" name="archivo"></form>
+  <form name="cuestionario-previo-modulo" data-netlify="true" netlify-honeypot="bot-field" enctype="multipart/form-data"><input name="modulo"><input type="file" name="archivo"></form>
 </div>
 
 <script src="assets/js/auth.js"></script>

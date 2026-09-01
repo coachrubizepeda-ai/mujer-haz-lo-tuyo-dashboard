@@ -228,20 +228,47 @@ img{max-width:100%;display:block;}
 .tag.eje2{background:rgba(255,221,0,.22);color:#8a6d00;}
 .tag.eje3{background:rgba(61,69,67,.12);color:var(--gris-oscuro);}
 .tag.cierre{background:linear-gradient(120deg,var(--amarillo),var(--azul-claro));color:var(--gris-oscuro);}
+.tag.grp-identidad{background:rgba(0,173,187,.14);color:var(--azul-oscuro);}
+.tag.grp-proyeccion{background:rgba(0,125,165,.14);color:var(--azul-oscuro);}
+.tag.grp-estrategia{background:rgba(255,221,0,.22);color:#8a6d00;}
+.tag.grp-cierre{background:linear-gradient(120deg,var(--amarillo),var(--azul-claro));color:var(--gris-oscuro);}
 
-/* ---------- Leyenda y color por rango de fechas (calendario) ---------- */
+/* ---------- Leyenda y agrupación visual del calendario ---------- */
+/* Reemplaza el antiguo sistema de "Eje 1/2/3" y el color por rango de
+   fechas: ahora se enmarcan los módulos por grupo temático (ver
+   GRUPO_LABEL en assets/js/data.js), usando solo colores de marca. */
 .cal-legend{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:14px;font-size:.8rem;color:var(--gris-claro);}
 .cal-legend-item{display:flex;align-items:center;gap:7px;}
 .cal-legend .dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none;}
-.cal-legend .dot-a{background:var(--azul-claro);}
-.cal-legend .dot-b{background:var(--azul-oscuro);}
-.cal-legend .dot-c{background:var(--amarillo-claro);}
-tr.rango-a{background:rgba(0,173,187,.05);}
-tr.rango-b{background:rgba(0,125,165,.06);}
-tr.rango-c{background:rgba(235,231,23,.09);}
-tr.rango-a td:first-child{border-left:4px solid var(--azul-claro);}
-tr.rango-b td:first-child{border-left:4px solid var(--azul-oscuro);}
-tr.rango-c td:first-child{border-left:4px solid var(--amarillo-claro);}
+.cal-legend .dot-identidad{background:var(--azul-claro);}
+.cal-legend .dot-proyeccion{background:var(--azul-oscuro);}
+.cal-legend .dot-estrategia{background:var(--amarillo);}
+.cal-legend .dot-cierre{background:var(--amarillo-claro);}
+
+/* Fila divisoria que encabeza cada grupo dentro de la tabla */
+.cal-group-row td{
+  font-weight:700;text-transform:uppercase;font-size:.72rem;letter-spacing:.06em;
+  color:var(--gris-oscuro);padding:10px 16px;
+}
+.cal-group-row.cal-grp-identidad td{background:rgba(0,173,187,.16);border-top:3px solid var(--azul-claro);}
+.cal-group-row.cal-grp-proyeccion td{background:rgba(0,125,165,.16);border-top:3px solid var(--azul-oscuro);}
+.cal-group-row.cal-grp-estrategia td{background:rgba(255,221,0,.24);border-top:3px solid var(--amarillo);}
+.cal-group-row.cal-grp-cierre td{background:rgba(235,231,23,.24);border-top:3px solid var(--amarillo-claro);}
+
+/* Marco de color de cada fila de módulo, agrupado por grupo temático */
+tr.cal-grp-identidad:not(.cal-group-row){background:rgba(0,173,187,.05);}
+tr.cal-grp-proyeccion:not(.cal-group-row){background:rgba(0,125,165,.06);}
+tr.cal-grp-estrategia:not(.cal-group-row){background:rgba(255,221,0,.1);}
+tr.cal-grp-cierre:not(.cal-group-row){background:rgba(235,231,23,.1);}
+tr.cal-grp-identidad:not(.cal-group-row) td:first-child{border-left:4px solid var(--azul-claro);}
+tr.cal-grp-proyeccion:not(.cal-group-row) td:first-child{border-left:4px solid var(--azul-oscuro);}
+tr.cal-grp-estrategia:not(.cal-group-row) td:first-child{border-left:4px solid var(--amarillo);}
+tr.cal-grp-cierre:not(.cal-group-row) td:first-child{border-left:4px solid var(--amarillo-claro);}
+
+/* Sesión especial "Taller con Caballos": tipografía distinta (itálica) para
+   diferenciarla visualmente de las filas de módulos numerados */
+tr.cal-especial td{font-style:italic;}
+tr.cal-especial td b{font-style:italic;}
 
 /* ---------- Tables ---------- */
 .table-wrap{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--border);}
