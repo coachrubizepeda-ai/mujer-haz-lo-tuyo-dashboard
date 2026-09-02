@@ -163,6 +163,23 @@ function renderCalendarBody(tbody, buildCells, colspan){
   });
 }
 
+/* ---------- Número de participante (ID único por asistente) ----------
+   Cada entrada de ASISTENTES (roster.js) trae un campo "id" fijo (P01, P02…)
+   que identifica a la persona sin importar cómo esté escrito su nombre en
+   ese momento. asistenteEtiqueta() arma la etiqueta "ID · Nombre" que se usa
+   en pase de lista, perfiles, dropdowns y el directorio. buscarAsistentePorNombre()
+   permite recuperar el id de alguien a partir de su nombre (cruzando por
+   coincidencia exacta con "nombre" o con "perfil"), con "—" si no se encuentra. */
+function buscarAsistentePorNombre(nombre){
+  if(typeof ASISTENTES === "undefined" || !ASISTENTES.length || !nombre) return null;
+  return ASISTENTES.find(a=>a.nombre===nombre || a.perfil===nombre) || null;
+}
+function asistenteEtiqueta(a, nombreMostrar){
+  if(!a) return "—";
+  const nombre = nombreMostrar || a.nombre;
+  return a.id ? `${a.id} · ${nombre}` : nombre;
+}
+
 /* ---------- Chips de redes sociales de un ponente ---------- */
 function socialChipsHTML(redes){
   if(!redes) return "";

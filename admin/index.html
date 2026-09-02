@@ -91,6 +91,7 @@
         <li><a href="#" data-form="materiales-ponente" target="_blank">Materiales de facilitadores <small>Presentaciones y ligas</small><span>→</span></a></li>
         <li><a href="#" data-form="resultado-test-asistente" target="_blank">Resultados del Test Trimetrix <small>Archivo subido por el facilitador, por asistente</small><span>→</span></a></li>
         <li><a href="#" data-form="asistencia-modulo" target="_blank">Asistencia por módulo <small>Reporte de lista pasada por cada facilitador</small><span>→</span></a></li>
+        <li><a href="#" data-form="comentario-facilitador" target="_blank">Comentarios entre facilitadores <small>Retroalimentación dirigida a uno o varios facilitadores</small><span>→</span></a></li>
       </ul>
     </div>
 
@@ -334,7 +335,7 @@
       el.className = "card";
       el.innerHTML = `<div style="display:flex;gap:14px;align-items:center;margin-bottom:8px;">
           <span class="avatar-init">${iniciales}</span>
-          <div><h4 style="margin:0;">${a.nombre}</h4><small style="color:var(--gris-claro)">${[a.cargo,a.empresa].filter(Boolean).join(" · ")}</small></div>
+          <div><h4 style="margin:0;">${asistenteEtiqueta(a)}</h4><small style="color:var(--gris-claro)">${[a.cargo,a.empresa].filter(Boolean).join(" · ")}</small></div>
         </div>
         ${a.semblanza ? `<p style="margin-bottom:0;">${a.semblanza}</p>` : ""}
         ${socialChipsHTML(a.linkedin ? {linkedin:a.linkedin} : null)}`;

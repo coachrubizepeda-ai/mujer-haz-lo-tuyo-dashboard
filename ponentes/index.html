@@ -39,6 +39,7 @@
     <button class="tab-btn" data-tab="t-materiales">Compartir materiales</button>
     <button class="tab-btn" data-tab="t-calendario">Calendario general</button>
     <button class="tab-btn" data-tab="t-lineamientos">Lineamientos</button>
+    <button class="tab-btn" data-tab="t-comentarios">Comentarios</button>
     <button class="tab-btn" data-tab="t-contacto">Contacto</button>
   </nav>
 </aside>
@@ -276,6 +277,41 @@
     </div>
   </section>
 
+  <!-- COMENTARIOS -->
+  <section class="tab-panel" id="t-comentarios">
+    <div class="section-head">
+      <span class="eyebrow">Entre facilitadores</span>
+      <h2>Comentarios</h2>
+      <p>Comparte una observación o retroalimentación para otro(s) facilitador(es) del programa.</p>
+    </div>
+    <div class="card">
+      <form name="comentario-facilitador" method="POST" data-netlify="true" netlify-honeypot="bot-field" id="form-comentario">
+        <input type="hidden" name="form-name" value="comentario-facilitador">
+        <p class="hp-field"><label>No llenar: <input name="bot-field"></label></p>
+        <div class="form-msg"></div>
+        <label>Tu nombre *</label>
+        <input type="text" name="autor" required placeholder="Tu nombre">
+        <label>¿A quién le interesa leer esto? *</label>
+        <div id="comentario-destinatarios"></div>
+        <input type="hidden" name="destinatarios" id="comentario-destinatarios-hidden">
+        <label>¿Para qué módulo aplica? (opcional)</label>
+        <select name="modulo" id="sel-modulo-comentario"><option value="">General / no aplica a un módulo específico</option></select>
+        <label>Tu comentario *</label>
+        <textarea name="comentario" required placeholder="Escribe tu retroalimentación…"></textarea>
+        <button class="btn btn-primary" type="submit">Enviar comentario</button>
+      </form>
+      <div class="callout" style="margin-top:16px;">
+        Estos comentarios también llegan por Netlify Forms a la administradora, aunque la lista de "Comentarios recientes" de abajo solo se ve en el navegador de quien los escribió.
+      </div>
+    </div>
+
+    <div class="section-head" style="margin-top:34px;">
+      <span class="eyebrow">En este navegador</span>
+      <h2>Comentarios recientes</h2>
+    </div>
+    <div id="comentarios-list"></div>
+  </section>
+
   <!-- CONTACTO -->
   <section class="tab-panel" id="t-contacto">
     <div class="section-head">
@@ -355,7 +391,7 @@
   const selAsistenteResultado = document.getElementById("sel-asistente-resultado");
   if(typeof ASISTENTES !== "undefined" && ASISTENTES.length){
     selAsistenteResultado.innerHTML = '<option value="">Selecciona…</option>' +
-      ASISTENTES.map(a=>`<option value="${a.nombre}">${a.nombre}</option>`).join("");
+      ASISTENTES.map(a=>`<option value="${a.nombre}">${asistenteEtiqueta(a)}</option>`).join("");
   } else {
     selAsistenteResultado.outerHTML = '<input type="text" name="nombre_asistente" id="sel-asistente-resultado" placeholder="Nombre de la asistente" required>';
   }
@@ -371,20 +407,56 @@
     });
   });
 
+  // ---------- Nombres editables (corrección de errores de escritura) ----------
+  // Se guarda solo en este navegador: mapa nombre-original -> nombre-corregido.
+  // Mismo mecanismo (localStorage.mjht_nombres_editados) usado en "Perfiles de
+  // asistentes" y en "Pasar lista", para que el nombre corregido se vea igual
+  // en ambos lugares.
+  const LS_KEY_NOMBRES = "mjht_nombres_editados";
+  function getNombresEditados(){
+    try { return JSON.parse(localStorage.getItem(LS_KEY_NOMBRES) || "{}"); }
+    catch(e){ return {}; }
+  }
+  function nombreMostrado(nombreOriginal){
+    const editados = getNombresEditados();
+    return editados[nombreOriginal] || nombreOriginal;
+  }
+  window.mjhtEditarNombre = function(nombreOriginal){
+    const actual = nombreMostrado(nombreOriginal);
+    const nuevo = prompt("Corregir nombre para mostrar (solo en este navegador):", actual);
+    if(nuevo === null) return;
+    const limpio = nuevo.trim();
+    const editados = getNombresEditados();
+    if(limpio && limpio !== nombreOriginal){ editados[nombreOriginal] = limpio; }
+    else { delete editados[nombreOriginal]; }
+    try { localStorage.setItem(LS_KEY_NOMBRES, JSON.stringify(editados)); } catch(e){}
+    renderAsistenciaChecks();
+    renderPerfilesYGrupal();
+  };
+
   // Pasar lista: checkboxes del roster de asistentes, o texto libre si aún no hay roster cargado
   const asistenciaChecks = document.getElementById("asistencia-checks");
   const asistenciaHint = document.getElementById("asistencia-hint");
-  if(typeof ASISTENTES !== "undefined" && ASISTENTES.length){
-    asistenciaHint.textContent = "Marca a quienes están presentes hoy.";
-    asistenciaChecks.innerHTML = ASISTENTES.map((a,i)=>`
-      <label class="check-row">
-        <input type="checkbox" name="presentes" value="${a.nombre}" id="asis-${i}">
-        <span>${a.nombre}${a.empresa ? ` <small style="color:var(--gris-claro)">· ${a.empresa}</small>` : ""}</span>
-      </label>`).join("");
-  } else {
-    asistenciaHint.textContent = "Rubí aún no ha cargado el directorio de asistentes — escribe aquí los nombres de las presentes, uno por línea.";
-    asistenciaChecks.innerHTML = `<textarea name="presentes_texto" placeholder="Nombre de cada asistente presente, uno por línea"></textarea>`;
+  function renderAsistenciaChecks(){
+    if(typeof ASISTENTES !== "undefined" && ASISTENTES.length){
+      asistenciaHint.textContent = "Marca a quienes están presentes hoy.";
+      asistenciaChecks.innerHTML = ASISTENTES.map((a,i)=>{
+        const nombreEsc = a.nombre.replace(/'/g,"\\'");
+        return `
+      <div style="display:flex;align-items:center;gap:6px;">
+        <label class="check-row" style="flex:1;">
+          <input type="checkbox" name="presentes" value="${a.nombre}" id="asis-${i}">
+          <span>${asistenteEtiqueta(a, nombreMostrado(a.nombre))}${a.empresa ? ` <small style="color:var(--gris-claro)">· ${a.empresa}</small>` : ""}</span>
+        </label>
+        <button type="button" class="btn-edit-nombre" title="Corregir nombre" onclick="mjhtEditarNombre('${nombreEsc}')">✏️</button>
+      </div>`;
+      }).join("");
+    } else {
+      asistenciaHint.textContent = "Rubí aún no ha cargado el directorio de asistentes — escribe aquí los nombres de las presentes, uno por línea.";
+      asistenciaChecks.innerHTML = `<textarea name="presentes_texto" placeholder="Nombre de cada asistente presente, uno por línea"></textarea>`;
+    }
   }
+  renderAsistenciaChecks();
 
   // ---------- Perfiles de asistentes (confidencial — solo este portal) ----------
   const perfilesWrap = document.getElementById("perfiles-list");
@@ -409,29 +481,6 @@
     if(typeof PERFILES !== "undefined" && PERFILES[llave]) return PERFILES[llave];
     return null;
   }
-
-  // ---------- Nombres editables (corrección de errores de escritura) ----------
-  // Se guarda solo en este navegador: mapa nombre-original -> nombre-corregido.
-  const LS_KEY_NOMBRES = "mjht_nombres_editados";
-  function getNombresEditados(){
-    try { return JSON.parse(localStorage.getItem(LS_KEY_NOMBRES) || "{}"); }
-    catch(e){ return {}; }
-  }
-  function nombreMostrado(nombreOriginal){
-    const editados = getNombresEditados();
-    return editados[nombreOriginal] || nombreOriginal;
-  }
-  window.mjhtEditarNombre = function(nombreOriginal){
-    const actual = nombreMostrado(nombreOriginal);
-    const nuevo = prompt("Corregir nombre para mostrar (solo en este navegador):", actual);
-    if(nuevo === null) return;
-    const limpio = nuevo.trim();
-    const editados = getNombresEditados();
-    if(limpio && limpio !== nombreOriginal){ editados[nombreOriginal] = limpio; }
-    else { delete editados[nombreOriginal]; }
-    try { localStorage.setItem(LS_KEY_NOMBRES, JSON.stringify(editados)); } catch(e){}
-    renderPerfilesYGrupal();
-  };
 
   // Agrupa los campos de un perfil por módulo, con encabezado por módulo
   function camposAgrupadosPorModuloHTML(campos){
@@ -465,6 +514,7 @@
     perfilesWrap.innerHTML = ASISTENTES.map((a,i)=>{
       const perfil = perfilDe(a);
       const nombreMostrar = nombreMostrado(a.nombre);
+      const etiquetaMostrar = asistenteEtiqueta(a, nombreMostrar);
       const iniciales = nombreMostrar.split(" ").map(w=>w[0]).slice(0,2).join("").toUpperCase();
       const nombreEsc = a.nombre.replace(/'/g,"\\'");
       const editBtn = `<button type="button" class="btn-edit-nombre" title="Corregir nombre" onclick="mjhtEditarNombre('${nombreEsc}')">✏️ Editar nombre</button>`;
@@ -477,7 +527,7 @@
             <div class="nombre-editable" style="display:flex;align-items:center;">
               <button class="acc-head" style="flex:1;">
                 <span class="num">${iniciales}</span>
-                <span class="meta"><h4>${nombreMostrar}</h4><small>${resumen}</small></span>
+                <span class="meta"><h4>${etiquetaMostrar}</h4><small>${resumen}</small></span>
                 <span class="chev">▾</span>
               </button>
               ${editBtn}
@@ -492,7 +542,7 @@
           <div class="nombre-editable" style="display:flex;align-items:center;">
             <button class="acc-head" style="flex:1;">
               <span class="num">${iniciales}</span>
-              <span class="meta"><h4>${nombreMostrar}</h4><small>Sin respuestas cargadas todavía</small></span>
+              <span class="meta"><h4>${etiquetaMostrar}</h4><small>Sin respuestas cargadas todavía</small></span>
               <span class="chev">▾</span>
             </button>
             ${editBtn}
@@ -609,21 +659,183 @@
     ["Cierre operativo de sesión", "Cada sesión debe contemplar un cierre estructurado que facilite la integración del contenido y una transición clara al siguiente módulo."],
     ["Disponibilidad para retroalimentación", "Estar disponible para recibir retroalimentación breve de la coordinación cuando sea necesario."]
   ];
-  // Bloques de lineamientos: siempre expandidos, sin acordeón — solo lista con encabezados.
-  function renderLineamientosBlock(containerId, items){
-    const wrap = document.getElementById(containerId);
-    wrap.innerHTML = items.map(([titulo, texto])=>`
-      <div class="lineamiento-item">
-        <h4>${titulo}</h4>
-        <p>${texto}</p>
+  // Bloques de lineamientos: siempre expandidos, sin acordeón — lista con
+  // encabezados + botones para agregar/editar/eliminar puntos, todo guardado
+  // solo en este navegador (localStorage). La base de cada bloque sigue
+  // viviendo en este archivo (o en assets/js/data.js para el de
+  // participantes); nunca se modifica — las ediciones y borrados se guardan
+  // como "overrides" por índice, y lo agregado en un arreglo aparte.
+  function lsGetJSON(key, fallback){
+    try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }
+    catch(e){ return fallback; }
+  }
+  function lsSetJSON(key, val){
+    try { localStorage.setItem(key, JSON.stringify(val)); } catch(e){}
+  }
+  const LINEAMIENTOS_BLOCKS = [
+    { containerId: "codigo-honor-acc", base: ()=>CODIGO_HONOR,
+      extraKey: "mjht_lineamientos_facilitadores_extra", overrideKey: "mjht_lineamientos_facilitadores_overrides" },
+    { containerId: "lineamientos-op-acc", base: ()=>LINEAMIENTOS_OP,
+      extraKey: "mjht_lineamientos_operativos_extra", overrideKey: "mjht_lineamientos_operativos_overrides" },
+    { containerId: "codigo-honor-participantes-acc", base: ()=> typeof CODIGO_HONOR_PARTICIPANTES !== "undefined" ? CODIGO_HONOR_PARTICIPANTES : [],
+      extraKey: "mjht_codigo_honor_participantes_extra", overrideKey: "mjht_codigo_honor_participantes_overrides" }
+  ];
+  function lineamientoItemHTML(titulo, texto, ref, containerId){
+    const refAttr = JSON.stringify(ref).replace(/'/g, "&#39;");
+    return `
+      <div class="lineamiento-item" data-ref='${refAttr}'>
+        <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;">
+          <div style="flex:1;min-width:0;"><h4>${titulo}</h4><p>${texto}</p></div>
+          <div style="display:flex;gap:2px;flex-shrink:0;">
+            <button type="button" class="btn-edit-nombre" title="Editar punto" onclick="mjhtEditarLineamiento('${containerId}', JSON.parse(this.closest('.lineamiento-item').dataset.ref))">✏️</button>
+            <button type="button" class="btn-edit-nombre" title="Eliminar punto" onclick="mjhtEliminarLineamiento('${containerId}', JSON.parse(this.closest('.lineamiento-item').dataset.ref))">🗑️</button>
+          </div>
+        </div>
+      </div>`;
+  }
+  function renderLineamientoBlockDynamic(cfg){
+    const base = cfg.base();
+    const overrides = lsGetJSON(cfg.overrideKey, {});
+    const extra = lsGetJSON(cfg.extraKey, []);
+    const wrap = document.getElementById(cfg.containerId);
+    if(!wrap) return;
+    const baseHTML = base.map(([titulo, texto], idx)=>{
+      const ov = overrides[idx];
+      if(ov && ov.deleted) return "";
+      const t = ov ? ov.titulo : titulo;
+      const d = ov ? ov.texto : texto;
+      return lineamientoItemHTML(t, d, {type:"base", idx}, cfg.containerId);
+    }).join("");
+    const extraHTML = extra.map((item, idx)=> lineamientoItemHTML(item.titulo, item.texto, {type:"extra", idx}, cfg.containerId)).join("");
+    wrap.innerHTML = baseHTML + extraHTML +
+      `<div class="lineamiento-item" style="border-bottom:none;">
+        <button type="button" class="btn btn-outline btn-sm" onclick="mjhtAgregarLineamiento('${cfg.containerId}')">+ Agregar punto</button>
+      </div>`;
+  }
+  function lineamientoCfg(containerId){
+    return LINEAMIENTOS_BLOCKS.find(c=>c.containerId===containerId);
+  }
+  window.mjhtAgregarLineamiento = function(containerId){
+    const cfg = lineamientoCfg(containerId);
+    if(!cfg) return;
+    const titulo = prompt("Título del nuevo punto:");
+    if(titulo === null || !titulo.trim()) return;
+    const texto = prompt("Descripción:", "") || "";
+    const extra = lsGetJSON(cfg.extraKey, []);
+    extra.push({ titulo: titulo.trim(), texto: texto.trim() });
+    lsSetJSON(cfg.extraKey, extra);
+    renderLineamientoBlockDynamic(cfg);
+  };
+  window.mjhtEditarLineamiento = function(containerId, ref){
+    const cfg = lineamientoCfg(containerId);
+    if(!cfg) return;
+    if(ref.type === "extra"){
+      const extra = lsGetJSON(cfg.extraKey, []);
+      const item = extra[ref.idx];
+      if(!item) return;
+      const titulo = prompt("Título:", item.titulo);
+      if(titulo === null) return;
+      const texto = prompt("Descripción:", item.texto);
+      if(texto === null) return;
+      extra[ref.idx] = { titulo: titulo.trim(), texto: texto.trim() };
+      lsSetJSON(cfg.extraKey, extra);
+    } else {
+      const base = cfg.base();
+      const overrides = lsGetJSON(cfg.overrideKey, {});
+      const actual = overrides[ref.idx] || { titulo: base[ref.idx][0], texto: base[ref.idx][1] };
+      const titulo = prompt("Título:", actual.titulo);
+      if(titulo === null) return;
+      const texto = prompt("Descripción:", actual.texto);
+      if(texto === null) return;
+      overrides[ref.idx] = { titulo: titulo.trim(), texto: texto.trim() };
+      lsSetJSON(cfg.overrideKey, overrides);
+    }
+    renderLineamientoBlockDynamic(cfg);
+  };
+  window.mjhtEliminarLineamiento = function(containerId, ref){
+    const cfg = lineamientoCfg(containerId);
+    if(!cfg) return;
+    if(!confirm("¿Eliminar este punto? (solo se guarda en este navegador)")) return;
+    if(ref.type === "extra"){
+      const extra = lsGetJSON(cfg.extraKey, []);
+      extra.splice(ref.idx, 1);
+      lsSetJSON(cfg.extraKey, extra);
+    } else {
+      const overrides = lsGetJSON(cfg.overrideKey, {});
+      overrides[ref.idx] = { deleted: true };
+      lsSetJSON(cfg.overrideKey, overrides);
+    }
+    renderLineamientoBlockDynamic(cfg);
+  };
+  LINEAMIENTOS_BLOCKS.forEach(renderLineamientoBlockDynamic);
+  initAccordion();
+
+  // ---------- Comentarios entre facilitadores ----------
+  const LS_KEY_COMENTARIOS = "mjht_comentarios_facilitadores";
+  function getComentariosLocales(){
+    try { return JSON.parse(localStorage.getItem(LS_KEY_COMENTARIOS) || "[]"); }
+    catch(e){ return []; }
+  }
+  function renderComentariosList(){
+    const wrap = document.getElementById("comentarios-list");
+    const comentarios = getComentariosLocales();
+    if(!comentarios.length){
+      wrap.innerHTML = `<div class="callout">Todavía no hay comentarios guardados en este navegador.</div>`;
+      return;
+    }
+    wrap.innerHTML = comentarios.map(c=>`
+      <div class="card">
+        <p style="margin-bottom:4px;"><b>${c.autor}</b> <small style="color:var(--gris-claro);">→ ${c.destinatarios}${c.modulo ? " · "+c.modulo : ""}</small></p>
+        <p style="margin-bottom:0;">${c.comentario}</p>
       </div>`).join("");
   }
-  renderLineamientosBlock("codigo-honor-acc", CODIGO_HONOR);
-  renderLineamientosBlock("lineamientos-op-acc", LINEAMIENTOS_OP);
-  if(typeof CODIGO_HONOR_PARTICIPANTES !== "undefined"){
-    renderLineamientosBlock("codigo-honor-participantes-acc", CODIGO_HONOR_PARTICIPANTES);
-  }
-  initAccordion();
+
+  // Checkboxes de destinatarios: facilitadores únicos de data.js + "Todos"
+  const comentarioDestWrap = document.getElementById("comentario-destinatarios");
+  const ponentesUnicosComentario = [...new Set(MODULOS.map(m=>m.ponente))];
+  comentarioDestWrap.innerHTML =
+    `<label class="check-row"><input type="checkbox" class="dest-check" value="Todos los facilitadores"><span>Todos los facilitadores</span></label>` +
+    ponentesUnicosComentario.map(p=>`<label class="check-row"><input type="checkbox" class="dest-check" value="${p}"><span>${p}</span></label>`).join("");
+
+  // Select de módulo (opcional) del formulario de comentarios
+  const selModuloComentario = document.getElementById("sel-modulo-comentario");
+  MODULOS.forEach(m=>{
+    const opt = document.createElement("option");
+    opt.value = `${m.id} - ${m.tema}`;
+    opt.textContent = `${typeof m.id==="number"?"Módulo "+m.id:"Cierre"} · ${m.tema}`;
+    selModuloComentario.appendChild(opt);
+  });
+
+  // Este listener se registra antes de que app.js conecte wireNetlifyForm
+  // (que se activa en DOMContentLoaded, después de este script), así que
+  // corre primero: valida destinatarios, arma el campo oculto y guarda una
+  // copia local para "Comentarios recientes" antes de que el formulario se
+  // envíe a Netlify y se reinicie.
+  const formComentario = document.getElementById("form-comentario");
+  formComentario.addEventListener("submit", (e)=>{
+    const checked = Array.from(comentarioDestWrap.querySelectorAll(".dest-check:checked")).map(c=>c.value);
+    if(!checked.length){
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      alert("Selecciona al menos un facilitador destinatario.");
+      return;
+    }
+    const destinatarios = checked.join(", ");
+    document.getElementById("comentario-destinatarios-hidden").value = destinatarios;
+    const moduloSel = document.getElementById("sel-modulo-comentario");
+    const comentarios = getComentariosLocales();
+    comentarios.unshift({
+      autor: formComentario.autor.value.trim() || "Anónimo",
+      destinatarios,
+      modulo: moduloSel.selectedOptions[0] ? moduloSel.selectedOptions[0].textContent : "",
+      comentario: formComentario.comentario.value.trim(),
+      fecha: new Date().toISOString()
+    });
+    lsSetJSON(LS_KEY_COMENTARIOS, comentarios);
+    renderComentariosList();
+    comentarioDestWrap.querySelectorAll(".dest-check:checked").forEach(c=>c.checked=false);
+  });
+  renderComentariosList();
 </script>
 </body>
 </html>

@@ -129,7 +129,8 @@
         <input type="hidden" name="perfil" value="asistente">
         <p class="hp-field"><label>No llenar: <input name="bot-field"></label></p>
         <div class="form-msg"></div>
-        <label>Nombre *</label><input type="text" name="nombre" required>
+        <label>Nombre *</label>
+        <select name="nombre" id="sel-nombre-semblanza" required><option value="">Selecciona tu nombre…</option></select>
         <label>Semblanza *</label>
         <textarea name="semblanza" required placeholder="Escribe aquí tu semblanza"></textarea>
         <button class="btn btn-primary" type="submit">Enviar mi semblanza</button>
@@ -439,6 +440,16 @@
     });
   });
 
+  // Dropdown de "Mi semblanza": nombres del roster oficial (roster.js), para
+  // evitar nombres duplicados o mal escritos que no coincidan con el roster.
+  const selNombreSemblanza = document.getElementById("sel-nombre-semblanza");
+  if(typeof ASISTENTES !== "undefined" && ASISTENTES.length){
+    selNombreSemblanza.innerHTML = '<option value="">Selecciona tu nombre…</option>' +
+      ASISTENTES.map(a=>`<option value="${a.nombre}">${asistenteEtiqueta(a)}</option>`).join("");
+  } else {
+    selNombreSemblanza.outerHTML = '<input type="text" name="nombre" id="sel-nombre-semblanza" placeholder="Tu nombre completo" required>';
+  }
+
   // ---------- Test Trimetrix: "Tus resultados" ----------
   // Lee de RESULTADOS_TEST (assets/js/data.js), keyed por nombre exacto del
   // roster. La administradora la llena a mano una vez que el facilitador le
@@ -452,7 +463,7 @@
     : [];
   if(nombresRoster.length){
     selNombreResultado.innerHTML = '<option value="">Selecciona tu nombre…</option>' +
-      nombresRoster.map(n=>`<option value="${n}">${n}</option>`).join("");
+      ASISTENTES.map(a=>`<option value="${a.nombre}">${asistenteEtiqueta(a)}</option>`).join("");
   } else {
     selNombreResultado.outerHTML = '<input type="text" id="sel-nombre-resultado" placeholder="Escribe tu nombre completo">';
   }
