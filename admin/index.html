@@ -516,9 +516,9 @@
     document.querySelectorAll("#form-links a").forEach(a=>{
       const formName = a.dataset.form;
       if(base){
-        // convierte una URL de sitio (https://x.netlify.app) en su panel de forms en app.netlify.com
+        // convierte una URL de sitio (https://x.netlify.app) en la vista de ESE formulario específico en app.netlify.com
         const siteSlug = base.replace(/^https?:\/\//,"").replace(/\.netlify\.app.*/,"");
-        a.href = `https://app.netlify.com/sites/${siteSlug}/forms`;
+        a.href = `https://app.netlify.com/sites/${siteSlug}/forms/${formName}`;
       } else {
         a.href = "#";
       }
