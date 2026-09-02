@@ -179,7 +179,7 @@
     <div class="section-head">
       <span class="eyebrow">Netlify Forms</span>
       <h2>Formularios recibidos</h2>
-      <p>Pega aquí la URL de tu sitio en Netlify una sola vez (se guarda en este navegador) y los botones de abajo te llevan directo a cada formulario.</p>
+      <p>Todos los envíos de todos los formularios del sitio (de cualquier persona, desde cualquier navegador) viven en un solo lugar: el panel de Netlify Forms de tu sitio. Esta sección ya no intenta armar una liga distinta para cada formulario — eso es lo que fallaba. En vez de eso, un solo botón te lleva a Netlify y ahí eliges el formulario que quieras ver, en la barra lateral izquierda.</p>
     </div>
     <div class="card">
       <label>URL de tu sitio en Netlify</label>
@@ -188,21 +188,19 @@
         <button class="btn btn-primary btn-sm" id="save-url">Guardar</button>
       </div>
       <p style="font-size:.8rem;color:var(--gris-claro);margin-top:-10px;">La encuentras en tu panel de Netlify, arriba del sitio, o en Site settings → General.</p>
+      <a href="#" id="btn-abrir-netlify-forms" target="_blank" class="btn btn-primary" style="margin-top:14px;display:inline-block;">Abrir mis formularios en Netlify ↗</a>
     </div>
     <div class="card">
-      <ul class="link-list" id="form-links">
-        <li><a href="#" data-form="registro-asistentes" target="_blank">Registro de asistentes <small>Nombre, contacto, empresa</small><span>→</span></a></li>
-        <li><a href="#" data-form="semblanzas" target="_blank">Semblanzas de asistentes <small>Directorio del grupo</small><span>→</span></a></li>
-        <li><a href="#" data-form="semblanzas-ponentes" target="_blank">Semblanzas de facilitadores <small>Directorio de especialistas</small><span>→</span></a></li>
-        <li><a href="#" data-form="cuestionario-previo" target="_blank">Cuestionarios previos <small>Por módulo</small><span>→</span></a></li>
-        <li><a href="#" data-form="cuestionario-previo-modulo" target="_blank">Cuestionario previo al módulo (admin) <small>Archivo por módulo, lo suben las participantes antes de la sesión</small><span>→</span></a></li>
-        <li><a href="#" data-form="cuestionario-previo-respuesta" target="_blank">Cuestionario previo contestado <small>Archivo que sube cada participante, por módulo</small><span>→</span></a></li>
-        <li><a href="#" data-form="feedback-sesion" target="_blank">Feedback de sesión <small>Calificaciones y comentarios</small><span>→</span></a></li>
-        <li><a href="#" data-form="materiales-ponente" target="_blank">Materiales de facilitadores <small>Presentaciones y ligas</small><span>→</span></a></li>
-        <li><a href="#" data-form="resultado-test-asistente" target="_blank">Resultados del Test Trimetrix <small>Archivo subido por el facilitador, por asistente</small><span>→</span></a></li>
-        <li><a href="#" data-form="asistencia-modulo" target="_blank">Asistencia por módulo <small>Reporte de lista pasada por cada facilitador</small><span>→</span></a></li>
-        <li><a href="#" data-form="comentario-facilitador" target="_blank">Comentarios entre facilitadores <small>Retroalimentación dirigida a uno o varios facilitadores</small><span>→</span></a></li>
+      <h4>Si no ves ningún formulario ahí (o dice "Enable form detection")</h4>
+      <ul class="checklist" style="pointer-events:none;">
+        <li><span class="txt"><b>1. Activa la detección</b><span>En Netlify, entra a tu sitio → Project configuration (o Site settings) → Forms → busca el botón "Enable form detection" y actívalo. Esto es un interruptor del proyecto, no depende del código.</span></span></li>
+        <li><span class="txt"><b>2. Vuelve a desplegar</b><span>En Netlify, ve a Deploys → Trigger deploy → Deploy site. Esto hace que Netlify vuelva a leer el sitio completo buscando formularios.</span></span></li>
+        <li><span class="txt"><b>3. Espera 1-2 minutos y refresca</b><span>Después del redeploy, entra otra vez a Forms — ahí deberías ver la lista completa de formularios con sus envíos.</span></span></li>
       </ul>
+    </div>
+    <div class="card">
+      <h4>¿Qué subir aquí y en dónde se refleja?</h4>
+      <p>Nada se "sube" directamente en esta pestaña — aquí solo hay ligas de acceso. Lo que SÍ puedes usar ahora mismo, sin depender de Netlify, son las secciones de "Resumen ejecutivo" (Registro de asistentes, Semblanzas, Feedback, Materiales, Resultados del test, Asistencia, Comentarios): esas se llenan automáticamente con lo que se guarda en <b>este mismo navegador</b> — es decir, si tú misma llenas un formulario de prueba desde esta computadora, lo vas a ver reflejado ahí al instante, sin pasar por Netlify. Para ver los envíos que hacen las demás personas desde SUS propios navegadores (participantes y facilitadores), esos solo llegan a Netlify Forms — por eso el botón de arriba.</p>
     </div>
 
     <div class="section-head" style="margin-top:34px;">
@@ -535,21 +533,22 @@
     selModuloCuestionarioAdmin.appendChild(opt);
   });
 
-  // Ligas a Netlify Forms
+  // Liga a Netlify Forms (un solo botón a la vista general de Forms del
+  // sitio — dentro de Netlify, Rubí elige el formulario específico en la
+  // barra lateral. Antes intentábamos armar una liga por formulario, pero
+  // eso dependía de que Netlify ya lo hubiera detectado con ese nombre
+  // exacto, y si no, mandaba siempre a la pantalla genérica de Forms).
   const siteInput = document.getElementById("site-url");
+  const btnAbrirNetlifyForms = document.getElementById("btn-abrir-netlify-forms");
   siteInput.value = localStorage.getItem("mjht_netlify_url") || "";
   function refreshFormLinks(){
     let base = siteInput.value.trim().replace(/\/+$/,"");
-    document.querySelectorAll("#form-links a").forEach(a=>{
-      const formName = a.dataset.form;
-      if(base){
-        // convierte una URL de sitio (https://x.netlify.app) en la vista de ESE formulario específico en app.netlify.com
-        const siteSlug = base.replace(/^https?:\/\//,"").replace(/\.netlify\.app.*/,"");
-        a.href = `https://app.netlify.com/sites/${siteSlug}/forms/${formName}`;
-      } else {
-        a.href = "#";
-      }
-    });
+    if(base){
+      const siteSlug = base.replace(/^https?:\/\//,"").replace(/\.netlify\.app.*/,"");
+      btnAbrirNetlifyForms.href = `https://app.netlify.com/sites/${siteSlug}/forms`;
+    } else {
+      btnAbrirNetlifyForms.href = "#";
+    }
   }
   document.getElementById("save-url").addEventListener("click", ()=>{
     localStorage.setItem("mjht_netlify_url", siteInput.value.trim());
