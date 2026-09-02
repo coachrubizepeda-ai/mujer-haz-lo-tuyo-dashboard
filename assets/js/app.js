@@ -271,16 +271,29 @@ function fechaCorta(iso){
 // acumuladas al final. Si el mismo módulo se pasó lista más de una vez,
 // ambos envíos comparten la misma columna (se apilan las fechas/checks en
 // la celda) para no desbordar la tabla con columnas repetidas.
-function renderAsistenciaReporteHTML(registros){
+//
+// opts.editable=true (solo se pasa desde el panel de administradora) agrega,
+// junto a cada envío dentro del encabezado de su columna, dos controles:
+// ✏️ Editar (abre un modal para marcar/desmarcar presentes de ESE envío) y
+// 🗑️ Eliminar (borra ese envío por completo, con confirmación). Ambos
+// controles llaman a mjhtAsistenciaAbrirEdicion()/mjhtAsistenciaEliminarRegistro()
+// (definidos más abajo en este mismo archivo) usando el índice real del
+// envío dentro del arreglo de mjht_asistencia_registros, para poder editarlo
+// o borrarlo sin afectar los demás. Cuando se llama sin opts (o con
+// editable=false/ausente) — como desde el portal de ponentes — el resultado
+// es idéntico al de antes: una tabla de solo lectura.
+function renderAsistenciaReporteHTML(registros, opts){
+  const editable = !!(opts && opts.editable);
   if(!registros || !registros.length){
     return `<div class="callout">Todavía no se ha registrado ninguna asistencia desde este navegador.</div>`;
   }
 
   // 1. Agrupa los registros en columnas: una por módulo reconocido (o por
   //    texto exacto de r.modulo si no se pudo reconocer), en orden de
-  //    aparición.
-  const columnas = []; // { key, mod, titulo, registros:[] }
-  registros.forEach(r=>{
+  //    aparición. Cada envío conserva su índice real dentro de `registros`
+  //    (idx) para poder editarlo/eliminarlo puntualmente en modo editable.
+  const columnas = []; // { key, mod, titulo, registros:[{r, idx}] }
+  registros.forEach((r, idx)=>{
     const mod = moduloDeRegistro(r);
     const key = mod ? "mod:"+mod.id : "txt:"+(r.modulo || "Sin especificar");
     let col = columnas.find(c=>c.key===key);
@@ -288,7 +301,7 @@ function renderAsistenciaReporteHTML(registros){
       col = { key, mod, titulo: r.modulo || "Sin especificar", registros: [] };
       columnas.push(col);
     }
-    col.registros.push(r);
+    col.registros.push({ r, idx });
   });
 
   // 2. Reordena cronológicamente según MODULOS cuando se pudo reconocer el
@@ -303,12 +316,19 @@ function renderAsistenciaReporteHTML(registros){
 
   // 3. Encabezados de columna: "Módulo N" (o "Cierre") + fecha oficial si
   //    se reconoció el módulo; si no, el texto tal cual llegó del formulario.
+  //    En modo editable, agrega debajo un control ✏️/🗑️ por cada envío que
+  //    comparte esa columna.
   const encabezadosHTML = columnas.map(col=>{
-    if(col.mod){
-      const etiqueta = col.mod.id === "cierre" ? "Cierre" : `Módulo ${col.mod.id}`;
-      return `<th><b>${etiqueta}</b><br><small style="font-weight:500;color:var(--gris-claro);">${col.mod.fechaLabel || ""}</small></th>`;
-    }
-    return `<th><b>${col.titulo}</b></th>`;
+    const tituloHTML = col.mod
+      ? `<b>${col.mod.id === "cierre" ? "Cierre" : "Módulo "+col.mod.id}</b><br><small style="font-weight:500;color:var(--gris-claro);">${col.mod.fechaLabel || ""}</small>`
+      : `<b>${col.titulo}</b>`;
+    const controlesHTML = editable ? `<div class="att-admin-col">${col.registros.map(({r, idx})=>`
+        <div class="att-admin-ctrl">
+          <span>${fechaCorta(r.fecha_envio)}</span>
+          <button type="button" class="btn-edit-nombre" title="Editar este envío" onclick="mjhtAsistenciaAbrirEdicion(${idx})">✏️</button>
+          <button type="button" class="btn-edit-nombre" title="Eliminar este envío" onclick="mjhtAsistenciaEliminarRegistro(${idx})">🗑️</button>
+        </div>`).join("")}</div>` : "";
+    return `<th>${tituloHTML}${controlesHTML}</th>`;
   }).join("");
 
   // 4. Filas: cada participante del roster, en su orden natural (M01..M10).
@@ -318,10 +338,10 @@ function renderAsistenciaReporteHTML(registros){
     const nombreMostrar = a ? (typeof nombreMostrado === "function" ? nombreMostrado(a.nombre) : a.nombre) : id;
     let total = 0;
     const celdasHTML = columnas.map(col=>{
-      const envios = col.registros.filter(r=>(r.presentes||[]).includes(id));
+      const envios = col.registros.filter(({r})=>(r.presentes||[]).includes(id));
       if(!envios.length) return `<td class="att-cell-empty">–</td>`;
       total++;
-      const chips = envios.map(r=>`<span class="att-chip">✓ ${fechaCorta(r.fecha_envio)}</span>`).join("");
+      const chips = envios.map(({r})=>`<span class="att-chip">✓ ${fechaCorta(r.fecha_envio)}</span>`).join("");
       return `<td class="att-cell-ok">${chips}</td>`;
     }).join("");
     return `<tr><td><b>${id}</b></td><td>${nombreMostrar}</td>${celdasHTML}<td class="att-cell-total"><b>${total}</b></td></tr>`;
@@ -335,6 +355,71 @@ function renderAsistenciaReporteHTML(registros){
       </table>
     </div>`;
 }
+
+/* ---------- Edición/eliminación de registros de asistencia (solo admin) ----------
+   Estas funciones son de uso general (no dependen de un contenedor fijo):
+   después de guardar el cambio en localStorage, llaman a
+   window.mjhtRerenderAsistenciaAdmin() si el panel de administradora la
+   definió, para volver a pintar la matriz. Se cargan siempre en app.js pero
+   solo se disparan desde botones que renderAsistenciaReporteHTML dibuja
+   cuando se le pasa {editable:true} — es decir, solo en admin/index.html. */
+function mjhtAsistenciaAbrirEdicion(idx){
+  const registros = getAsistenciaRegistros();
+  const r = registros[idx];
+  if(!r) return;
+  const asistentes = typeof ASISTENTES !== "undefined" ? ASISTENTES : [];
+  const presentes = new Set(r.presentes || []);
+  const overlay = document.createElement("div");
+  overlay.className = "gate-overlay att-edit-overlay";
+  overlay.innerHTML = `
+    <div class="gate-box att-edit-box">
+      <h3 style="margin-bottom:4px;">Editar asistencia</h3>
+      <p style="color:var(--gris-claro);font-size:.85rem;margin-bottom:14px;">${r.modulo || "Módulo"} · enviado ${fechaCorta(r.fecha_envio)}${r.ponente ? " · "+r.ponente : ""}</p>
+      <div class="att-edit-list">
+        ${asistentes.map(a=>`
+          <label class="check-row">
+            <input type="checkbox" value="${a.id}" ${presentes.has(a.id) ? "checked" : ""}>
+            <span>${asistenteEtiqueta(a, typeof nombreMostrado === "function" ? nombreMostrado(a.nombre) : a.nombre)}</span>
+          </label>`).join("")}
+      </div>
+      <div style="display:flex;gap:10px;margin-top:16px;">
+        <button type="button" class="btn btn-outline btn-block" id="att-edit-cancel">Cancelar</button>
+        <button type="button" class="btn btn-primary btn-block" id="att-edit-save">Guardar cambios</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  const cerrar = ()=> overlay.remove();
+  overlay.querySelector("#att-edit-cancel").addEventListener("click", cerrar);
+  overlay.addEventListener("click", (e)=>{ if(e.target === overlay) cerrar(); });
+  overlay.querySelector("#att-edit-save").addEventListener("click", ()=>{
+    const marcados = Array.from(overlay.querySelectorAll('.att-edit-list input[type="checkbox"]:checked')).map(c=>c.value);
+    const actuales = getAsistenciaRegistros();
+    if(actuales[idx]){
+      actuales[idx] = Object.assign({}, actuales[idx], { presentes: marcados });
+      try { localStorage.setItem(LS_KEY_ASISTENCIA, JSON.stringify(actuales)); } catch(e){}
+    }
+    cerrar();
+    if(typeof window.mjhtRerenderAsistenciaAdmin === "function") window.mjhtRerenderAsistenciaAdmin();
+  });
+}
+window.mjhtAsistenciaAbrirEdicion = mjhtAsistenciaAbrirEdicion;
+
+function mjhtAsistenciaEliminarRegistro(idx){
+  if(!confirm("¿Eliminar este envío de asistencia? Esta acción no se puede deshacer (solo afecta este navegador).")) return;
+  const registros = getAsistenciaRegistros();
+  registros.splice(idx, 1);
+  try { localStorage.setItem(LS_KEY_ASISTENCIA, JSON.stringify(registros)); } catch(e){}
+  if(typeof window.mjhtRerenderAsistenciaAdmin === "function") window.mjhtRerenderAsistenciaAdmin();
+}
+window.mjhtAsistenciaEliminarRegistro = mjhtAsistenciaEliminarRegistro;
+
+function mjhtAsistenciaReiniciarTodo(){
+  if(!confirm("¿Reiniciar TODA la asistencia? Se van a borrar TODOS los envíos guardados en este navegador (todas las listas pasadas hasta ahora).")) return;
+  if(!confirm("Esta acción no se puede deshacer. ¿Confirmas que quieres borrar por completo el historial de asistencia?")) return;
+  try { localStorage.setItem(LS_KEY_ASISTENCIA, JSON.stringify([])); } catch(e){}
+  if(typeof window.mjhtRerenderAsistenciaAdmin === "function") window.mjhtRerenderAsistenciaAdmin();
+}
+window.mjhtAsistenciaReiniciarTodo = mjhtAsistenciaReiniciarTodo;
 
 /* ============================================================
    Perfiles de asistentes: parser del formulario pegado
@@ -553,14 +638,48 @@ function renderPerfilGrupalHTML(g, filtroModulo){
    ============================================================ */
 
 /* ---------- 1/2. Registro y semblanzas de asistentes ---------- */
+// "Mi registro" (portal de asistentes) ya no crea una base de datos paralela:
+// al enviarlo, cada participante guarda sus correcciones/datos adicionales
+// (empresa, cargo, teléfono, email, redes sociales, comentarios) como
+// "overrides" ligados a su ID de roster (M01–M10), bajo esta misma clave —
+// mismo patrón que mjht_nombres_editados. renderRegistroAsistentesHTML() (el
+// "Registro de asistentes" del admin) lee el roster BASE + estos overrides
+// fusionados, para reflejar siempre la versión más reciente sin duplicar la
+// fuente de verdad.
+const LS_KEY_REGISTRO_OVERRIDES = "mjht_registro_overrides";
+function getRegistroOverrides(){
+  try { return JSON.parse(localStorage.getItem(LS_KEY_REGISTRO_OVERRIDES) || "{}"); }
+  catch(e){ return {}; }
+}
+function guardarRegistroOverride(id, campos){
+  if(!id) return getRegistroOverrides();
+  const todos = getRegistroOverrides();
+  todos[id] = Object.assign({}, todos[id], campos, { fecha: new Date().toISOString() });
+  try { localStorage.setItem(LS_KEY_REGISTRO_OVERRIDES, JSON.stringify(todos)); } catch(e){}
+  return todos;
+}
+// Combina un asistente del roster base con sus overrides guardados (si los
+// tiene) — los overrides ganan sobre el valor base cuando no vienen vacíos.
+function asistenteConOverrides(a){
+  const overrides = getRegistroOverrides();
+  const ov = overrides[a.id];
+  if(!ov) return a;
+  const merged = Object.assign({}, a);
+  ["empresa","cargo","telefono","email","redes_sociales","comentarios"].forEach(campo=>{
+    if(ov[campo]) merged[campo] = ov[campo];
+  });
+  return merged;
+}
 function renderRegistroAsistentesHTML(){
   if(typeof ASISTENTES === "undefined" || !ASISTENTES.length){
     return `<div class="callout">Todavía no has cargado el roster de asistentes en <code>assets/js/roster.js</code>.</div>`;
   }
-  const filas = ASISTENTES.map(a=>`
-    <tr><td><b>${a.id}</b></td><td>${a.nombre}</td><td>${a.cargo || "—"}</td><td>${a.empresa || "—"}</td></tr>`).join("");
+  const filas = ASISTENTES.map(a0=>{
+    const a = asistenteConOverrides(a0);
+    return `<tr><td><b>${a.id}</b></td><td>${a.nombre}</td><td>${a.cargo || "—"}</td><td>${a.empresa || "—"}</td><td>${a.telefono || "—"}</td><td>${a.email || "—"}</td></tr>`;
+  }).join("");
   return `<div class="table-wrap"><table>
-    <thead><tr><th>ID</th><th>Nombre</th><th>Cargo</th><th>Empresa</th></tr></thead>
+    <thead><tr><th>ID</th><th>Nombre</th><th>Cargo</th><th>Empresa</th><th>Teléfono</th><th>Email</th></tr></thead>
     <tbody>${filas}</tbody>
   </table></div>`;
 }

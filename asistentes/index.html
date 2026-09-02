@@ -32,15 +32,19 @@
   </div>
   <nav class="side-nav">
     <button class="tab-btn active" data-tab="t-inicio">Inicio</button>
+    <div class="side-sep"><span>Mi perfil</span></div>
     <button class="tab-btn" data-tab="t-perfil">Mi registro</button>
     <button class="tab-btn" data-tab="t-semblanza">Mi semblanza</button>
     <button class="tab-btn" data-tab="t-test">Test Trimetrix</button>
+    <div class="side-sep"><span>El programa</span></div>
     <button class="tab-btn" data-tab="t-calendario">Calendario</button>
     <button class="tab-btn" data-tab="t-modulos">Módulos y materiales</button>
     <button class="tab-btn" data-tab="t-tareas">Tareas</button>
     <button class="tab-btn" data-tab="t-ponentes">Facilitadores</button>
+    <div class="side-sep"><span>Antes de cada sesión</span></div>
     <button class="tab-btn" data-tab="t-cuestionario">Cuestionario previo</button>
     <button class="tab-btn" data-tab="t-feedback">Feedback</button>
+    <div class="side-sep"><span>Información práctica</span></div>
     <button class="tab-btn" data-tab="t-acceso">Acceso a instalaciones</button>
     <button class="tab-btn" data-tab="t-lineamientos">Lineamientos</button>
     <button class="tab-btn" data-tab="t-contacto">Contacto</button>
@@ -82,20 +86,24 @@
       <p>Regístrate una sola vez al inicio del diplomado. Esta información le sirve a la coordinación para tu certificado, tu kit de bienvenida y la logística de cada sesión.</p>
     </div>
     <div class="card">
-      <form name="registro-asistentes" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+      <form name="registro-asistentes" method="POST" data-netlify="true" netlify-honeypot="bot-field" id="form-registro-asistentes">
         <input type="hidden" name="form-name" value="registro-asistentes">
+        <input type="hidden" name="participante_id" id="input-participante-id-registro">
         <p class="hp-field"><label>No llenar: <input name="bot-field"></label></p>
         <div class="form-msg"></div>
+        <label>¿Quién eres? *</label>
+        <select id="sel-nombre-registro" required><option value="">Selecciona tu nombre…</option></select>
+        <p class="file-hint" style="margin-top:-6px;">Al elegir tu nombre precargamos lo que ya tenemos de ti — solo completa o corrige lo que falte.</p>
         <div class="field-row">
-          <div><label>Nombre completo *</label><input type="text" name="nombre" required></div>
-          <div><label>Correo electrónico *</label><input type="email" name="email" required></div>
+          <div><label>Nombre completo *</label><input type="text" name="nombre" id="input-nombre-registro" required></div>
+          <div><label>Correo electrónico *</label><input type="email" name="email" id="input-email-registro" required></div>
         </div>
         <div class="field-row">
-          <div><label>Empresa / negocio</label><input type="text" name="empresa"></div>
-          <div><label>Cargo / rol</label><input type="text" name="cargo"></div>
+          <div><label>Empresa / negocio</label><input type="text" name="empresa" id="input-empresa-registro"></div>
+          <div><label>Cargo / rol</label><input type="text" name="cargo" id="input-cargo-registro"></div>
         </div>
         <div class="field-row">
-          <div><label>Teléfono / WhatsApp *</label><input type="tel" name="telefono" required></div>
+          <div><label>Teléfono / WhatsApp *</label><input type="tel" name="telefono" id="input-telefono-registro" required></div>
           <div><label>¿Cómo te enteraste del diplomado?</label>
             <select name="entero">
               <option value="">Selecciona…</option>
@@ -108,9 +116,9 @@
           </div>
         </div>
         <label>Redes sociales</label>
-        <input type="text" name="redes_sociales" placeholder="Instagram, LinkedIn, etc.">
+        <input type="text" name="redes_sociales" id="input-redes-registro" placeholder="Instagram, LinkedIn, etc.">
         <label>¿Algo que quieras que sepamos antes de empezar? (alergias, necesidades, comentarios)</label>
-        <textarea name="comentarios" placeholder="Opcional"></textarea>
+        <textarea name="comentarios" id="input-comentarios-registro" placeholder="Opcional"></textarea>
         <button class="btn btn-primary" type="submit">Enviar mi registro</button>
       </form>
     </div>
@@ -582,6 +590,45 @@
     document.getElementById("sel-nombre-resultado").tagName === "SELECT" ? "change" : "input",
     mostrarResultadoTest
   );
+
+  // ---------- "Mi registro" conectado al roster (assets/js/roster.js) ----------
+  // En vez de una base de datos paralela, la participante elige su nombre del
+  // roster oficial; eso precarga lo que ya se tiene de ella (empresa, cargo,
+  // y cualquier corrección guardada antes en este navegador) y, al enviar,
+  // las correcciones se guardan como overrides ligados a su ID (M01–M10) —
+  // mismo patrón que mjht_nombres_editados — vía guardarRegistroOverride()
+  // en assets/js/app.js. El formulario se sigue enviando también a Netlify
+  // Forms como respaldo histórico, ahora con el ID de participante incluido.
+  const selNombreRegistro = document.getElementById("sel-nombre-registro");
+  const formRegistroAsistentes = document.getElementById("form-registro-asistentes");
+  if(typeof ASISTENTES !== "undefined" && ASISTENTES.length){
+    selNombreRegistro.innerHTML = '<option value="">Selecciona tu nombre…</option>' +
+      ASISTENTES.map(a=>`<option value="${a.id}">${asistenteEtiqueta(a)}</option>`).join("");
+  }
+  selNombreRegistro.addEventListener("change", ()=>{
+    const a = (typeof ASISTENTES !== "undefined") ? ASISTENTES.find(x=>x.id===selNombreRegistro.value) : null;
+    const overrides = (typeof getRegistroOverrides === "function" ? getRegistroOverrides() : {})[selNombreRegistro.value] || {};
+    document.getElementById("input-participante-id-registro").value = a ? a.id : "";
+    document.getElementById("input-nombre-registro").value = a ? a.nombre : "";
+    document.getElementById("input-empresa-registro").value = overrides.empresa || (a && a.empresa) || "";
+    document.getElementById("input-cargo-registro").value = overrides.cargo || (a && a.cargo) || "";
+    document.getElementById("input-telefono-registro").value = overrides.telefono || "";
+    document.getElementById("input-email-registro").value = overrides.email || "";
+    document.getElementById("input-redes-registro").value = overrides.redes_sociales || "";
+    document.getElementById("input-comentarios-registro").value = overrides.comentarios || "";
+  });
+  formRegistroAsistentes.addEventListener("submit", ()=>{
+    const id = selNombreRegistro.value;
+    if(!id || typeof guardarRegistroOverride !== "function") return;
+    guardarRegistroOverride(id, {
+      empresa: formRegistroAsistentes.empresa.value.trim(),
+      cargo: formRegistroAsistentes.cargo.value.trim(),
+      telefono: formRegistroAsistentes.telefono.value.trim(),
+      email: formRegistroAsistentes.email.value.trim(),
+      redes_sociales: formRegistroAsistentes.redes_sociales.value.trim(),
+      comentarios: formRegistroAsistentes.comentarios.value.trim()
+    });
+  });
 </script>
 </body>
 </html>

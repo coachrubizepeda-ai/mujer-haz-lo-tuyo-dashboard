@@ -491,6 +491,20 @@ footer.site a:hover{color:var(--azul-oscuro);}
 .att-cell-empty{color:var(--gris-claro);}
 .att-cell-total{background:rgba(0,125,165,.08);}
 
+/* Controles ✏️/🗑️ por envío, dentro del encabezado de columna — solo se
+   dibujan cuando renderAsistenciaReporteHTML() se llama con {editable:true}
+   (panel de administradora). */
+.att-admin-col{margin-top:6px;display:flex;flex-direction:column;gap:3px;}
+.att-admin-ctrl{
+  display:flex;align-items:center;justify-content:center;gap:4px;
+  font-weight:400;font-size:.72rem;color:var(--gris-claro);
+}
+.att-admin-ctrl .btn-edit-nombre{padding:0;}
+
+/* Modal de edición de un envío de asistencia (reutiliza .gate-overlay/.gate-box) */
+.att-edit-box{max-width:460px;width:100%;text-align:left;}
+.att-edit-list{max-height:320px;overflow-y:auto;margin:4px 0 4px;}
+
 /* ---------- Checklist editable (lanzamiento) ---------- */
 .checklist li.overdue .txt b{color:var(--gris-oscuro);}
 .checklist .fecha-limite{display:block;font-size:.76rem;color:var(--gris-claro);margin-top:2px;}

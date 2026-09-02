@@ -142,6 +142,28 @@
     </div>
     <div id="resultados-test-admin"></div>
 
+    <div class="section-head" style="margin-top:28px;">
+      <span class="eyebrow">Subir el archivo real</span>
+      <h2>Subir resultado del test (PDF)</h2>
+      <p>Si ya tienes el PDF de resultados de una participante, súbelo aquí directamente — se envía al mismo formulario que usan los facilitadores.</p>
+    </div>
+    <div class="card">
+      <form name="resultado-test-asistente" method="POST" data-netlify="true" netlify-honeypot="bot-field" enctype="multipart/form-data" id="form-resultado-test-admin">
+        <input type="hidden" name="form-name" value="resultado-test-asistente">
+        <input type="hidden" name="ponente_nombre" value="Rubí (Administradora)">
+        <p class="hp-field"><label>No llenar: <input name="bot-field"></label></p>
+        <div class="form-msg"></div>
+        <label>Participante *</label>
+        <select name="nombre_asistente" id="sel-asistente-resultado-admin-upload" required></select>
+        <label>Archivo de resultados (PDF) *</label>
+        <input type="file" name="archivo" accept=".pdf" required>
+        <button class="btn btn-primary" type="submit">Subir resultado</button>
+      </form>
+      <div class="callout" style="margin-top:16px;">
+        El archivo subido aquí queda guardado en <b>Netlify Forms → resultado-test-asistente</b>. Esta vista solo muestra la referencia (nombre del archivo); para descargar el PDF real entra a tu panel de Netlify.
+      </div>
+    </div>
+
     <!-- 10. COMENTARIOS DE FACILITADORES -->
     <div class="section-head" style="margin-top:34px;">
       <span class="eyebrow">Entre facilitadores</span>
@@ -211,6 +233,12 @@
     </div>
     <div class="callout" style="margin-bottom:16px;">
       Este reporte se arma con los envíos hechos desde este navegador. Para ver TODOS los envíos de todos los facilitadores, revisa Netlify Forms → asistencia-modulo.
+    </div>
+    <div class="callout warn" style="margin-bottom:16px;">
+      Junto a cada envío (encabezado de columna) tienes ✏️ para corregir quién estuvo presente (por ejemplo, alguien que llegó tarde o se les pasó marcar) y 🗑️ para eliminar por completo ese envío. Todo se guarda solo en este navegador.
+    </div>
+    <div style="margin-bottom:16px;">
+      <button type="button" class="btn btn-outline btn-sm" onclick="mjhtAsistenciaReiniciarTodo()">🔄 Reiniciar TODA la asistencia</button>
     </div>
     <div id="asistencia-reporte-admin"></div>
   </section>
@@ -384,9 +412,16 @@
         <td>${m.presentacion ? `<a href="${m.presentacion}" target="_blank">ver ↗</a>` : "—"}</td>`;
   }, 6);
 
-  // Reporte de asistencia (local — ver assets/js/app.js)
+  // Reporte de asistencia (local — ver assets/js/app.js). Se pasa
+  // {editable:true} SOLO aquí (admin) para que la matriz muestre los
+  // controles ✏️/🗑️ por envío y el botón de reinicio total funcione;
+  // mjhtRerenderAsistenciaAdmin() es el callback que esas acciones llaman
+  // después de guardar el cambio, para repintar esta misma matriz.
   const asistenciaReporteAdminWrap = document.getElementById("asistencia-reporte-admin");
-  if(asistenciaReporteAdminWrap) asistenciaReporteAdminWrap.innerHTML = renderAsistenciaReporteHTML(getAsistenciaRegistros());
+  window.mjhtRerenderAsistenciaAdmin = function(){
+    if(asistenciaReporteAdminWrap) asistenciaReporteAdminWrap.innerHTML = renderAsistenciaReporteHTML(getAsistenciaRegistros(), {editable:true});
+  };
+  window.mjhtRerenderAsistenciaAdmin();
 
   // ---------- Resumen ejecutivo: secciones 1 a 10 (ver assets/js/app.js) ----------
   document.getElementById("registro-asistentes-admin").innerHTML = renderRegistroAsistentesHTML();
@@ -411,6 +446,24 @@
     if(!id || !valor) return;
     guardarResultadoTest(id, valor);
     inputResultado.value = "";
+    document.getElementById("resultados-test-admin").innerHTML = renderResultadosTestEstadoHTML();
+  });
+
+  // Subir resultado del test (PDF real) — envía a Netlify Forms
+  // (resultado-test-asistente, mismo formulario que usan los facilitadores)
+  // y además guarda la referencia local (nombre del archivo) para que se
+  // vea de inmediato en la tabla de arriba.
+  const selAsistenteResultadoAdminUpload = document.getElementById("sel-asistente-resultado-admin-upload");
+  if(typeof ASISTENTES !== "undefined" && ASISTENTES.length){
+    selAsistenteResultadoAdminUpload.innerHTML = ASISTENTES.map(a=>`<option value="${a.nombre}">${asistenteEtiqueta(a)}</option>`).join("");
+  }
+  document.getElementById("form-resultado-test-admin").addEventListener("submit", ()=>{
+    const nombreSel = selAsistenteResultadoAdminUpload.value;
+    const asistente = buscarAsistentePorNombre(nombreSel);
+    const fileInput = document.querySelector('#form-resultado-test-admin input[type=file]');
+    const archivoNombre = fileInput && fileInput.files && fileInput.files[0] ? fileInput.files[0].name : "";
+    if(!asistente || !archivoNombre) return;
+    guardarResultadoTest(asistente.id, archivoNombre);
     document.getElementById("resultados-test-admin").innerHTML = renderResultadosTestEstadoHTML();
   });
 
