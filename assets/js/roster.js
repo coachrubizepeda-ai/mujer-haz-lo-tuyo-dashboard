@@ -35,4 +35,5 @@ const ASISTENTES = [
   { nombre: "Ana Vélez", empresa: "", cargo: "", semblanza: "", linkedin: "" },
   { nombre: "Sara Rivero Rugerio", empresa: "", cargo: "", semblanza: "", linkedin: "" },
   { nombre: "Mildred Sosa", empresa: "", cargo: "", semblanza: "", linkedin: "", perfil: "Mildred Erosa" },
+  { nombre: "Lupita Prósperi", empresa: "", cargo: "", semblanza: "", linkedin: "" },
 ];

@@ -52,7 +52,7 @@
       <p>Vista rápida del diplomado — edición Matutina CANACINTRA / Club de Empresarios.</p>
     </div>
     <div class="grid grid-3" style="margin-bottom:18px;">
-      <div class="stat"><b>10 + 1</b><span>módulos + experiencia de cierre</span></div>
+      <div class="stat"><b>10 + 2</b><span>módulos + Experiencia con caballos + Experiencia de cierre</span></div>
       <div class="stat"><b>9</b><span>especialistas invitados</span></div>
       <div class="stat"><b>50 hrs</b><span>4 sep — 13 nov 2026 · viernes 9–14 hrs</span></div>
       <div class="stat"><b>11–20</b><span>cupo mínimo / máximo de participantes</span></div>
@@ -128,6 +128,16 @@
       <p>Se genera desde <code>assets/js/roster.js</code>. Súbelo ahí cuando tengas la información completa del grupo.</p>
     </div>
     <div id="asistentes-list" class="grid grid-2"></div>
+
+    <div class="section-head" style="margin-top:34px;">
+      <span class="eyebrow">Lineamientos</span>
+      <h2>Código de Honor para participantes</h2>
+      <p>Visible también en el portal de asistentes y en el de facilitadores. Rubí aún debe confirmar el texto definitivo (contenido borrador).</p>
+    </div>
+    <div class="lineamiento-block honor-participantes">
+      <div class="lb-head">Código de Honor para participantes<small>Borrador — pendiente de confirmar con Rubí</small></div>
+      <div class="lb-body" id="codigo-honor-participantes-acc"></div>
+    </div>
   </section>
 
   <!-- CALENDARIO -->
@@ -332,6 +342,15 @@
     });
   } else {
     asisWrap.innerHTML = `<div class="callout">Aún no has cargado el directorio de asistentes. Agrégalas en <code>assets/js/roster.js</code> (o pídeme que las suba cuando me compartas la información).</div>`;
+  }
+
+  // Código de Honor para participantes (contenido borrador, ver assets/js/data.js)
+  if(typeof CODIGO_HONOR_PARTICIPANTES !== "undefined"){
+    document.getElementById("codigo-honor-participantes-acc").innerHTML = CODIGO_HONOR_PARTICIPANTES.map(([titulo, texto])=>`
+      <div class="lineamiento-item">
+        <h4>${titulo}</h4>
+        <p>${texto}</p>
+      </div>`).join("");
   }
 
   // Select de módulo para "Cuestionario previo al módulo"

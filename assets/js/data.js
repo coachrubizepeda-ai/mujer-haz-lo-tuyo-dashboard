@@ -216,7 +216,7 @@ const EJE_LABEL = {
 // ------------------------------------------------------------------
 // Agrupamiento visible del calendario (reemplaza "Eje 1/2/3" + número).
 // Confirmado por Rubí:
-//   - Módulos 1, 2, 3 + Sesión especial "Taller con Caballos" → Identidad Interna
+//   - Módulos 1, 2, 3 + Sesión especial "Presencia que conecta. Experiencia con caballos" → Identidad Interna
 //   - Módulos 4, 5, 6, 7                                       → Proyección y marca personal
 //   - Módulos 8, 9, 10                                         → Estrategia
 //   - Sesión de cierre (cata de vinos)                         → Experiencia de cierre
@@ -247,10 +247,20 @@ const RESULTADOS_TEST = {
 // calendario de los 3 portales, pero no cuenta como módulo ni afecta el
 // avance del diplomado (renderCourseProgress solo usa MODULOS).
 const SESION_ESPECIAL = {
-  tema: "Sesión especial: Taller con Caballos",
+  tema: "Presencia que conecta. Experiencia con caballos",
   grupo: "identidad",
   fecha: "2026-09-19",
   fechaLabel: "Sábado 19 sep",
   horario: "Por confirmar",
   facilitadora: "Rosario"
 };
+
+// Código de Honor para participantes — placeholder editable: Rubí aún no ha
+// compartido el contenido definitivo, así que estos son puntos de ejemplo
+// marcados como borrador. Reemplázalos en cuanto Rubí confirme el texto real.
+const CODIGO_HONOR_PARTICIPANTES = [
+  ["Compromiso y puntualidad", "Asistir a las sesiones con puntualidad y compromiso con el propio proceso. [PENDIENTE: confirmar con Rubí]"],
+  ["Confidencialidad", "Respetar la privacidad e historias compartidas por las demás participantes. [PENDIENTE: confirmar con Rubí]"],
+  ["Apertura y respeto", "Participar con apertura, respeto y sin juicio hacia una misma y hacia el grupo. [PENDIENTE: confirmar con Rubí]"],
+  ["Confianza en el proceso", "Confiar en la metodología y en el acompañamiento de los facilitadores. [PENDIENTE: confirmar con Rubí]"]
+];

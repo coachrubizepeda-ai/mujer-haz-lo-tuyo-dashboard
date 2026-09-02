@@ -265,8 +265,9 @@ tr.cal-grp-proyeccion:not(.cal-group-row) td:first-child{border-left:4px solid v
 tr.cal-grp-estrategia:not(.cal-group-row) td:first-child{border-left:4px solid var(--amarillo);}
 tr.cal-grp-cierre:not(.cal-group-row) td:first-child{border-left:4px solid var(--amarillo-claro);}
 
-/* Sesión especial "Taller con Caballos": tipografía distinta (itálica) para
-   diferenciarla visualmente de las filas de módulos numerados */
+/* Sesión especial "Presencia que conecta. Experiencia con caballos": tipografía
+   distinta (itálica) para diferenciarla visualmente de las filas de módulos
+   numerados */
 tr.cal-especial td{font-style:italic;}
 tr.cal-especial td b{font-style:italic;}
 
@@ -304,11 +305,45 @@ td svg{width:16px;height:16px;vertical-align:-3px;}
 .acc-body-inner h5{font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--gris-claro);margin:14px 0 6px;}
 .acc-body-inner h5:first-child{margin-top:0;}
 
+/* ---------- Lineamientos: bloques siempre expandidos, diferenciados por color ---------- */
+.lineamiento-block{
+  border:1px solid var(--border);border-radius:var(--radius);background:var(--card);
+  overflow:hidden;margin-bottom:18px;box-shadow:var(--shadow);
+}
+.lineamiento-block .lb-head{
+  padding:14px 20px;font-weight:700;font-size:1rem;color:#fff;
+}
+.lineamiento-block .lb-head small{display:block;font-weight:500;font-size:.75rem;margin-top:2px;opacity:.9;}
+.lineamiento-block.honor-facilitadores .lb-head{background:var(--azul-oscuro);}
+.lineamiento-block.operativos .lb-head{background:var(--amarillo);color:var(--gris-oscuro);}
+.lineamiento-block.honor-participantes .lb-head{background:var(--azul-claro);}
+.lineamiento-block .lb-body{padding:8px 20px 18px;}
+.lineamiento-item{padding:12px 0;border-bottom:1px solid var(--border);}
+.lineamiento-item:last-child{border-bottom:none;}
+.lineamiento-item h4{margin:0 0 4px;font-size:.95rem;}
+.lineamiento-item p{margin:0;color:var(--gris-claro);font-size:.88rem;}
+
 /* ---------- Perfil de asistente (campos del diagnóstico) ---------- */
 .perfil-campo{display:flex;gap:12px;margin-bottom:8px;align-items:baseline;}
 .perfil-campo .mtag{flex:0 0 30px;color:var(--gris-claro);font-weight:700;font-size:.72rem;}
 .perfil-campo .txt{flex:1;font-size:.86rem;line-height:1.45;}
 .perfil-campo .txt b{color:var(--gris-oscuro);}
+
+/* Agrupación por módulo dentro de un perfil cargado */
+.perfil-modulo-grupo{margin-bottom:16px;}
+.perfil-modulo-grupo:last-child{margin-bottom:0;}
+.perfil-modulo-grupo h5{
+  font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;color:var(--azul-oscuro);
+  margin:0 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border);
+}
+
+/* Botón/edición inline del nombre de una asistente (perfiles de ponentes) */
+.nombre-editable{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.btn-edit-nombre{
+  background:none;border:none;cursor:pointer;color:var(--gris-claro);
+  font-size:.85rem;padding:2px 4px;line-height:1;flex:none;
+}
+.btn-edit-nombre:hover{color:var(--azul-oscuro);}
 
 /* ---------- Forms ---------- */
 label{display:block;font-size:.85rem;font-weight:600;margin-bottom:6px;color:var(--gris-oscuro);}

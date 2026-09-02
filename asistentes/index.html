@@ -42,6 +42,7 @@
     <button class="tab-btn" data-tab="t-cuestionario">Cuestionario previo</button>
     <button class="tab-btn" data-tab="t-feedback">Feedback</button>
     <button class="tab-btn" data-tab="t-acceso">Acceso a instalaciones</button>
+    <button class="tab-btn" data-tab="t-lineamientos">Lineamientos</button>
     <button class="tab-btn" data-tab="t-contacto">Contacto</button>
   </nav>
 </aside>
@@ -157,7 +158,7 @@
     <div class="section-head">
       <span class="eyebrow">Planeación</span>
       <h2>Calendario del diplomado</h2>
-      <p>10 módulos + experiencia de cierre. Viernes de 9:00 a 14:00 hrs en el Club de Empresarios (CCE), Torre Inxignia.</p>
+      <p>10 módulos + Experiencia con caballos + Experiencia de cierre. Viernes de 9:00 a 14:00 hrs en el Club de Empresarios (CCE), Torre Inxignia.</p>
     </div>
     <div id="cal-legend"></div>
     <div class="table-wrap">
@@ -286,6 +287,19 @@
     </div>
   </section>
 
+  <!-- LINEAMIENTOS -->
+  <section class="tab-panel" id="t-lineamientos">
+    <div class="section-head">
+      <span class="eyebrow">Convivencia</span>
+      <h2>Lineamientos</h2>
+      <p>Código de Honor para participantes del diplomado.</p>
+    </div>
+    <div class="lineamiento-block honor-participantes">
+      <div class="lb-head">Código de Honor para participantes<small>Borrador — pendiente de confirmar con Rubí</small></div>
+      <div class="lb-body" id="codigo-honor-participantes-acc"></div>
+    </div>
+  </section>
+
   <!-- CONTACTO -->
   <section class="tab-panel" id="t-contacto">
     <div class="section-head">
@@ -321,6 +335,15 @@
 <script src="../assets/js/app.js"></script>
 <script>
   renderCourseProgress("course-progress");
+
+  // Lineamientos: Código de Honor para participantes (siempre expandido)
+  if(typeof CODIGO_HONOR_PARTICIPANTES !== "undefined"){
+    document.getElementById("codigo-honor-participantes-acc").innerHTML = CODIGO_HONOR_PARTICIPANTES.map(([titulo, texto])=>`
+      <div class="lineamiento-item">
+        <h4>${titulo}</h4>
+        <p>${texto}</p>
+      </div>`).join("");
+  }
 
   // Calendario
   const hoy = new Date();

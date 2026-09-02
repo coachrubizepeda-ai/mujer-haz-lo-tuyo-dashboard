@@ -54,11 +54,6 @@
       <p>Este espacio es para ti como especialista del diplomado. Aquí encuentras la información de tu módulo, el calendario completo del programa, y el lugar para compartir tu semblanza y tu presentación.</p>
     </div>
     <div id="course-progress" class="course-progress"></div>
-    <div class="grid grid-3">
-      <div class="stat"><b>10</b><span>módulos · 9 especialistas</span></div>
-      <div class="stat"><b>5 hrs</b><span>por módulo, viernes 9:00–14:00</span></div>
-      <div class="stat"><b>CCE</b><span>Club de Empresarios, Torre Inxignia</span></div>
-    </div>
     <div class="callout" style="margin-top:20px;">
       Empieza por la pestaña <b>Mi módulo</b> para confirmar tu fecha, y no olvides dejar tu <b>semblanza</b> para el directorio del grupo.
     </div>
@@ -157,6 +152,13 @@
     <textarea name="texto"></textarea>
   </form>
 
+  <!-- Formulario oculto: captura de imagen del cuestionario, para quien prefiera no transcribir el texto -->
+  <form name="captura-perfil-asistente" method="POST" data-netlify="true" netlify-honeypot="bot-field" enctype="multipart/form-data" id="form-captura-perfil" style="display:none;">
+    <input type="hidden" name="form-name" value="captura-perfil-asistente">
+    <input name="nombre_asistente">
+    <input type="file" name="archivo">
+  </form>
+
   <!-- SEMBLANZA -->
   <section class="tab-panel" id="t-semblanza">
     <div class="section-head">
@@ -178,8 +180,6 @@
         </div>
         <label>Semblanza profesional *</label>
         <textarea name="semblanza" required placeholder="Trayectoria, especialidad, un par de logros representativos."></textarea>
-        <label>Liga a foto (Drive, Canva, etc.)</label>
-        <input type="text" name="foto_url" placeholder="https://">
         <p class="file-hint" style="margin-top:-6px;">Comparte tus redes — las asistentes las van a ver en tu módulo para seguirte.</p>
         <div class="field-row">
           <div><label>LinkedIn</label><input type="text" name="linkedin" placeholder="https://linkedin.com/in/..."></div>
@@ -216,7 +216,7 @@
         <label>Sube tu(s) presentación(es) (PDF, PPT, etc.)</label>
         <input type="file" name="archivo" accept=".pdf,.ppt,.pptx,.key">
         <div id="pdfs-extra"></div>
-        <button type="button" class="btn btn-outline btn-sm" style="margin:6px 0 4px;" onclick="mjhtAgregarPDF()">+ Agregar otro PDF</button>
+        <button type="button" class="btn btn-outline btn-sm" style="margin:6px 0 4px;" onclick="mjhtAgregarPDF()">+ Agregar otro archivo</button>
         <p class="file-hint">Los envíos con archivo llegan al panel de formularios de Netlify; si tu archivo es muy pesado, mejor comparte la liga de Drive/Canva abajo.</p>
         <label>Ligas que quieras compartir (todas opcionales)</label>
         <div class="field-row">
@@ -260,17 +260,20 @@
       <p>Código de Honor y lineamientos operativos del programa. Aplican a todas las sesiones del diplomado.</p>
     </div>
 
-    <div class="section-head" style="margin-bottom:14px;">
-      <span class="eyebrow">Ética y postura</span>
-      <h2 style="font-size:1.15rem;">Código de Honor para facilitadores</h2>
+    <div class="lineamiento-block honor-facilitadores">
+      <div class="lb-head">Código de Honor para facilitadores</div>
+      <div class="lb-body" id="codigo-honor-acc"></div>
     </div>
-    <div id="codigo-honor-acc"></div>
 
-    <div class="section-head" style="margin-top:34px;margin-bottom:14px;">
-      <span class="eyebrow">Operación</span>
-      <h2 style="font-size:1.15rem;">Lineamientos operativos para facilitadores</h2>
+    <div class="lineamiento-block operativos">
+      <div class="lb-head">Lineamientos operativos para facilitadores</div>
+      <div class="lb-body" id="lineamientos-op-acc"></div>
     </div>
-    <div id="lineamientos-op-acc"></div>
+
+    <div class="lineamiento-block honor-participantes">
+      <div class="lb-head">Código de Honor para participantes<small>Borrador — pendiente de confirmar con Rubí</small></div>
+      <div class="lb-body" id="codigo-honor-participantes-acc"></div>
+    </div>
   </section>
 
   <!-- CONTACTO -->
@@ -407,6 +410,51 @@
     return null;
   }
 
+  // ---------- Nombres editables (corrección de errores de escritura) ----------
+  // Se guarda solo en este navegador: mapa nombre-original -> nombre-corregido.
+  const LS_KEY_NOMBRES = "mjht_nombres_editados";
+  function getNombresEditados(){
+    try { return JSON.parse(localStorage.getItem(LS_KEY_NOMBRES) || "{}"); }
+    catch(e){ return {}; }
+  }
+  function nombreMostrado(nombreOriginal){
+    const editados = getNombresEditados();
+    return editados[nombreOriginal] || nombreOriginal;
+  }
+  window.mjhtEditarNombre = function(nombreOriginal){
+    const actual = nombreMostrado(nombreOriginal);
+    const nuevo = prompt("Corregir nombre para mostrar (solo en este navegador):", actual);
+    if(nuevo === null) return;
+    const limpio = nuevo.trim();
+    const editados = getNombresEditados();
+    if(limpio && limpio !== nombreOriginal){ editados[nombreOriginal] = limpio; }
+    else { delete editados[nombreOriginal]; }
+    try { localStorage.setItem(LS_KEY_NOMBRES, JSON.stringify(editados)); } catch(e){}
+    renderPerfilesYGrupal();
+  };
+
+  // Agrupa los campos de un perfil por módulo, con encabezado por módulo
+  function camposAgrupadosPorModuloHTML(campos){
+    if(!campos || !campos.length) return "<p>Sin respuestas registradas.</p>";
+    const porModulo = {};
+    const orden = [];
+    campos.forEach(c=>{
+      const key = c.modulo != null ? c.modulo : "otro";
+      if(!(key in porModulo)){ porModulo[key] = []; orden.push(key); }
+      porModulo[key].push(c);
+    });
+    return orden.map(key=>{
+      const modInfo = (typeof MODULOS !== "undefined") ? MODULOS.find(m=>m.id===key) : null;
+      const titulo = key==="otro" ? "Otras respuestas" : `Módulo ${key}${modInfo ? " — "+modInfo.tema : ""}`;
+      const items = porModulo[key].map(c=>`
+        <div class="perfil-campo">
+          <span class="mtag">M${key}</span>
+          <span class="txt"><b>${c.label}:</b> ${c.valor}</span>
+        </div>`).join("");
+      return `<div class="perfil-modulo-grupo"><h5>${titulo}</h5>${items}</div>`;
+    }).join("");
+  }
+
   function renderPerfilesYGrupal(){
     if(typeof ASISTENTES === "undefined" || !ASISTENTES.length){
       perfilesWrap.innerHTML = `<div class="callout">Todavía no hay directorio de asistentes cargado (assets/js/roster.js).</div>`;
@@ -416,39 +464,51 @@
 
     perfilesWrap.innerHTML = ASISTENTES.map((a,i)=>{
       const perfil = perfilDe(a);
-      const iniciales = a.nombre.split(" ").map(w=>w[0]).slice(0,2).join("").toUpperCase();
+      const nombreMostrar = nombreMostrado(a.nombre);
+      const iniciales = nombreMostrar.split(" ").map(w=>w[0]).slice(0,2).join("").toUpperCase();
+      const nombreEsc = a.nombre.replace(/'/g,"\\'");
+      const editBtn = `<button type="button" class="btn-edit-nombre" title="Corregir nombre" onclick="mjhtEditarNombre('${nombreEsc}')">✏️ Editar nombre</button>`;
 
       if(perfil){
         const resumen = perfil.resumen ? Object.values(perfil.resumen).filter(Boolean).join(" · ") : "";
-        const camposHTML = (perfil.campos||[]).map(c=>`
-          <div class="perfil-campo">
-            <span class="mtag">M${c.modulo}</span>
-            <span class="txt"><b>${c.label}:</b> ${c.valor}</span>
-          </div>`).join("");
+        const camposHTML = camposAgrupadosPorModuloHTML(perfil.campos);
         return `
           <div class="acc-item perfil">
-            <button class="acc-head">
-              <span class="num">${iniciales}</span>
-              <span class="meta"><h4>${a.nombre}</h4><small>${resumen}</small></span>
-              <span class="chev">▾</span>
-            </button>
-            <div class="acc-body"><div class="acc-body-inner">${camposHTML || "<p>Sin respuestas registradas.</p>"}</div></div>
+            <div class="nombre-editable" style="display:flex;align-items:center;">
+              <button class="acc-head" style="flex:1;">
+                <span class="num">${iniciales}</span>
+                <span class="meta"><h4>${nombreMostrar}</h4><small>${resumen}</small></span>
+                <span class="chev">▾</span>
+              </button>
+              ${editBtn}
+            </div>
+            <div class="acc-body"><div class="acc-body-inner">${camposHTML}</div></div>
           </div>`;
       }
 
-      // Sin perfil todavía: ventana para pegar sus respuestas
+      // Sin perfil todavía: ventana para pegar sus respuestas, o subir una captura
       return `
         <div class="acc-item">
-          <button class="acc-head">
-            <span class="num">${iniciales}</span>
-            <span class="meta"><h4>${a.nombre}</h4><small>Sin respuestas cargadas todavía</small></span>
-            <span class="chev">▾</span>
-          </button>
+          <div class="nombre-editable" style="display:flex;align-items:center;">
+            <button class="acc-head" style="flex:1;">
+              <span class="num">${iniciales}</span>
+              <span class="meta"><h4>${nombreMostrar}</h4><small>Sin respuestas cargadas todavía</small></span>
+              <span class="chev">▾</span>
+            </button>
+            ${editBtn}
+          </div>
           <div class="acc-body"><div class="acc-body-inner">
             <p class="file-hint">Pega aquí exactamente el texto de sus respuestas al formulario (tal cual lo copias de Google Forms) y pulsa "Cargar".</p>
             <textarea id="pegar-${i}" placeholder="Nombre&#10;${a.nombre}&#10;Rango edad&#10;...&#10;M1 motivacion&#10;..."></textarea>
             <p class="perfil-msg" id="pegar-msg-${i}" style="font-size:.82rem;margin-top:4px;"></p>
             <button type="button" class="btn btn-primary btn-sm" data-idx="${i}" data-nombre="${a.nombre}" onclick="mjhtCargarPerfil(this)">Cargar</button>
+            <div class="callout" style="margin-top:16px;">
+              Sube la captura si prefieres no transcribir el texto; se revisará y clasificará manualmente.
+            </div>
+            <label style="margin-top:10px;">Captura de pantalla de las respuestas</label>
+            <input type="file" accept="image/*" id="captura-${i}">
+            <p class="perfil-msg" id="captura-msg-${i}" style="font-size:.82rem;margin-top:-6px;"></p>
+            <button type="button" class="btn btn-outline btn-sm" data-idx="${i}" data-nombre="${a.nombre}" onclick="mjhtSubirCaptura(this)">Subir captura</button>
           </div></div>
         </div>`;
     }).join("");
@@ -477,6 +537,25 @@
     form.texto.value = raw;
     fetch("/", { method:"POST", headers:{"Content-Type":"application/x-www-form-urlencoded"}, body:new URLSearchParams(new FormData(form)).toString() }).catch(()=>{});
     setTimeout(renderPerfilesYGrupal, 0);
+  };
+
+  window.mjhtSubirCaptura = function(btn){
+    const idx = btn.dataset.idx;
+    const nombre = btn.dataset.nombre;
+    const fileInput = document.getElementById("captura-"+idx);
+    const msg = document.getElementById("captura-msg-"+idx);
+    if(!fileInput.files || !fileInput.files.length){
+      msg.textContent = "Selecciona primero un archivo de imagen.";
+      msg.style.color = "var(--warn)";
+      return;
+    }
+    const form = document.getElementById("form-captura-perfil");
+    form.nombre_asistente.value = nombre;
+    form.archivo.files = fileInput.files;
+    const data = new FormData(form);
+    fetch("/", { method:"POST", body:data })
+      .then(()=>{ msg.textContent = "¡Listo! Se envió la captura. Gracias."; msg.style.color = "var(--ok)"; fileInput.value=""; })
+      .catch(()=>{ msg.textContent = "No se pudo enviar. Intenta de nuevo o escribe a hazlotuyo@theokpeople.com."; msg.style.color = "var(--warn)"; });
   };
 
   renderPerfilesYGrupal();
@@ -530,20 +609,20 @@
     ["Cierre operativo de sesión", "Cada sesión debe contemplar un cierre estructurado que facilite la integración del contenido y una transición clara al siguiente módulo."],
     ["Disponibilidad para retroalimentación", "Estar disponible para recibir retroalimentación breve de la coordinación cuando sea necesario."]
   ];
-  function renderLineamientosAcc(containerId, items){
+  // Bloques de lineamientos: siempre expandidos, sin acordeón — solo lista con encabezados.
+  function renderLineamientosBlock(containerId, items){
     const wrap = document.getElementById(containerId);
-    wrap.innerHTML = items.map(([titulo, texto], i)=>`
-      <div class="acc-item">
-        <button class="acc-head">
-          <span class="num">${String(i+1).padStart(2,"0")}</span>
-          <span class="meta"><h4>${titulo}</h4></span>
-          <span class="chev">▾</span>
-        </button>
-        <div class="acc-body"><div class="acc-body-inner"><p>${texto}</p></div></div>
+    wrap.innerHTML = items.map(([titulo, texto])=>`
+      <div class="lineamiento-item">
+        <h4>${titulo}</h4>
+        <p>${texto}</p>
       </div>`).join("");
   }
-  renderLineamientosAcc("codigo-honor-acc", CODIGO_HONOR);
-  renderLineamientosAcc("lineamientos-op-acc", LINEAMIENTOS_OP);
+  renderLineamientosBlock("codigo-honor-acc", CODIGO_HONOR);
+  renderLineamientosBlock("lineamientos-op-acc", LINEAMIENTOS_OP);
+  if(typeof CODIGO_HONOR_PARTICIPANTES !== "undefined"){
+    renderLineamientosBlock("codigo-honor-participantes-acc", CODIGO_HONOR_PARTICIPANTES);
+  }
   initAccordion();
 </script>
 </body>
