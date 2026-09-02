@@ -479,6 +479,24 @@ footer.site a:hover{color:var(--azul-oscuro);}
 }
 .progress-label{font-size:.82rem;color:var(--gris-claro);margin-bottom:18px;display:block;}
 
+/* ---------- Matriz de asistencia (participante × módulo) ---------- */
+.att-matrix{min-width:640px;}
+.att-matrix th,.att-matrix td{white-space:nowrap;text-align:center;}
+.att-matrix th:nth-child(1),.att-matrix th:nth-child(2),
+.att-matrix td:nth-child(1),.att-matrix td:nth-child(2){text-align:left;}
+.att-chip{
+  display:inline-block;background:var(--azul-claro);color:#fff;font-size:.72rem;font-weight:600;
+  padding:3px 8px;border-radius:999px;margin:1px 2px;
+}
+.att-cell-empty{color:var(--gris-claro);}
+.att-cell-total{background:rgba(0,125,165,.08);}
+
+/* ---------- Checklist editable (lanzamiento) ---------- */
+.checklist li.overdue .txt b{color:var(--gris-oscuro);}
+.checklist .fecha-limite{display:block;font-size:.76rem;color:var(--gris-claro);margin-top:2px;}
+.checklist .fecha-limite.overdue{color:var(--gris-oscuro);font-weight:700;}
+.checklist .item-actions{display:flex;gap:2px;flex-shrink:0;margin-left:8px;}
+
 /* ---------- Barra de avance del diplomado ---------- */
 .course-progress{
   background:var(--card);border:1px solid var(--border);border-radius:var(--radius);

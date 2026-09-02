@@ -38,7 +38,6 @@
     <button class="tab-btn" data-tab="t-calendario">Calendario maestro</button>
     <button class="tab-btn" data-tab="t-financiero">Modelo financiero</button>
     <button class="tab-btn" data-tab="t-checklist">Checklist de lanzamiento</button>
-    <button class="tab-btn" data-tab="t-comunicacion">Comunicación</button>
   </nav>
 </aside>
 
@@ -342,31 +341,6 @@
     </div>
   </section>
 
-  <!-- COMUNICACION -->
-  <section class="tab-panel" id="t-comunicacion">
-    <div class="section-head">
-      <span class="eyebrow">Herramientas de venta</span>
-      <h2>Comunicación</h2>
-    </div>
-    <div class="card">
-      <h4>Mensaje ya enviado a Fernanda (CANACINTRA)</h4>
-      <p style="font-style:italic;background:#F4F1E9;padding:14px 16px;border-radius:10px;">"Hola [Nombre], gracias por compartirme tu plan — se nota que tienes claridad de hacia dónde quieres llevar a tu sección. Tengo una idea que creo que encaja perfecto con lo que quieres lograr este año — y que podría ser parte de tu plan de gestión sin costo para la organización. Me gustaría platicártela en persona cuando tengas 45 minutos. ¿Cómo tienes la semana?"</p>
-    </div>
-    <div class="card">
-      <h4>Principios clave de la estrategia de venta</h4>
-      <ul class="checklist" style="pointer-events:none;">
-        <li><span class="txt"><b>CANACINTRA no tiene presupuesto</b><span>No te vendes como coach — te posicionas como aliada estratégica con un programa.</span></span></li>
-        <li><span class="txt"><b>La presidenta es la puerta, no el cliente final</b><span>El acuerdo institucional abre la puerta a las socias.</span></span></li>
-        <li><span class="txt"><b>Sin costo para CANACINTRA</b><span>= sin objeciones institucionales.</span></span></li>
-        <li><span class="txt"><b>El coaching a Fernanda va implícito</b><span>En la co-organización del programa.</span></span></li>
-        <li><span class="txt"><b>El grupo vespertino debe abrirse</b><span>Es condición del modelo: los costos de producción ya están cubiertos.</span></span></li>
-      </ul>
-    </div>
-    <div class="card">
-      <p style="margin-bottom:4px;"><b>Contacto público:</b> hazlotuyo@theokpeople.com · 222 113 3443</p>
-      <p style="margin-bottom:0;"><b>Redes:</b> @MujerHazLoTuyo · theokpeople.com/hazlotuyo</p>
-    </div>
-  </section>
 
 </main>
 
@@ -530,51 +504,179 @@
   });
   refreshFormLinks();
 
-  // Checklist (persistido en localStorage)
-  const CHECK_ITEMS = [
-    ["ratificacion", "Ratificación de la presidencia general de CANACINTRA", "Para los acuerdos que lo requieran."],
-    ["acuerdo", "Cerrar el acuerdo de colaboración con Fernanda", "Secciones 4 a 12 del documento aún en construcción."],
-    ["cupo", "Confirmar 11 socias inscritas (cupo mínimo)", "Activa el precio preferencial de $17,500."],
-    ["vespertino", "Abrir simultáneamente el grupo vespertino público", "Condición del modelo — costos ya cubiertos."],
-    ["sede", "Confirmar sede y fechas con el Club de Empresarios (CCE)", "Viernes 9:00–14:00, 4 sep – 13 nov."],
-    ["ponentes", "Confirmar a los 9 especialistas + sommelier de cierre", "Fechas y honorarios acordados."],
-    ["contratos", "Enviar acuerdo de colaboración a cada facilitador", "Incluye fecha, horario y honorarios."],
-    ["materiales", "Solicitar semblanza y presentación a cada facilitador", "Vía el portal de facilitadores de este dashboard."],
-    ["test", "Contratar/activar las ligas del test Talent Insight", "Una por participante."],
-    ["certificados", "Diseñar y preparar certificados", "Para la experiencia de cierre del 13 de nov."],
-    ["marketing", "Lanzar marketing específico del grupo matutino", "Presupuesto: $3,000."],
-    ["facturacion", "Preparar facturación (todos los ingresos se facturan)", "Precios ya incluyen IVA."],
-    ["platica", "Agendar la plática gratuita para CANACINTRA", "\"Liderar desde adentro\" — puerta de entrada."],
-    ["netlify", "Configurar la URL de este sitio en la pestaña Formularios", "Para que los botones de Netlify Forms funcionen."]
+  // Helpers de localStorage (mismo patrón que los bloques de Lineamientos
+  // en ponentes/index.html).
+  function lsGetJSON(key, fallback){
+    try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }
+    catch(e){ return fallback; }
+  }
+  function lsSetJSON(key, val){
+    try { localStorage.setItem(key, JSON.stringify(val)); } catch(e){}
+  }
+
+  // ---------- Checklist de lanzamiento: editable (agregar/editar/eliminar) ----------
+  // Mismo patrón que los bloques de Lineamientos: la base vive fija aquí
+  // abajo (estado inicial/default) y nunca se modifica; los cambios se
+  // guardan en localStorage como "overrides" por índice (editar/eliminar un
+  // punto original) y "extra" (puntos agregados por Rubí). El estado de
+  // completado (done/not-done) se sigue guardando aparte, en "mjht_checklist",
+  // usando el mismo id de siempre para los puntos originales.
+  const CHECK_ITEMS_BASE = [
+    ["ratificacion", "Ratificación de la presidencia general de CANACINTRA", "Para los acuerdos que lo requieran.", ""],
+    ["acuerdo", "Cerrar el acuerdo de colaboración con Fernanda", "Secciones 4 a 12 del documento aún en construcción.", ""],
+    ["cupo", "Confirmar 11 socias inscritas (cupo mínimo)", "Activa el precio preferencial de $17,500.", ""],
+    ["vespertino", "Abrir simultáneamente el grupo vespertino público", "Condición del modelo — costos ya cubiertos.", ""],
+    ["sede", "Confirmar sede y fechas con el Club de Empresarios (CCE)", "Viernes 9:00–14:00, 4 sep – 13 nov.", ""],
+    ["ponentes", "Confirmar a los 9 especialistas + sommelier de cierre", "Fechas y honorarios acordados.", ""],
+    ["contratos", "Enviar acuerdo de colaboración a cada facilitador", "Incluye fecha, horario y honorarios.", ""],
+    ["materiales", "Solicitar semblanza y presentación a cada facilitador", "Vía el portal de facilitadores de este dashboard.", ""],
+    ["test", "Contratar/activar las ligas del test Talent Insight", "Una por participante.", ""],
+    ["certificados", "Diseñar y preparar certificados", "Para la experiencia de cierre del 13 de nov.", ""],
+    ["marketing", "Lanzar marketing específico del grupo matutino", "Presupuesto: $3,000.", ""],
+    ["facturacion", "Preparar facturación (todos los ingresos se facturan)", "Precios ya incluyen IVA.", ""],
+    ["platica", "Agendar la plática gratuita para CANACINTRA", "\"Liderar desde adentro\" — puerta de entrada.", ""],
+    ["netlify", "Configurar la URL de este sitio en la pestaña Formularios", "Para que los botones de Netlify Forms funcionen.", ""]
   ];
+  const CHECK_OVERRIDE_KEY = "mjht_checklist_items"; // { [key]: {titulo, desc, fecha} | {deleted:true} }
+  const CHECK_EXTRA_KEY = "mjht_checklist_extra";     // [ {id, titulo, desc, fecha} ]
+  const CHECK_DONE_KEY = "mjht_checklist";            // { [id]: true|false }
+
+  function checklistDoneState(){
+    return JSON.parse(localStorage.getItem(CHECK_DONE_KEY) || "{}");
+  }
+  // Arma la lista de ítems activos (base con overrides aplicados, sin los
+  // eliminados, más los agregados), cada uno como {id, titulo, desc, fecha}.
+  function checklistItemsActivos(){
+    const overrides = lsGetJSON(CHECK_OVERRIDE_KEY, {});
+    const extra = lsGetJSON(CHECK_EXTRA_KEY, []);
+    const base = CHECK_ITEMS_BASE
+      .map(([id, titulo, desc, fecha])=>{
+        const ov = overrides[id];
+        if(ov && ov.deleted) return null;
+        return {
+          id,
+          titulo: ov && ov.titulo !== undefined ? ov.titulo : titulo,
+          desc: ov && ov.desc !== undefined ? ov.desc : desc,
+          fecha: ov && ov.fecha !== undefined ? ov.fecha : fecha
+        };
+      })
+      .filter(Boolean);
+    return base.concat(extra.map(item=>({ id:item.id, titulo:item.titulo, desc:item.desc||"", fecha:item.fecha||"" })));
+  }
+  function fechaLimiteLabel(fecha){
+    if(!fecha) return "";
+    const d = new Date(fecha+"T00:00:00");
+    if(isNaN(d.getTime())) return "";
+    return d.toLocaleDateString("es-MX", { day:"2-digit", month:"2-digit", year:"numeric" });
+  }
   const ul = document.getElementById("checklist");
-  const saved = JSON.parse(localStorage.getItem("mjht_checklist") || "{}");
   function updateProgress(){
-    const state = JSON.parse(localStorage.getItem("mjht_checklist") || "{}");
-    const done = CHECK_ITEMS.filter(([key])=>state[key]).length;
-    const pct = Math.round((done/CHECK_ITEMS.length)*100);
+    const items = checklistItemsActivos();
+    const state = checklistDoneState();
+    const done = items.filter(it=>state[it.id]).length;
+    const total = items.length || 1;
+    const pct = Math.round((done/total)*100);
     document.getElementById("progress-fill").style.width = pct+"%";
     document.getElementById("progress-label").textContent =
-      done === CHECK_ITEMS.length
-        ? `¡Listo! ${done} de ${CHECK_ITEMS.length} completados`
-        : `${done} de ${CHECK_ITEMS.length} completados`;
+      items.length && done === items.length
+        ? `¡Listo! ${done} de ${items.length} completados`
+        : `${done} de ${items.length} completados`;
   }
-  CHECK_ITEMS.forEach(([key,title,desc])=>{
-    const li = document.createElement("li");
-    const checked = !!saved[key];
-    if(checked) li.classList.add("done");
-    li.innerHTML = `<input type="checkbox" ${checked?"checked":""} id="chk-${key}">
-      <span class="txt"><b>${title}</b><span>${desc}</span></span>`;
-    li.querySelector("input").addEventListener("change", (e)=>{
-      const state = JSON.parse(localStorage.getItem("mjht_checklist") || "{}");
-      state[key] = e.target.checked;
-      localStorage.setItem("mjht_checklist", JSON.stringify(state));
-      li.classList.toggle("done", e.target.checked);
-      updateProgress();
+  function renderChecklist(){
+    const items = checklistItemsActivos();
+    const state = checklistDoneState();
+    const hoy = new Date(); hoy.setHours(0,0,0,0);
+    ul.innerHTML = items.map(it=>{
+      const checked = !!state[it.id];
+      const vencido = !checked && it.fecha && new Date(it.fecha+"T00:00:00") < hoy;
+      const fechaHTML = it.fecha
+        ? `<span class="fecha-limite${vencido?" overdue":""}">${vencido?"⚠️ ":""}Fecha límite: ${fechaLimiteLabel(it.fecha)}${vencido?" (vencida)":""}</span>`
+        : "";
+      return `
+        <li class="${checked?"done":""}${vencido?" overdue":""}" data-id="${it.id}">
+          <input type="checkbox" ${checked?"checked":""}>
+          <span class="txt"><b>${it.titulo}</b><span>${it.desc||""}</span>${fechaHTML}</span>
+          <span class="item-actions">
+            <button type="button" class="btn-edit-nombre" title="Editar" onclick="mjhtEditarChecklistItem('${it.id}')">✏️</button>
+            <button type="button" class="btn-edit-nombre" title="Eliminar" onclick="mjhtEliminarChecklistItem('${it.id}')">🗑️</button>
+          </span>
+        </li>`;
+    }).join("") + `
+      <li style="border-bottom:none;">
+        <button type="button" class="btn btn-outline btn-sm" onclick="mjhtAgregarChecklistItem()">+ Agregar</button>
+      </li>`;
+    ul.querySelectorAll("li[data-id] input[type=checkbox]").forEach(chk=>{
+      chk.addEventListener("change", (e)=>{
+        const li = e.target.closest("li");
+        const id = li.dataset.id;
+        const state = checklistDoneState();
+        state[id] = e.target.checked;
+        localStorage.setItem(CHECK_DONE_KEY, JSON.stringify(state));
+        renderChecklist();
+        updateProgress();
+      });
     });
-    ul.appendChild(li);
-  });
-  updateProgress();
+    updateProgress();
+  }
+  window.mjhtAgregarChecklistItem = function(){
+    const titulo = prompt("Título del nuevo pendiente:");
+    if(titulo === null || !titulo.trim()) return;
+    const desc = prompt("Descripción (opcional):", "") || "";
+    const fecha = prompt("Fecha límite (opcional, formato AAAA-MM-DD):", "") || "";
+    const extra = lsGetJSON(CHECK_EXTRA_KEY, []);
+    extra.push({ id: "extra-"+Date.now(), titulo: titulo.trim(), desc: desc.trim(), fecha: fecha.trim() });
+    lsSetJSON(CHECK_EXTRA_KEY, extra);
+    renderChecklist();
+  };
+  window.mjhtEditarChecklistItem = function(id){
+    const isExtra = id.indexOf("extra-") === 0;
+    if(isExtra){
+      const extra = lsGetJSON(CHECK_EXTRA_KEY, []);
+      const item = extra.find(it=>it.id===id);
+      if(!item) return;
+      const titulo = prompt("Título:", item.titulo);
+      if(titulo === null) return;
+      const desc = prompt("Descripción:", item.desc || "");
+      if(desc === null) return;
+      const fecha = prompt("Fecha límite (AAAA-MM-DD, vacío = sin fecha):", item.fecha || "");
+      if(fecha === null) return;
+      item.titulo = titulo.trim(); item.desc = desc.trim(); item.fecha = fecha.trim();
+      lsSetJSON(CHECK_EXTRA_KEY, extra);
+    } else {
+      const base = CHECK_ITEMS_BASE.find(([key])=>key===id);
+      if(!base) return;
+      const overrides = lsGetJSON(CHECK_OVERRIDE_KEY, {});
+      const actual = overrides[id] && !overrides[id].deleted ? overrides[id] : { titulo: base[1], desc: base[2], fecha: base[3] };
+      const titulo = prompt("Título:", actual.titulo);
+      if(titulo === null) return;
+      const desc = prompt("Descripción:", actual.desc || "");
+      if(desc === null) return;
+      const fecha = prompt("Fecha límite (AAAA-MM-DD, vacío = sin fecha):", actual.fecha || "");
+      if(fecha === null) return;
+      overrides[id] = { titulo: titulo.trim(), desc: desc.trim(), fecha: fecha.trim() };
+      lsSetJSON(CHECK_OVERRIDE_KEY, overrides);
+    }
+    renderChecklist();
+  };
+  window.mjhtEliminarChecklistItem = function(id){
+    if(!confirm("¿Eliminar este pendiente? (solo se guarda en este navegador)")) return;
+    const isExtra = id.indexOf("extra-") === 0;
+    if(isExtra){
+      let extra = lsGetJSON(CHECK_EXTRA_KEY, []);
+      extra = extra.filter(it=>it.id!==id);
+      lsSetJSON(CHECK_EXTRA_KEY, extra);
+    } else {
+      const overrides = lsGetJSON(CHECK_OVERRIDE_KEY, {});
+      overrides[id] = { deleted: true };
+      lsSetJSON(CHECK_OVERRIDE_KEY, overrides);
+    }
+    // Limpia también el estado done/not-done del punto eliminado.
+    const state = checklistDoneState();
+    delete state[id];
+    localStorage.setItem(CHECK_DONE_KEY, JSON.stringify(state));
+    renderChecklist();
+  };
+  renderChecklist();
 </script>
 </body>
 </html>

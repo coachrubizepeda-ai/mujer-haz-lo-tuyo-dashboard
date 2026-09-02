@@ -238,65 +238,102 @@ function fechaOficialModulo(r){
   return mod ? mod.fechaLabel : null;
 }
 
+// Resuelve a qué módulo de MODULOS corresponde un registro de asistencia
+// (mismo criterio que fechaOficialModulo: moduloId si viene, si no el número
+// dentro del texto guardado en r.modulo, o "cierre"). Devuelve el objeto de
+// MODULOS o null si no se pudo reconocer.
+function moduloDeRegistro(r){
+  if(typeof MODULOS === "undefined") return null;
+  let mod = null;
+  if(r.moduloId !== undefined && r.moduloId !== null && r.moduloId !== ""){
+    mod = MODULOS.find(m=>String(m.id)===String(r.moduloId));
+  }
+  if(!mod && r.modulo){
+    const matchNum = String(r.modulo).match(/[Mm]ódulo\s+(\d+)/);
+    if(matchNum) mod = MODULOS.find(m=>String(m.id)===matchNum[1]);
+    else if(/cierre/i.test(r.modulo)) mod = MODULOS.find(m=>m.id==="cierre");
+  }
+  return mod || null;
+}
+
+// Fecha corta dd/mm a partir de un ISO datetime (fecha de envío del formulario).
+function fechaCorta(iso){
+  if(!iso) return "—";
+  const d = new Date(iso);
+  if(isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("es-MX", { day:"2-digit", month:"2-digit" });
+}
+
+// Matriz de asistencia: participantes (eje Y) × módulos en los que ya se
+// pasó lista (eje X, derivados de `registros` — solo columnas con al menos
+// un envío), con un check + la fecha en que se pasó lista en cada celda
+// donde la persona estuvo presente, y una columna de total de sesiones
+// acumuladas al final. Si el mismo módulo se pasó lista más de una vez,
+// ambos envíos comparten la misma columna (se apilan las fechas/checks en
+// la celda) para no desbordar la tabla con columnas repetidas.
 function renderAsistenciaReporteHTML(registros){
   if(!registros || !registros.length){
     return `<div class="callout">Todavía no se ha registrado ninguna asistencia desde este navegador.</div>`;
   }
 
-  // Tabla por módulo: si un módulo se pasó lista más de una vez, se muestra
-  // cada envío por separado (fecha de envío + facilitador). Cuando se puede
-  // reconocer el módulo (moduloId, o el número dentro del texto guardado),
-  // se muestra también la fecha OFICIAL de esa sesión (cruzando con MODULOS),
-  // además de la fecha en la que se envió el formulario de asistencia.
-  const porModuloHTML = registros.map(r=>{
-    const presentesHTML = (r.presentes||[]).length
-      ? `<ul class="checklist" style="pointer-events:none;">${
-          r.presentes.map(id=>{
-            const a = (typeof ASISTENTES !== "undefined") ? ASISTENTES.find(x=>x.id===id) : null;
-            const nombreMostrar = a ? (typeof nombreMostrado === "function" ? nombreMostrado(a.nombre) : a.nombre) : id;
-            return `<li><span class="txt"><b>${id}</b><span>${a ? nombreMostrar : "(no encontrado en el roster)"}</span></span></li>`;
-          }).join("")
-        }</ul>`
-      : `<p class="file-hint">Sin asistentes marcadas en este envío.</p>`;
-    const fecha = r.fecha_envio ? new Date(r.fecha_envio).toLocaleString("es-MX") : "—";
-    const fechaOficial = fechaOficialModulo(r);
-    return `
-      <div class="card">
-        <h4 style="margin-bottom:4px;">${r.modulo || "Módulo sin especificar"}</h4>
-        <p style="margin-bottom:12px;color:var(--gris-claro);font-size:.85rem;">${fechaOficial ? `Sesión oficial: <b>${fechaOficial}</b> · ` : ""}Enviado por ${r.ponente || "—"} · lista pasada el ${fecha} · ${(r.presentes||[]).length} presente${(r.presentes||[]).length===1?"":"s"}</p>
-        ${presentesHTML}
-      </div>`;
+  // 1. Agrupa los registros en columnas: una por módulo reconocido (o por
+  //    texto exacto de r.modulo si no se pudo reconocer), en orden de
+  //    aparición.
+  const columnas = []; // { key, mod, titulo, registros:[] }
+  registros.forEach(r=>{
+    const mod = moduloDeRegistro(r);
+    const key = mod ? "mod:"+mod.id : "txt:"+(r.modulo || "Sin especificar");
+    let col = columnas.find(c=>c.key===key);
+    if(!col){
+      col = { key, mod, titulo: r.modulo || "Sin especificar", registros: [] };
+      columnas.push(col);
+    }
+    col.registros.push(r);
+  });
+
+  // 2. Reordena cronológicamente según MODULOS cuando se pudo reconocer el
+  //    módulo; las columnas no reconocidas quedan al final, en el orden en
+  //    que aparecieron.
+  const ordenModulos = typeof MODULOS !== "undefined" ? MODULOS.map(m=>m.id) : [];
+  columnas.sort((a,b)=>{
+    const ia = a.mod ? ordenModulos.indexOf(a.mod.id) : Infinity;
+    const ib = b.mod ? ordenModulos.indexOf(b.mod.id) : Infinity;
+    return ia - ib;
+  });
+
+  // 3. Encabezados de columna: "Módulo N" (o "Cierre") + fecha oficial si
+  //    se reconoció el módulo; si no, el texto tal cual llegó del formulario.
+  const encabezadosHTML = columnas.map(col=>{
+    if(col.mod){
+      const etiqueta = col.mod.id === "cierre" ? "Cierre" : `Módulo ${col.mod.id}`;
+      return `<th><b>${etiqueta}</b><br><small style="font-weight:500;color:var(--gris-claro);">${col.mod.fechaLabel || ""}</small></th>`;
+    }
+    return `<th><b>${col.titulo}</b></th>`;
   }).join("");
 
-  // Resumen por participante: cuántos módulos distintos (por texto de
-  // "modulo" del registro) tienen a esa persona marcada como presente.
-  const conteoPorId = {};
-  registros.forEach(r=>{
-    const modulosVistos = new Set();
-    (r.presentes||[]).forEach(id=>{
-      const key = id + "||" + (r.modulo || "");
-      if(!modulosVistos.has(key)){
-        modulosVistos.add(key);
-        conteoPorId[id] = (conteoPorId[id]||0) + 1;
-      }
-    });
-  });
-  const idsOrdenados = (typeof ASISTENTES !== "undefined" ? ASISTENTES.map(a=>a.id) : Object.keys(conteoPorId));
-  const resumenHTML = idsOrdenados.map(id=>{
+  // 4. Filas: cada participante del roster, en su orden natural (M01..M10).
+  const idsOrdenados = (typeof ASISTENTES !== "undefined" ? ASISTENTES.map(a=>a.id) : []);
+  const filasHTML = idsOrdenados.map(id=>{
     const a = (typeof ASISTENTES !== "undefined") ? ASISTENTES.find(x=>x.id===id) : null;
     const nombreMostrar = a ? (typeof nombreMostrado === "function" ? nombreMostrado(a.nombre) : a.nombre) : id;
-    const n = conteoPorId[id] || 0;
-    return `<tr><td><b>${id}</b></td><td>${nombreMostrar}</td><td>${n}</td></tr>`;
+    let total = 0;
+    const celdasHTML = columnas.map(col=>{
+      const envios = col.registros.filter(r=>(r.presentes||[]).includes(id));
+      if(!envios.length) return `<td class="att-cell-empty">–</td>`;
+      total++;
+      const chips = envios.map(r=>`<span class="att-chip">✓ ${fechaCorta(r.fecha_envio)}</span>`).join("");
+      return `<td class="att-cell-ok">${chips}</td>`;
+    }).join("");
+    return `<tr><td><b>${id}</b></td><td>${nombreMostrar}</td>${celdasHTML}<td class="att-cell-total"><b>${total}</b></td></tr>`;
   }).join("");
 
   return `
     <div class="table-wrap" style="margin-bottom:20px;">
-      <table>
-        <thead><tr><th>ID</th><th>Participante</th><th>Sesiones de asistencia acumuladas</th></tr></thead>
-        <tbody>${resumenHTML}</tbody>
+      <table class="att-matrix">
+        <thead><tr><th>ID</th><th>Participante</th>${encabezadosHTML}<th>Total</th></tr></thead>
+        <tbody>${filasHTML}</tbody>
       </table>
-    </div>
-    ${porModuloHTML}`;
+    </div>`;
 }
 
 /* ============================================================
