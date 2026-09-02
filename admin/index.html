@@ -33,6 +33,7 @@
   <nav class="side-nav">
     <button class="tab-btn active" data-tab="t-resumen">Resumen</button>
     <button class="tab-btn" data-tab="t-formularios">Formularios recibidos</button>
+    <button class="tab-btn" data-tab="t-asistencia">Reporte de asistencia</button>
     <button class="tab-btn" data-tab="t-directorio">Directorio de facilitadores</button>
     <button class="tab-btn" data-tab="t-calendario">Calendario maestro</button>
     <button class="tab-btn" data-tab="t-financiero">Modelo financiero</button>
@@ -112,6 +113,19 @@
         <button class="btn btn-primary" type="submit">Subir cuestionario</button>
       </form>
     </div>
+  </section>
+
+  <!-- REPORTE DE ASISTENCIA -->
+  <section class="tab-panel" id="t-asistencia">
+    <div class="section-head">
+      <span class="eyebrow">Pasar lista</span>
+      <h2>Reporte de asistencia</h2>
+      <p>Qué asistentes estuvieron presentes en cada módulo, y cuántas sesiones de asistencia acumula cada participante.</p>
+    </div>
+    <div class="callout" style="margin-bottom:16px;">
+      Este reporte se arma con los envíos hechos desde este navegador. Para ver TODOS los envíos de todos los facilitadores, revisa Netlify Forms → asistencia-modulo.
+    </div>
+    <div id="asistencia-reporte-admin"></div>
   </section>
 
   <!-- DIRECTORIO -->
@@ -307,6 +321,10 @@
         <td>${GRUPO_LABEL[m.grupo]}</td><td>${m.ponente}</td>
         <td>${m.presentacion ? `<a href="${m.presentacion}" target="_blank">ver ↗</a>` : "—"}</td>`;
   }, 6);
+
+  // Reporte de asistencia (local — ver assets/js/app.js)
+  const asistenciaReporteAdminWrap = document.getElementById("asistencia-reporte-admin");
+  if(asistenciaReporteAdminWrap) asistenciaReporteAdminWrap.innerHTML = renderAsistenciaReporteHTML(getAsistenciaRegistros());
 
   // Directorio de ponentes
   const dirWrap = document.getElementById("directorio-list");

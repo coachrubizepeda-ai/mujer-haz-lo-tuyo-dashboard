@@ -164,7 +164,7 @@ function renderCalendarBody(tbody, buildCells, colspan){
 }
 
 /* ---------- Número de participante (ID único por asistente) ----------
-   Cada entrada de ASISTENTES (roster.js) trae un campo "id" fijo (P01, P02…)
+   Cada entrada de ASISTENTES (roster.js) trae un campo "id" fijo (M01, M02…)
    que identifica a la persona sin importar cómo esté escrito su nombre en
    ese momento. asistenteEtiqueta() arma la etiqueta "ID · Nombre" que se usa
    en pase de lista, perfiles, dropdowns y el directorio. buscarAsistentePorNombre()
@@ -189,6 +189,92 @@ function socialChipsHTML(redes){
   if(redes.x) items.push(`<a class="social-chip" href="${redes.x}" target="_blank" rel="noopener">${ICONS.x}X</a>`);
   if(!items.length) return "";
   return `<div class="social-row">${items.join("")}</div>`;
+}
+
+/* ============================================================
+   Reporte de asistencia (local)
+   -------------------------------------------------------------
+   Cada envío del formulario "Pasar lista" (asistencia-modulo, en el
+   portal de facilitadores) guarda además una copia en localStorage,
+   bajo la clave mjht_asistencia_registros: un arreglo de registros
+   {modulo, fecha_envio, ponente, presentes:[ids "M0X"]}. Esto es
+   SOLO un espejo local (por navegador) para armar una vista rápida
+   en los portales de facilitadores y administradora — el registro
+   real y completo de todos los envíos de todas las personas sigue
+   viviendo en Netlify Forms.
+   ============================================================ */
+const LS_KEY_ASISTENCIA = "mjht_asistencia_registros";
+
+function getAsistenciaRegistros(){
+  try { return JSON.parse(localStorage.getItem(LS_KEY_ASISTENCIA) || "[]"); }
+  catch(e){ return []; }
+}
+
+function guardarAsistenciaRegistro(registro){
+  const registros = getAsistenciaRegistros();
+  registros.push(registro);
+  try { localStorage.setItem(LS_KEY_ASISTENCIA, JSON.stringify(registros)); } catch(e){}
+  return registros;
+}
+
+// Arma: una tabla por módulo con quién estuvo presente (id + nombre), y un
+// resumen por participante con cuántas sesiones acumuladas de asistencia
+// tiene (cuántos módulos distintos aparecen marcados en algún registro).
+function renderAsistenciaReporteHTML(registros){
+  if(!registros || !registros.length){
+    return `<div class="callout">Todavía no se ha registrado ninguna asistencia desde este navegador.</div>`;
+  }
+
+  // Tabla por módulo: si un módulo se pasó lista más de una vez, se muestra
+  // cada envío por separado (fecha de envío + facilitador).
+  const porModuloHTML = registros.map(r=>{
+    const presentesHTML = (r.presentes||[]).length
+      ? `<ul class="checklist" style="pointer-events:none;">${
+          r.presentes.map(id=>{
+            const a = (typeof ASISTENTES !== "undefined") ? ASISTENTES.find(x=>x.id===id) : null;
+            const nombreMostrar = a ? (typeof nombreMostrado === "function" ? nombreMostrado(a.nombre) : a.nombre) : id;
+            return `<li><span class="txt"><b>${id}</b><span>${a ? nombreMostrar : "(no encontrado en el roster)"}</span></span></li>`;
+          }).join("")
+        }</ul>`
+      : `<p class="file-hint">Sin asistentes marcadas en este envío.</p>`;
+    const fecha = r.fecha_envio ? new Date(r.fecha_envio).toLocaleString("es-MX") : "—";
+    return `
+      <div class="card">
+        <h4 style="margin-bottom:4px;">${r.modulo || "Módulo sin especificar"}</h4>
+        <p style="margin-bottom:12px;color:var(--gris-claro);font-size:.85rem;">Enviado por ${r.ponente || "—"} · ${fecha} · ${(r.presentes||[]).length} presente${(r.presentes||[]).length===1?"":"s"}</p>
+        ${presentesHTML}
+      </div>`;
+  }).join("");
+
+  // Resumen por participante: cuántos módulos distintos (por texto de
+  // "modulo" del registro) tienen a esa persona marcada como presente.
+  const conteoPorId = {};
+  registros.forEach(r=>{
+    const modulosVistos = new Set();
+    (r.presentes||[]).forEach(id=>{
+      const key = id + "||" + (r.modulo || "");
+      if(!modulosVistos.has(key)){
+        modulosVistos.add(key);
+        conteoPorId[id] = (conteoPorId[id]||0) + 1;
+      }
+    });
+  });
+  const idsOrdenados = (typeof ASISTENTES !== "undefined" ? ASISTENTES.map(a=>a.id) : Object.keys(conteoPorId));
+  const resumenHTML = idsOrdenados.map(id=>{
+    const a = (typeof ASISTENTES !== "undefined") ? ASISTENTES.find(x=>x.id===id) : null;
+    const nombreMostrar = a ? (typeof nombreMostrado === "function" ? nombreMostrado(a.nombre) : a.nombre) : id;
+    const n = conteoPorId[id] || 0;
+    return `<tr><td><b>${id}</b></td><td>${nombreMostrar}</td><td>${n}</td></tr>`;
+  }).join("");
+
+  return `
+    <div class="table-wrap" style="margin-bottom:20px;">
+      <table>
+        <thead><tr><th>ID</th><th>Participante</th><th>Sesiones de asistencia acumuladas</th></tr></thead>
+        <tbody>${resumenHTML}</tbody>
+      </table>
+    </div>
+    ${porModuloHTML}`;
 }
 
 /* ============================================================
@@ -324,10 +410,39 @@ function computePerfilGrupal(perfiles){
     return { label, entradas };
   }).filter(d=>d.entradas.length);
 
-  return { n: perfiles.length, edades, experiencias, estudiosCount, distribuciones };
+  // Todas las preguntas (no solo las de "clavesInteres"), agrupadas por
+  // módulo — usa el campo "modulo" que ya trae cada campo del perfil, para
+  // poder filtrar la vista por módulo sin tocar el contenido de las
+  // respuestas. Estructura: { [modulo]: [{label, entradas:[[valor,count]]}] }
+  const porModuloMap = {};
+  const ordenModulos = [];
+  perfiles.forEach(p=>{
+    (p.campos||[]).forEach(c=>{
+      const modKey = c.modulo != null ? c.modulo : "otro";
+      if(!(modKey in porModuloMap)){ porModuloMap[modKey] = {}; ordenModulos.push(modKey); }
+      if(!(c.key in porModuloMap[modKey])){ porModuloMap[modKey][c.key] = { label: c.label, counts: {} }; }
+      porModuloMap[modKey][c.key].counts[c.valor] = (porModuloMap[modKey][c.key].counts[c.valor]||0) + 1;
+    });
+  });
+  ordenModulos.sort((a,b)=>{
+    if(a==="otro") return 1;
+    if(b==="otro") return -1;
+    return a - b;
+  });
+  const porModulo = ordenModulos.map(modKey=>{
+    const preguntas = Object.values(porModuloMap[modKey]).map(q=>({
+      label: q.label,
+      entradas: Object.entries(q.counts).sort((a,b)=>b[1]-a[1])
+    }));
+    return { modulo: modKey, preguntas };
+  });
+
+  return { n: perfiles.length, edades, experiencias, estudiosCount, distribuciones, porModulo };
 }
 
-function renderPerfilGrupalHTML(g){
+// filtroModulo: id de módulo (número, o "otro") para mostrar solo ese grupo
+// de preguntas, o "" / undefined para mostrar todos los módulos.
+function renderPerfilGrupalHTML(g, filtroModulo){
   if(!g.n){
     return `<div class="callout">Todavía no hay respuestas suficientes para armar el perfil general del grupo.</div>`;
   }
@@ -336,13 +451,7 @@ function renderPerfilGrupalHTML(g){
   const estudiosTxt = Object.entries(g.estudiosCount).sort((a,b)=>b[1]-a[1])
     .map(([k,v])=>`${k} (${v})`).join(", ") || "sin datos suficientes";
 
-  const distHTML = g.distribuciones.map(d=>`
-    <div class="perfil-campo">
-      <span class="mtag">·</span>
-      <span class="txt"><b>${d.label}:</b> ${d.entradas.map(([v,c])=>`${v} (${c})`).join(", ")}</span>
-    </div>`).join("");
-
-  return `
+  const resumenCard = `
     <div class="card">
       <h4>Perfil general del grupo <small style="font-weight:400;color:var(--gris-claro);">— con base en ${g.n} respuesta${g.n===1?"":"s"}</small></h4>
       <div class="grid grid-3" style="margin:14px 0 18px;">
@@ -350,6 +459,22 @@ function renderPerfilGrupalHTML(g){
         <div class="stat"><b>${expProm!==null?expProm+" años":"—"}</b><span>experiencia promedio</span></div>
         <div class="stat"><b style="font-size:1rem;line-height:1.3;">${estudiosTxt}</b><span>grado de estudios</span></div>
       </div>
-      ${distHTML}
     </div>`;
+
+  const modulosAMostrar = (g.porModulo||[]).filter(bloque=>
+    !filtroModulo || String(bloque.modulo) === String(filtroModulo)
+  );
+
+  const porModuloHTML = modulosAMostrar.map(bloque=>{
+    const modInfo = (bloque.modulo!=="otro" && typeof MODULOS !== "undefined") ? MODULOS.find(m=>m.id===bloque.modulo) : null;
+    const titulo = bloque.modulo==="otro" ? "Otras respuestas" : `Módulo ${bloque.modulo}${modInfo ? " — "+modInfo.tema : ""}`;
+    const preguntasHTML = bloque.preguntas.map(q=>`
+      <div class="perfil-campo">
+        <span class="mtag">·</span>
+        <span class="txt"><b>${q.label}:</b> ${q.entradas.map(([v,c])=>`${v} (${c})`).join(", ")}</span>
+      </div>`).join("");
+    return `<div class="card"><h4 style="margin-bottom:10px;">${titulo}</h4>${preguntasHTML}</div>`;
+  }).join("");
+
+  return resumenCard + (porModuloHTML || `<div class="callout">No hay respuestas registradas para ese módulo todavía.</div>`);
 }

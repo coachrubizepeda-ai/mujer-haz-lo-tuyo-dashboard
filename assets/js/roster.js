@@ -5,7 +5,7 @@
    Ejemplo de campos:
 
    {
-     id: "P11",            // identificador corto y estable de la persona —
+     id: "M11",            // identificador corto y estable de la persona —
                            // no lo cambies aunque su nombre se corrija después
      nombre: "Ana Pérez",
      empresa: "Pérez Consultoría",
@@ -28,14 +28,14 @@
    ============================================================ */
 
 const ASISTENTES = [
-  { id: "P01", nombre: "Liz Perez", empresa: "", cargo: "", semblanza: "", linkedin: "", perfil: "Elizabeth Pérez Martinez" },
-  { id: "P02", nombre: "Liz Cárcamo", empresa: "", cargo: "", semblanza: "", linkedin: "" },
-  { id: "P03", nombre: "Lilia Velez", empresa: "", cargo: "", semblanza: "", linkedin: "" },
-  { id: "P04", nombre: "Iztel Palacios", empresa: "", cargo: "", semblanza: "", linkedin: "", perfil: "Itzel Palacios Ortiz" },
-  { id: "P05", nombre: "Liliana Buitrón", empresa: "", cargo: "", semblanza: "", linkedin: "" },
-  { id: "P06", nombre: "Marysol Pontón", empresa: "", cargo: "", semblanza: "", linkedin: "", perfil: "Marysol Ponton Gracía" },
-  { id: "P07", nombre: "Ana Vélez", empresa: "", cargo: "", semblanza: "", linkedin: "" },
-  { id: "P08", nombre: "Sara Rivero Rugerio", empresa: "", cargo: "", semblanza: "", linkedin: "" },
-  { id: "P09", nombre: "Mildred Sosa", empresa: "", cargo: "", semblanza: "", linkedin: "", perfil: "Mildred Erosa" },
-  { id: "P10", nombre: "Lupita Prósperi", empresa: "", cargo: "", semblanza: "", linkedin: "" },
+  { id: "M01", nombre: "Liz Perez", empresa: "", cargo: "", semblanza: "", linkedin: "", perfil: "Elizabeth Pérez Martinez" },
+  { id: "M02", nombre: "Liz Cárcamo", empresa: "", cargo: "", semblanza: "", linkedin: "" },
+  { id: "M03", nombre: "Lilia Velez", empresa: "", cargo: "", semblanza: "", linkedin: "" },
+  { id: "M04", nombre: "Iztel Palacios", empresa: "", cargo: "", semblanza: "", linkedin: "", perfil: "Itzel Palacios Ortiz" },
+  { id: "M05", nombre: "Liliana Buitrón", empresa: "", cargo: "", semblanza: "", linkedin: "" },
+  { id: "M06", nombre: "Marysol Pontón", empresa: "", cargo: "", semblanza: "", linkedin: "", perfil: "Marysol Ponton Gracía" },
+  { id: "M07", nombre: "Ana Vélez", empresa: "", cargo: "", semblanza: "", linkedin: "" },
+  { id: "M08", nombre: "Sara Rivero Rugerio", empresa: "", cargo: "", semblanza: "", linkedin: "" },
+  { id: "M09", nombre: "Mildred Sosa", empresa: "", cargo: "", semblanza: "", linkedin: "", perfil: "Mildred Erosa" },
+  { id: "M10", nombre: "Lupita Prósperi", empresa: "", cargo: "", semblanza: "", linkedin: "" },
 ];

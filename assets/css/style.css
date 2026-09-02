@@ -165,6 +165,18 @@ img{max-width:100%;display:block;}
 .tab-btn:hover{background:rgba(0,173,187,.1);color:var(--azul-oscuro);}
 .tab-btn.active{background:linear-gradient(120deg,var(--azul-oscuro),var(--azul-claro));color:#fff;box-shadow:0 3px 10px rgba(0,125,165,.35);}
 
+/* Separador sutil dentro del side-nav, para agrupar visualmente un
+   subconjunto de botones (p.ej. la información propia del facilitador,
+   distinta de las secciones sobre participantes o materiales). */
+.side-sep{
+  display:flex;align-items:center;gap:8px;
+  margin:10px 6px 4px;padding-top:10px;border-top:1px solid var(--border);
+}
+.side-sep span{
+  font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--gris-claro);
+}
+
 .main-col{flex:1;min-width:0;}
 .main-col > .wrap{max-width:1120px;}
 
@@ -183,6 +195,9 @@ img{max-width:100%;display:block;}
   .side-nav{
     flex-direction:row;overflow-x:auto;padding:0 14px 14px;
     width:100%;order:3;
+  }
+  .side-sep{
+    flex:none;margin:0 2px;padding:0 10px 0 12px;border-top:none;border-left:1px solid var(--border);
   }
 }
 

@@ -35,11 +35,12 @@
     <button class="tab-btn" data-tab="t-modulo">Mi módulo</button>
     <button class="tab-btn" data-tab="t-asistencia">Pasar lista</button>
     <button class="tab-btn" data-tab="t-perfiles">Perfiles de asistentes</button>
-    <button class="tab-btn" data-tab="t-semblanza">Mi semblanza</button>
     <button class="tab-btn" data-tab="t-materiales">Compartir materiales</button>
     <button class="tab-btn" data-tab="t-calendario">Calendario general</button>
     <button class="tab-btn" data-tab="t-lineamientos">Lineamientos</button>
     <button class="tab-btn" data-tab="t-comentarios">Comentarios</button>
+    <div class="side-sep"><span>Tu información</span></div>
+    <button class="tab-btn" data-tab="t-semblanza">Mi semblanza</button>
     <button class="tab-btn" data-tab="t-contacto">Contacto</button>
   </nav>
 </aside>
@@ -87,7 +88,9 @@
         <p class="hp-field"><label>No llenar: <input name="bot-field"></label></p>
         <div class="form-msg"></div>
         <div class="field-row">
-          <div><label>Tu nombre (facilitador) *</label><input type="text" name="ponente_nombre" required></div>
+          <div><label>Tu nombre (facilitador) *</label>
+            <select name="ponente_nombre" id="sel-ponente-nombre-asistencia" required><option value="">Selecciona tu nombre…</option></select>
+          </div>
           <div><label>Módulo *</label>
             <select name="modulo" id="sel-modulo-asistencia" required></select>
           </div>
@@ -102,6 +105,16 @@
         <button class="btn btn-primary" type="submit">Enviar lista de asistencia</button>
       </form>
     </div>
+
+    <div class="section-head" style="margin-top:34px;">
+      <span class="eyebrow">En este navegador</span>
+      <h2>Reporte de asistencia (local)</h2>
+      <p>Resumen de las listas de asistencia enviadas desde este navegador.</p>
+    </div>
+    <div class="callout" style="margin-bottom:16px;">
+      Este resumen se arma con los envíos hechos desde este navegador. Para ver TODOS los envíos de todos los facilitadores, revisa Netlify Forms → asistencia-modulo.
+    </div>
+    <div id="asistencia-reporte-ponente"></div>
   </section>
 
   <!-- PERFILES DE ASISTENTES (confidencial, solo facilitadores) -->
@@ -118,6 +131,8 @@
       <h2>Perfil general del grupo</h2>
       <p>Se arma automáticamente con las respuestas que ya estén cargadas.</p>
     </div>
+    <label>Ver módulo:</label>
+    <select id="sel-filtro-modulo-grupal" style="max-width:360px;margin-bottom:16px;"><option value="">Todos los módulos</option></select>
     <div id="perfil-grupal"></div>
 
     <div class="section-head" style="margin-top:34px;">
@@ -134,7 +149,9 @@
         <p class="hp-field"><label>No llenar: <input name="bot-field"></label></p>
         <div class="form-msg"></div>
         <div class="field-row">
-          <div><label>Tu nombre (facilitador) *</label><input type="text" name="ponente_nombre" required></div>
+          <div><label>Tu nombre (facilitador) *</label>
+            <select name="ponente_nombre" id="sel-ponente-nombre-resultado" required><option value="">Selecciona tu nombre…</option></select>
+          </div>
           <div><label>Nombre de la asistente *</label>
             <select name="nombre_asistente" id="sel-asistente-resultado" required></select>
           </div>
@@ -160,42 +177,6 @@
     <input type="file" name="archivo">
   </form>
 
-  <!-- SEMBLANZA -->
-  <section class="tab-panel" id="t-semblanza">
-    <div class="section-head">
-      <span class="eyebrow">Directorio de especialistas</span>
-      <h2>Mi semblanza</h2>
-      <p>Comparte tu semblanza profesional para el directorio del grupo y las participantes.</p>
-    </div>
-    <div class="card">
-      <form name="semblanzas-ponentes" method="POST" data-netlify="true" netlify-honeypot="bot-field">
-        <input type="hidden" name="form-name" value="semblanzas-ponentes">
-        <input type="hidden" name="perfil" value="ponente">
-        <p class="hp-field"><label>No llenar: <input name="bot-field"></label></p>
-        <div class="form-msg"></div>
-        <div class="field-row">
-          <div><label>Nombre *</label><input type="text" name="nombre" required></div>
-          <div><label>Módulo que impartes *</label>
-            <select name="modulo" id="sel-modulo-semblanza" required></select>
-          </div>
-        </div>
-        <label>Semblanza profesional *</label>
-        <textarea name="semblanza" required placeholder="Trayectoria, especialidad, un par de logros representativos."></textarea>
-        <p class="file-hint" style="margin-top:-6px;">Comparte tus redes — las asistentes las van a ver en tu módulo para seguirte.</p>
-        <div class="field-row">
-          <div><label>LinkedIn</label><input type="text" name="linkedin" placeholder="https://linkedin.com/in/..."></div>
-          <div><label>Instagram</label><input type="text" name="instagram" placeholder="https://instagram.com/..."></div>
-        </div>
-        <label>X (Twitter)</label>
-        <input type="text" name="x" placeholder="https://x.com/...">
-        <div class="callout" style="margin-bottom:16px;">
-          Rubí publica estas ligas directo en tu módulo dentro de <code>assets/js/data.js</code> — este formulario se las hace llegar.
-        </div>
-        <button class="btn btn-primary" type="submit">Enviar mi semblanza</button>
-      </form>
-    </div>
-  </section>
-
   <!-- MATERIALES -->
   <section class="tab-panel" id="t-materiales">
     <div class="section-head">
@@ -209,7 +190,9 @@
         <p class="hp-field"><label>No llenar: <input name="bot-field"></label></p>
         <div class="form-msg"></div>
         <div class="field-row">
-          <div><label>Nombre *</label><input type="text" name="nombre" required></div>
+          <div><label>Nombre *</label>
+            <select name="nombre" id="sel-nombre-materiales" required><option value="">Selecciona tu nombre…</option></select>
+          </div>
           <div><label>Módulo *</label>
             <select name="modulo" id="sel-modulo-materiales" required></select>
           </div>
@@ -290,7 +273,7 @@
         <p class="hp-field"><label>No llenar: <input name="bot-field"></label></p>
         <div class="form-msg"></div>
         <label>Tu nombre *</label>
-        <input type="text" name="autor" required placeholder="Tu nombre">
+        <select name="autor" id="sel-autor-comentario" required><option value="">Selecciona tu nombre…</option></select>
         <label>¿A quién le interesa leer esto? *</label>
         <div id="comentario-destinatarios"></div>
         <input type="hidden" name="destinatarios" id="comentario-destinatarios-hidden">
@@ -310,6 +293,44 @@
       <h2>Comentarios recientes</h2>
     </div>
     <div id="comentarios-list"></div>
+  </section>
+
+  <!-- SEMBLANZA (información del facilitador, junto a Contacto) -->
+  <section class="tab-panel" id="t-semblanza">
+    <div class="section-head">
+      <span class="eyebrow">Directorio de especialistas</span>
+      <h2>Mi semblanza</h2>
+      <p>Comparte tu semblanza profesional para el directorio del grupo y las participantes.</p>
+    </div>
+    <div class="card">
+      <form name="semblanzas-ponentes" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+        <input type="hidden" name="form-name" value="semblanzas-ponentes">
+        <input type="hidden" name="perfil" value="ponente">
+        <p class="hp-field"><label>No llenar: <input name="bot-field"></label></p>
+        <div class="form-msg"></div>
+        <div class="field-row">
+          <div><label>Nombre *</label>
+            <select name="nombre" id="sel-nombre-semblanza-ponente" required><option value="">Selecciona tu nombre…</option></select>
+          </div>
+          <div><label>Módulo que impartes *</label>
+            <select name="modulo" id="sel-modulo-semblanza" required></select>
+          </div>
+        </div>
+        <label>Semblanza profesional *</label>
+        <textarea name="semblanza" required placeholder="Trayectoria, especialidad, un par de logros representativos."></textarea>
+        <p class="file-hint" style="margin-top:-6px;">Comparte tus redes — las asistentes las van a ver en tu módulo para seguirte.</p>
+        <div class="field-row">
+          <div><label>LinkedIn</label><input type="text" name="linkedin" placeholder="https://linkedin.com/in/..."></div>
+          <div><label>Instagram</label><input type="text" name="instagram" placeholder="https://instagram.com/..."></div>
+        </div>
+        <label>X (Twitter)</label>
+        <input type="text" name="x" placeholder="https://x.com/...">
+        <div class="callout" style="margin-bottom:16px;">
+          Rubí publica estas ligas directo en tu módulo dentro de <code>assets/js/data.js</code> — este formulario se las hace llegar.
+        </div>
+        <button class="btn btn-primary" type="submit">Enviar mi semblanza</button>
+      </form>
+    </div>
   </section>
 
   <!-- CONTACTO -->
@@ -365,6 +386,19 @@
 
   // Selector "Mi módulo"
   const ponentesUnicos = [...new Set(MODULOS.map(m=>m.ponente))];
+
+  // Nombres de facilitadores precargados: se reutiliza la misma lista
+  // (ponentesUnicos, de assets/js/data.js) en todos los campos donde un
+  // facilitador debe identificarse a sí mismo — evita nombres mal escritos
+  // que no coincidan entre formularios. NO se usa para los campos que piden
+  // el nombre de una ASISTENTE (esos usan su propio dropdown con ID "M0X").
+  ["sel-ponente-nombre-asistencia","sel-ponente-nombre-resultado","sel-nombre-semblanza-ponente","sel-nombre-materiales","sel-autor-comentario"].forEach(id=>{
+    const sel = document.getElementById(id);
+    if(!sel) return;
+    sel.innerHTML = '<option value="">Selecciona tu nombre…</option>' +
+      ponentesUnicos.map(p=>`<option value="${p}">${p}</option>`).join("");
+  });
+
   const selPonente = document.getElementById("sel-ponente");
   selPonente.innerHTML = '<option value="">Selecciona tu nombre…</option>' +
     ponentesUnicos.map(p=>`<option value="${p}">${p}</option>`).join("");
@@ -457,6 +491,35 @@
     }
   }
   renderAsistenciaChecks();
+
+  // ---------- Reporte de asistencia (local) ----------
+  // Al enviar "Pasar lista", además del envío normal a Netlify Forms
+  // (manejado por wireNetlifyForm en app.js), guarda un registro espejo en
+  // este navegador: {modulo, fecha_envio, ponente, presentes:[ids "M0X"]}.
+  // Este listener se registra antes de que corra wireNetlifyForm (que se
+  // conecta en DOMContentLoaded, después de este script), así que se
+  // ejecuta primero y no interfiere con el envío normal del formulario.
+  const formAsistencia = document.getElementById("form-asistencia");
+  const asistenciaReporteWrap = document.getElementById("asistencia-reporte-ponente");
+  function renderAsistenciaReporteLocal(){
+    if(asistenciaReporteWrap) asistenciaReporteWrap.innerHTML = renderAsistenciaReporteHTML(getAsistenciaRegistros());
+  }
+  formAsistencia.addEventListener("submit", ()=>{
+    const moduloSel = document.getElementById("sel-modulo-asistencia");
+    const ponenteSel = document.getElementById("sel-ponente-nombre-asistencia");
+    const presentesIds = Array.from(formAsistencia.querySelectorAll('input[name="presentes"]:checked')).map(chk=>{
+      const a = buscarAsistentePorNombre(chk.value);
+      return a ? a.id : chk.value;
+    });
+    guardarAsistenciaRegistro({
+      modulo: moduloSel.selectedOptions[0] ? moduloSel.selectedOptions[0].textContent : "",
+      fecha_envio: new Date().toISOString(),
+      ponente: ponenteSel ? ponenteSel.value : "",
+      presentes: presentesIds
+    });
+    renderAsistenciaReporteLocal();
+  });
+  renderAsistenciaReporteLocal();
 
   // ---------- Perfiles de asistentes (confidencial — solo este portal) ----------
   const perfilesWrap = document.getElementById("perfiles-list");
@@ -565,7 +628,18 @@
     initAccordion();
 
     const cargados = ASISTENTES.map(perfilDe).filter(Boolean);
-    grupalWrap.innerHTML = renderPerfilGrupalHTML(computePerfilGrupal(cargados));
+    const filtro = document.getElementById("sel-filtro-modulo-grupal")?.value || "";
+    grupalWrap.innerHTML = renderPerfilGrupalHTML(computePerfilGrupal(cargados), filtro);
+  }
+
+  // Filtro "Ver módulo:" del Perfil general del grupo — se llena con los
+  // módulos de MODULOS (data.js) y, al cambiar, vuelve a pintar la vista
+  // mostrando solo las preguntas de ese módulo (sin tocar las respuestas).
+  const selFiltroModuloGrupal = document.getElementById("sel-filtro-modulo-grupal");
+  if(selFiltroModuloGrupal){
+    selFiltroModuloGrupal.innerHTML = '<option value="">Todos los módulos</option>' +
+      MODULOS.filter(m=>typeof m.id==="number").map(m=>`<option value="${m.id}">Módulo ${m.id} — ${m.tema}</option>`).join("");
+    selFiltroModuloGrupal.addEventListener("change", renderPerfilesYGrupal);
   }
 
   window.mjhtCargarPerfil = function(btn){
