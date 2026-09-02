@@ -513,6 +513,7 @@
     });
     guardarAsistenciaRegistro({
       modulo: moduloSel.selectedOptions[0] ? moduloSel.selectedOptions[0].textContent : "",
+      moduloId: moduloSel.value ? moduloSel.value.split(" - ")[0] : "",
       fecha_envio: new Date().toISOString(),
       ponente: ponenteSel ? ponenteSel.value : "",
       presentes: presentesIds
@@ -708,6 +709,37 @@
     document.getElementById("links-extra").appendChild(wrap);
   };
 
+  // ---------- Espejo local de "Compartir materiales" (ver assets/js/app.js) ----------
+  // Al enviar el formulario, además de Netlify Forms, guarda una copia en
+  // este navegador (mjht_materiales_compartidos) para que el panel de
+  // administradora pueda listar de un vistazo qué se ha compartido por
+  // módulo — el archivo real solo vive en Netlify Forms.
+  const formMateriales = document.querySelector('form[name="materiales-ponente"]');
+  formMateriales.addEventListener("submit", ()=>{
+    const modulo = document.getElementById("sel-modulo-materiales").value;
+    const ponente = document.getElementById("sel-nombre-materiales").value;
+    const fileInput = formMateriales.querySelector('input[name="archivo"]');
+    if(fileInput && fileInput.files && fileInput.files[0]){
+      guardarMaterialCompartido({ modulo, ponente, tipo:"pdf", nombre_o_url: fileInput.files[0].name, fecha: new Date().toISOString() });
+    }
+    ["link_web","link_spotify","link_instagram","link_x","link_linkedin"].forEach(name=>{
+      const campo = formMateriales.querySelector(`[name="${name}"]`);
+      const val = campo ? campo.value.trim() : "";
+      if(val) guardarMaterialCompartido({ modulo, ponente, tipo:"liga", nombre_o_url: val, fecha: new Date().toISOString() });
+    });
+  });
+
+  // ---------- Espejo local de "Mi semblanza" del facilitador ----------
+  // Guarda la semblanza enviada en mjht_semblanzas_facilitadores para que el
+  // admin pueda mostrarla junto a la oficial de data.js y marcarla como
+  // actualización pendiente de revisar.
+  const formSemblanzaPonente = document.querySelector('form[name="semblanzas-ponentes"]');
+  formSemblanzaPonente.addEventListener("submit", ()=>{
+    const nombre = document.getElementById("sel-nombre-semblanza-ponente").value;
+    const semblanza = formSemblanzaPonente.semblanza.value.trim();
+    guardarSemblanzaFacilitador(nombre, semblanza);
+  });
+
   // ---------- Lineamientos: Código de Honor + operativos ----------
   const CODIGO_HONOR = [
     ["Coherencia", "Facilitar la congruencia entre lo que se dice, se hace y se es."],
@@ -845,23 +877,13 @@
   initAccordion();
 
   // ---------- Comentarios entre facilitadores ----------
-  const LS_KEY_COMENTARIOS = "mjht_comentarios_facilitadores";
-  function getComentariosLocales(){
-    try { return JSON.parse(localStorage.getItem(LS_KEY_COMENTARIOS) || "[]"); }
-    catch(e){ return []; }
-  }
+  // getComentariosFacilitadores()/renderComentariosFacilitadoresHTML() viven
+  // en assets/js/app.js (mismo LS_KEY_COMENTARIOS_FACILITADORES) para que el
+  // panel de administradora pueda mostrar exactamente la misma lista.
+  const LS_KEY_COMENTARIOS = LS_KEY_COMENTARIOS_FACILITADORES;
   function renderComentariosList(){
     const wrap = document.getElementById("comentarios-list");
-    const comentarios = getComentariosLocales();
-    if(!comentarios.length){
-      wrap.innerHTML = `<div class="callout">Todavía no hay comentarios guardados en este navegador.</div>`;
-      return;
-    }
-    wrap.innerHTML = comentarios.map(c=>`
-      <div class="card">
-        <p style="margin-bottom:4px;"><b>${c.autor}</b> <small style="color:var(--gris-claro);">→ ${c.destinatarios}${c.modulo ? " · "+c.modulo : ""}</small></p>
-        <p style="margin-bottom:0;">${c.comentario}</p>
-      </div>`).join("");
+    wrap.innerHTML = renderComentariosFacilitadoresHTML(getComentariosFacilitadores());
   }
 
   // Checkboxes de destinatarios: facilitadores únicos de data.js + "Todos"
@@ -897,7 +919,7 @@
     const destinatarios = checked.join(", ");
     document.getElementById("comentario-destinatarios-hidden").value = destinatarios;
     const moduloSel = document.getElementById("sel-modulo-comentario");
-    const comentarios = getComentariosLocales();
+    const comentarios = getComentariosFacilitadores();
     comentarios.unshift({
       autor: formComentario.autor.value.trim() || "Anónimo",
       destinatarios,

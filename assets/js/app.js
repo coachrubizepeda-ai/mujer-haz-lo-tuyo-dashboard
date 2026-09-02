@@ -220,13 +220,34 @@ function guardarAsistenciaRegistro(registro){
 // Arma: una tabla por módulo con quién estuvo presente (id + nombre), y un
 // resumen por participante con cuántas sesiones acumuladas de asistencia
 // tiene (cuántos módulos distintos aparecen marcados en algún registro).
+// Busca en MODULOS la fecha OFICIAL de la sesión a la que corresponde un
+// registro de asistencia — usa r.moduloId si el registro ya lo trae (nuevos
+// envíos), y si no, intenta reconocerlo a partir del texto guardado en
+// r.modulo (registros viejos, antes de que se guardara moduloId).
+function fechaOficialModulo(r){
+  if(typeof MODULOS === "undefined") return null;
+  let mod = null;
+  if(r.moduloId !== undefined && r.moduloId !== null && r.moduloId !== ""){
+    mod = MODULOS.find(m=>String(m.id)===String(r.moduloId));
+  }
+  if(!mod && r.modulo){
+    const matchNum = String(r.modulo).match(/[Mm]ódulo\s+(\d+)/);
+    if(matchNum) mod = MODULOS.find(m=>String(m.id)===matchNum[1]);
+    else if(/cierre/i.test(r.modulo)) mod = MODULOS.find(m=>m.id==="cierre");
+  }
+  return mod ? mod.fechaLabel : null;
+}
+
 function renderAsistenciaReporteHTML(registros){
   if(!registros || !registros.length){
     return `<div class="callout">Todavía no se ha registrado ninguna asistencia desde este navegador.</div>`;
   }
 
   // Tabla por módulo: si un módulo se pasó lista más de una vez, se muestra
-  // cada envío por separado (fecha de envío + facilitador).
+  // cada envío por separado (fecha de envío + facilitador). Cuando se puede
+  // reconocer el módulo (moduloId, o el número dentro del texto guardado),
+  // se muestra también la fecha OFICIAL de esa sesión (cruzando con MODULOS),
+  // además de la fecha en la que se envió el formulario de asistencia.
   const porModuloHTML = registros.map(r=>{
     const presentesHTML = (r.presentes||[]).length
       ? `<ul class="checklist" style="pointer-events:none;">${
@@ -238,10 +259,11 @@ function renderAsistenciaReporteHTML(registros){
         }</ul>`
       : `<p class="file-hint">Sin asistentes marcadas en este envío.</p>`;
     const fecha = r.fecha_envio ? new Date(r.fecha_envio).toLocaleString("es-MX") : "—";
+    const fechaOficial = fechaOficialModulo(r);
     return `
       <div class="card">
         <h4 style="margin-bottom:4px;">${r.modulo || "Módulo sin especificar"}</h4>
-        <p style="margin-bottom:12px;color:var(--gris-claro);font-size:.85rem;">Enviado por ${r.ponente || "—"} · ${fecha} · ${(r.presentes||[]).length} presente${(r.presentes||[]).length===1?"":"s"}</p>
+        <p style="margin-bottom:12px;color:var(--gris-claro);font-size:.85rem;">${fechaOficial ? `Sesión oficial: <b>${fechaOficial}</b> · ` : ""}Enviado por ${r.ponente || "—"} · lista pasada el ${fecha} · ${(r.presentes||[]).length} presente${(r.presentes||[]).length===1?"":"s"}</p>
         ${presentesHTML}
       </div>`;
   }).join("");
@@ -477,4 +499,284 @@ function renderPerfilGrupalHTML(g, filtroModulo){
   }).join("");
 
   return resumenCard + (porModuloHTML || `<div class="callout">No hay respuestas registradas para ese módulo todavía.</div>`);
+}
+
+/* ============================================================
+   Resumen ejecutivo del admin — espejos locales por sección
+   -------------------------------------------------------------
+   El sitio no tiene backend ni base de datos compartida: los
+   formularios se guardan en Netlify Forms (solo la administradora
+   los ve en su panel de Netlify) y todo lo que se guarda aquí con
+   localStorage SOLO es visible en el navegador donde se guardó. Las
+   funciones de esta sección reutilizan siempre el mismo patrón: la
+   clave de localStorage se llena desde el portal donde ocurre la
+   acción (asistentes/ponentes) y se lee desde aquí (renderX en
+   admin) — para que, si algún día se usa el mismo navegador o se
+   migra a una base de datos real, ya quede todo conectado.
+   ============================================================ */
+
+/* ---------- 1/2. Registro y semblanzas de asistentes ---------- */
+function renderRegistroAsistentesHTML(){
+  if(typeof ASISTENTES === "undefined" || !ASISTENTES.length){
+    return `<div class="callout">Todavía no has cargado el roster de asistentes en <code>assets/js/roster.js</code>.</div>`;
+  }
+  const filas = ASISTENTES.map(a=>`
+    <tr><td><b>${a.id}</b></td><td>${a.nombre}</td><td>${a.cargo || "—"}</td><td>${a.empresa || "—"}</td></tr>`).join("");
+  return `<div class="table-wrap"><table>
+    <thead><tr><th>ID</th><th>Nombre</th><th>Cargo</th><th>Empresa</th></tr></thead>
+    <tbody>${filas}</tbody>
+  </table></div>`;
+}
+
+const LS_KEY_SEMBLANZAS_ASISTENTES = "mjht_semblanzas_asistentes";
+function getSemblanzasAsistentes(){
+  try { return JSON.parse(localStorage.getItem(LS_KEY_SEMBLANZAS_ASISTENTES) || "{}"); }
+  catch(e){ return {}; }
+}
+function guardarSemblanzaAsistente(id, nombre, semblanza){
+  const todas = getSemblanzasAsistentes();
+  todas[id] = { nombre, semblanza, fecha: new Date().toISOString() };
+  try { localStorage.setItem(LS_KEY_SEMBLANZAS_ASISTENTES, JSON.stringify(todas)); } catch(e){}
+  return todas;
+}
+function renderSemblanzasAsistentesHTML(){
+  if(typeof ASISTENTES === "undefined" || !ASISTENTES.length){
+    return `<div class="callout">Todavía no has cargado el roster de asistentes.</div>`;
+  }
+  const guardadas = getSemblanzasAsistentes();
+  const filas = ASISTENTES.map(a=>{
+    const s = guardadas[a.id];
+    return `<tr><td><b>${a.id}</b></td><td>${a.nombre}</td>
+      <td>${s ? "✅ Semblanza enviada" : "⏳ Pendiente"}</td>
+      <td>${s ? new Date(s.fecha).toLocaleDateString("es-MX") : "—"}</td></tr>`;
+  }).join("");
+  return `<div class="table-wrap"><table>
+    <thead><tr><th>ID</th><th>Nombre</th><th>Estado</th><th>Última actualización (este navegador)</th></tr></thead>
+    <tbody>${filas}</tbody>
+  </table></div>`;
+}
+
+/* ---------- 3. Semblanza de facilitadores ---------- */
+const LS_KEY_SEMBLANZAS_FACILITADORES = "mjht_semblanzas_facilitadores";
+function getSemblanzasFacilitadores(){
+  try { return JSON.parse(localStorage.getItem(LS_KEY_SEMBLANZAS_FACILITADORES) || "{}"); }
+  catch(e){ return {}; }
+}
+function guardarSemblanzaFacilitador(nombre, semblanza){
+  if(!nombre) return getSemblanzasFacilitadores();
+  const todas = getSemblanzasFacilitadores();
+  todas[nombre] = { semblanza, fecha: new Date().toISOString() };
+  try { localStorage.setItem(LS_KEY_SEMBLANZAS_FACILITADORES, JSON.stringify(todas)); } catch(e){}
+  return todas;
+}
+function renderSemblanzasFacilitadoresHTML(){
+  if(typeof MODULOS === "undefined") return "";
+  const ponentesUnicos = [...new Set(MODULOS.map(m=>m.ponente))];
+  const guardadas = getSemblanzasFacilitadores();
+  return ponentesUnicos.map(p=>{
+    const oficial = MODULOS.find(m=>m.ponente===p && m.semblanza)?.semblanza || "Sin semblanza registrada todavía en assets/js/data.js.";
+    const nueva = guardadas[p];
+    return `<div class="card">
+      <h4 style="margin-bottom:6px;">${p}</h4>
+      <p style="margin-bottom:${nueva ? "10px" : "0"};"><b>Semblanza oficial (data.js):</b> ${oficial}</p>
+      ${nueva ? `<div class="callout warn"><b>🆕 Actualización pendiente de revisar</b> — enviada el ${new Date(nueva.fecha).toLocaleDateString("es-MX")} desde "Mi semblanza" en el portal de facilitadores (este navegador):<br>${nueva.semblanza}</div>` : ""}
+    </div>`;
+  }).join("");
+}
+
+/* ---------- 4. Cuestionarios previos subidos por módulo (admin) ---------- */
+const LS_KEY_CUESTIONARIOS_SUBIDOS = "mjht_cuestionarios_previos_subidos";
+function getCuestionariosPreviosSubidos(){
+  try { return JSON.parse(localStorage.getItem(LS_KEY_CUESTIONARIOS_SUBIDOS) || "{}"); }
+  catch(e){ return {}; }
+}
+function guardarCuestionarioPrevioSubido(moduloId, archivoNombre){
+  const todos = getCuestionariosPreviosSubidos();
+  todos[moduloId] = { archivo_nombre: archivoNombre, fecha: new Date().toISOString() };
+  try { localStorage.setItem(LS_KEY_CUESTIONARIOS_SUBIDOS, JSON.stringify(todos)); } catch(e){}
+  return todos;
+}
+function renderCuestionariosPreviosEstadoHTML(){
+  if(typeof MODULOS === "undefined") return "";
+  const subidos = getCuestionariosPreviosSubidos();
+  const filas = MODULOS.map(m=>{
+    const s = subidos[m.id];
+    const label = typeof m.id==="number" ? "Módulo "+m.id : "Cierre";
+    return `<tr><td>${label}</td><td>${m.tema}</td>
+      <td>${s ? "✅ Cargado" : "⏳ Pendiente"}</td>
+      <td>${s ? (s.archivo_nombre || "—") : "—"}</td>
+      <td>${s ? new Date(s.fecha).toLocaleDateString("es-MX") : "—"}</td></tr>`;
+  }).join("");
+  return `<div class="table-wrap"><table>
+    <thead><tr><th>Módulo</th><th>Tema</th><th>Estado</th><th>Archivo</th><th>Fecha de carga</th></tr></thead>
+    <tbody>${filas}</tbody>
+  </table></div>`;
+}
+
+/* ---------- 5. Cuestionario previo — respuestas de participantes ---------- */
+const LS_KEY_CUESTIONARIO_RESPUESTAS = "mjht_cuestionarios_previos_respuestas";
+function getCuestionarioRespuestas(){
+  try { return JSON.parse(localStorage.getItem(LS_KEY_CUESTIONARIO_RESPUESTAS) || "[]"); }
+  catch(e){ return []; }
+}
+function guardarCuestionarioRespuesta(registro){
+  const arr = getCuestionarioRespuestas();
+  arr.push(registro);
+  try { localStorage.setItem(LS_KEY_CUESTIONARIO_RESPUESTAS, JSON.stringify(arr)); } catch(e){}
+  return arr;
+}
+function renderCuestionarioRespuestasHTML(){
+  if(typeof MODULOS === "undefined") return "";
+  const arr = getCuestionarioRespuestas();
+  if(!arr.length){
+    return `<div class="callout">Todavía no se ha registrado ningún cuestionario contestado desde este navegador.</div>`;
+  }
+  const grupos = MODULOS.map(m=>{
+    const label = typeof m.id==="number" ? "Módulo "+m.id : "Cierre";
+    const claveModulo = `${m.id} - ${m.tema}`;
+    const entregas = arr.filter(r=>r.modulo === claveModulo);
+    if(!entregas.length) return "";
+    return `<div class="card"><h4 style="margin-bottom:8px;">${label} — ${m.tema}</h4>
+      <ul class="checklist" style="pointer-events:none;">
+      ${entregas.map(r=>`<li><span class="txt"><b>${r.participante_id || "—"}</b><span>${r.participante_nombre || "(sin nombre)"} · ${r.fecha ? new Date(r.fecha).toLocaleDateString("es-MX") : "—"}</span></span></li>`).join("")}
+      </ul></div>`;
+  }).filter(Boolean).join("");
+  return grupos || `<div class="callout">Todavía no se ha registrado ningún cuestionario contestado desde este navegador.</div>`;
+}
+
+/* ---------- 6. Feedback de sesión, clasificado por módulo ---------- */
+const LS_KEY_FEEDBACK_SESIONES = "mjht_feedback_sesiones";
+function getFeedbackSesiones(){
+  try { return JSON.parse(localStorage.getItem(LS_KEY_FEEDBACK_SESIONES) || "[]"); }
+  catch(e){ return []; }
+}
+function guardarFeedbackSesion(registro){
+  const arr = getFeedbackSesiones();
+  arr.push(registro);
+  try { localStorage.setItem(LS_KEY_FEEDBACK_SESIONES, JSON.stringify(arr)); } catch(e){}
+  return arr;
+}
+function renderFeedbackSesionesHTML(){
+  if(typeof MODULOS === "undefined") return "";
+  const arr = getFeedbackSesiones();
+  const grupos = MODULOS.map(m=>{
+    const label = typeof m.id==="number" ? "Módulo "+m.id : "Cierre";
+    const claveModulo = `${m.id} - ${m.tema}`;
+    const items = arr.filter(r=>r.modulo === claveModulo);
+    if(!items.length) return "";
+    return `<div class="card"><h4 style="margin-bottom:8px;">${label} — ${m.tema}</h4>
+      ${items.map(r=>`<div style="padding:10px 0;border-top:1px solid var(--border);">
+        <p style="margin-bottom:4px;"><b>${r.participante_nombre || "Anónimo"}</b> <small style="color:var(--gris-claro);">${r.fecha ? new Date(r.fecha).toLocaleDateString("es-MX") : ""}</small></p>
+        <p style="margin-bottom:0;">${r.feedback || "(sin comentario)"}</p>
+      </div>`).join("")}
+    </div>`;
+  }).filter(Boolean).join("");
+  return grupos || `<div class="callout">Todavía no se ha registrado feedback de sesión desde este navegador.</div>`;
+}
+
+/* ---------- 7. Materiales de facilitadores + recomendaciones del admin ---------- */
+const LS_KEY_MATERIALES_COMPARTIDOS = "mjht_materiales_compartidos";
+function getMaterialesCompartidos(){
+  try { return JSON.parse(localStorage.getItem(LS_KEY_MATERIALES_COMPARTIDOS) || "[]"); }
+  catch(e){ return []; }
+}
+function guardarMaterialCompartido(registro){
+  const arr = getMaterialesCompartidos();
+  arr.push(registro);
+  try { localStorage.setItem(LS_KEY_MATERIALES_COMPARTIDOS, JSON.stringify(arr)); } catch(e){}
+  return arr;
+}
+const LS_KEY_RECOMENDACIONES_MATERIALES = "mjht_recomendaciones_materiales";
+function getRecomendacionesMateriales(){
+  try { return JSON.parse(localStorage.getItem(LS_KEY_RECOMENDACIONES_MATERIALES) || "{}"); }
+  catch(e){ return {}; }
+}
+function guardarRecomendacionMaterial(moduloId, texto){
+  const todas = getRecomendacionesMateriales();
+  todas[moduloId] = texto;
+  try { localStorage.setItem(LS_KEY_RECOMENDACIONES_MATERIALES, JSON.stringify(todas)); } catch(e){}
+  return todas;
+}
+// withRecomendaciones=true agrega, debajo de cada módulo, el textarea de
+// "Recomendaciones para este módulo" que solo usa la administradora — es de
+// solo lectura/anotación: nunca edita ni borra lo que subió el facilitador.
+function renderMaterialesFacilitadoresHTML(withRecomendaciones){
+  if(typeof MODULOS === "undefined") return "";
+  const materiales = getMaterialesCompartidos();
+  const recos = getRecomendacionesMateriales();
+  return MODULOS.map(m=>{
+    const label = typeof m.id==="number" ? "Módulo "+m.id : "Cierre";
+    const claveModulo = `${m.id} - ${m.tema}`;
+    const propios = materiales.filter(x=>x.modulo === claveModulo);
+    const presentacionOficial = m.presentacion ? `<p style="margin-bottom:6px;"><a href="${m.presentacion}" target="_blank">Ver presentación oficial ↗</a></p>` : "";
+    const listaPropios = propios.length
+      ? `<ul class="checklist" style="pointer-events:none;">${propios.map(x=>`<li><span class="txt"><b>${x.tipo==="pdf"?"Archivo":"Liga"}</b><span>${x.nombre_o_url} · ${x.fecha ? new Date(x.fecha).toLocaleDateString("es-MX") : "—"}</span></span></li>`).join("")}</ul>`
+      : `<p class="file-hint">Sin materiales registrados en este navegador todavía.</p>`;
+    const recoBloque = withRecomendaciones ? `
+      <label style="margin-top:12px;">Recomendaciones para este módulo <small style="font-weight:400;color:var(--gris-claro);">(solo lectura/anotación tuya — no edita ni borra lo que subió el facilitador)</small></label>
+      <textarea id="reco-modulo-${m.id}" placeholder="Escribe tu recomendación…">${recos[m.id] || ""}</textarea>
+      <button type="button" class="btn btn-outline btn-sm" data-modulo="${m.id}" onclick="mjhtGuardarRecomendacionMaterial(this)">Guardar recomendación</button>
+    ` : "";
+    return `<div class="card">
+      <h4 style="margin-bottom:8px;">${label} — ${m.tema} <small style="font-weight:400;color:var(--gris-claro);">· ${m.ponente}</small></h4>
+      ${presentacionOficial}
+      ${listaPropios}
+      ${recoBloque}
+    </div>`;
+  }).join("");
+}
+window.mjhtGuardarRecomendacionMaterial = function(btn){
+  const moduloId = btn.dataset.modulo;
+  const textarea = document.getElementById("reco-modulo-"+moduloId);
+  if(!textarea) return;
+  guardarRecomendacionMaterial(moduloId, textarea.value);
+  const original = btn.textContent;
+  btn.textContent = "¡Guardado!";
+  setTimeout(()=>{ btn.textContent = original; }, 1500);
+};
+
+/* ---------- 8. Resultados del test ---------- */
+const LS_KEY_RESULTADOS_TEST = "mjht_resultados_test";
+function getResultadosTestLocal(){
+  try { return JSON.parse(localStorage.getItem(LS_KEY_RESULTADOS_TEST) || "{}"); }
+  catch(e){ return {}; }
+}
+function guardarResultadoTest(participanteId, valor){
+  const todos = getResultadosTestLocal();
+  todos[participanteId] = { archivo_nombre_o_url: valor, fecha: new Date().toISOString() };
+  try { localStorage.setItem(LS_KEY_RESULTADOS_TEST, JSON.stringify(todos)); } catch(e){}
+  return todos;
+}
+function renderResultadosTestEstadoHTML(){
+  if(typeof ASISTENTES === "undefined" || !ASISTENTES.length){
+    return `<div class="callout">Todavía no has cargado el roster de asistentes.</div>`;
+  }
+  const resultados = getResultadosTestLocal();
+  const filas = ASISTENTES.map(a=>{
+    const r = resultados[a.id];
+    return `<tr><td><b>${a.id}</b></td><td>${a.nombre}</td>
+      <td>${r ? "✅ Cargado" : "⏳ Pendiente"}</td>
+      <td>${r ? r.archivo_nombre_o_url : "—"}</td></tr>`;
+  }).join("");
+  return `<div class="table-wrap"><table>
+    <thead><tr><th>ID</th><th>Nombre</th><th>Estado</th><th>Referencia</th></tr></thead>
+    <tbody>${filas}</tbody>
+  </table></div>`;
+}
+
+/* ---------- 10. Comentarios de facilitadores (compartido admin/ponentes) ---------- */
+const LS_KEY_COMENTARIOS_FACILITADORES = "mjht_comentarios_facilitadores";
+function getComentariosFacilitadores(){
+  try { return JSON.parse(localStorage.getItem(LS_KEY_COMENTARIOS_FACILITADORES) || "[]"); }
+  catch(e){ return []; }
+}
+function renderComentariosFacilitadoresHTML(comentarios){
+  if(!comentarios || !comentarios.length){
+    return `<div class="callout">Todavía no hay comentarios guardados en este navegador.</div>`;
+  }
+  return comentarios.map(c=>`
+    <div class="card">
+      <p style="margin-bottom:4px;"><b>${c.autor}</b> <small style="color:var(--gris-claro);">→ ${c.destinatarios}${c.modulo ? " · "+c.modulo : ""}${c.fecha ? " · "+new Date(c.fecha).toLocaleString("es-MX") : ""}</small></p>
+      <p style="margin-bottom:0;">${c.comentario}</p>
+    </div>`).join("");
 }

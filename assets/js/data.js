@@ -10,7 +10,7 @@ const PROGRAMA = {
   sede: "Club de Empresarios (CCE), Torre Inxignia",
   inicio: "4 de septiembre de 2026",
   fin: "13 de noviembre de 2026",
-  horasTotales: 50,
+  horasTotales: 56,
   cupoMinimo: 11,
   cupoMaximo: 20,
   contacto: {

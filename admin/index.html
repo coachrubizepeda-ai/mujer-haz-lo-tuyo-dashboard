@@ -55,15 +55,102 @@
     <div class="grid grid-3" style="margin-bottom:18px;">
       <div class="stat"><b>10 + 2</b><span>módulos + Experiencia con caballos + Experiencia de cierre</span></div>
       <div class="stat"><b>9</b><span>especialistas invitados</span></div>
-      <div class="stat"><b>50 hrs</b><span>4 sep — 13 nov 2026 · viernes 9–14 hrs</span></div>
+      <div class="stat"><b>56 hrs</b><span>4 sep — 13 nov 2026 · viernes 9–14 hrs</span></div>
       <div class="stat"><b>11–20</b><span>cupo mínimo / máximo de participantes</span></div>
       <div class="stat"><b id="prox-fecha">—</b><span id="prox-modulo">próxima sesión</span></div>
       <div class="stat"><b>CCE</b><span>Club de Empresarios, Torre Inxignia</span></div>
     </div>
     <div id="course-progress" class="course-progress"></div>
     <div class="callout">
-      Este dashboard es 100% estático (para Netlify). Los formularios de asistentes y facilitadores se guardan directo en el panel de <b>Netlify Forms</b> de tu sitio — no aquí. En la pestaña "Formularios recibidos" tienes las ligas directas.
+      Este dashboard es 100% estático (para Netlify). Los formularios de asistentes y facilitadores se guardan directo en el panel de <b>Netlify Forms</b> de tu sitio — no aquí. En la pestaña "Formularios recibidos" tienes las ligas directas. Las secciones de abajo arman una vista rápida con lo que se ha guardado en <b>este navegador</b>; para ver los envíos hechos por otras personas desde SUS propios navegadores, siempre revisa Netlify Forms.
     </div>
+
+    <!-- 1. REGISTRO DE ASISTENTES -->
+    <div class="section-head" style="margin-top:34px;">
+      <span class="eyebrow">Fuente de verdad</span>
+      <h2>Registro de asistentes</h2>
+      <p>El roster de <code>assets/js/roster.js</code> ya ES el registro oficial — no depende de que llegue un formulario.</p>
+    </div>
+    <div id="registro-asistentes-admin"></div>
+    <div class="callout">Para agregar o corregir un registro, edita el roster del equipo o pide a la asistente que use el botón ✏️ en el portal de facilitador.</div>
+
+    <!-- 2. SEMBLANZA DE ASISTENTES -->
+    <div class="section-head" style="margin-top:34px;">
+      <span class="eyebrow">Directorio del grupo</span>
+      <h2>Semblanza de asistentes</h2>
+      <p>Estado de la semblanza de cada participante ("Mi semblanza" en el portal de asistentes).</p>
+    </div>
+    <div id="semblanzas-asistentes-admin"></div>
+    <div class="callout">Esta vista se arma con lo que se ha guardado en ESTE navegador. Para ver los envíos hechos por otras personas desde SUS propios navegadores, revisa Netlify Forms → semblanzas.</div>
+
+    <!-- 3. SEMBLANZA DE FACILITADORES -->
+    <div class="section-head" style="margin-top:34px;">
+      <span class="eyebrow">Directorio de especialistas</span>
+      <h2>Semblanza de facilitadores</h2>
+      <p>Semblanza oficial de cada facilitador (assets/js/data.js) y, si aplica, la versión que enviaron desde "Mi semblanza" en su portal.</p>
+    </div>
+    <div id="semblanzas-facilitadores-admin"></div>
+    <div class="callout">Esta vista se arma con lo que se ha guardado en ESTE navegador. Para ver los envíos hechos por otras personas desde SUS propios navegadores, revisa Netlify Forms → semblanzas-ponentes.</div>
+
+    <!-- 4. CUESTIONARIOS PREVIOS (subidos por módulo) -->
+    <div class="section-head" style="margin-top:34px;">
+      <span class="eyebrow">Antes de cada sesión</span>
+      <h2>Cuestionarios previos — estado por módulo</h2>
+      <p>Qué módulos ya tienen su cuestionario previo cargado (pestaña "Formularios recibidos" de este mismo panel) y cuáles siguen pendientes.</p>
+    </div>
+    <div id="cuestionarios-previos-estado"></div>
+    <div class="callout">Esta vista se arma con lo que se ha subido desde ESTE navegador. Para confirmar todos los envíos, revisa Netlify Forms → cuestionario-previo-modulo.</div>
+
+    <!-- 5. CUESTIONARIO PREVIO — RESPUESTAS DE PARTICIPANTES -->
+    <div class="section-head" style="margin-top:34px;">
+      <span class="eyebrow">Entregado por las participantes</span>
+      <h2>Cuestionarios previos contestados</h2>
+      <p>Quién ya subió su cuestionario previo contestado ("Sube tu cuestionario previo contestado" en el portal de asistentes), por módulo.</p>
+    </div>
+    <div id="cuestionario-respuestas-admin"></div>
+    <div class="callout">Esta vista se arma con lo que se ha guardado en ESTE navegador. Para ver los envíos hechos por otras personas desde SUS propios navegadores, revisa Netlify Forms → cuestionario-previo-respuesta.</div>
+
+    <!-- 6. FEEDBACK DE LA SESIÓN -->
+    <div class="section-head" style="margin-top:34px;">
+      <span class="eyebrow">Después de cada módulo</span>
+      <h2>Feedback de la sesión</h2>
+      <p>Comentarios y calificaciones enviados desde "Feedback de la sesión" en el portal de asistentes, clasificados por módulo.</p>
+    </div>
+    <div id="feedback-sesiones-admin"></div>
+    <div class="callout">Esta vista se arma con lo que se ha guardado en ESTE navegador. Para ver los envíos hechos por otras personas desde SUS propios navegadores, revisa Netlify Forms → feedback-sesion.</div>
+
+    <!-- 7. MATERIALES DE FACILITADORES -->
+    <div class="section-head" style="margin-top:34px;">
+      <span class="eyebrow">Por módulo</span>
+      <h2>Materiales de facilitadores</h2>
+      <p>Presentación oficial de cada módulo, materiales que el facilitador compartió desde su portal, y espacio para que dejes tu recomendación (no modifica lo que subió el facilitador).</p>
+    </div>
+    <div id="materiales-facilitadores-admin"></div>
+    <div class="callout">La lista de materiales se arma con lo que se ha guardado en ESTE navegador. Para ver todos los envíos, revisa Netlify Forms → materiales-ponente.</div>
+
+    <!-- 8. RESULTADOS DEL TEST -->
+    <div class="section-head" style="margin-top:34px;">
+      <span class="eyebrow">Test Trimetrix</span>
+      <h2>Resultados del test</h2>
+      <p>Registra la referencia (archivo o liga) del resultado de cada participante. Como este sitio no tiene backend, el archivo real se comparte por otro medio (correo, WhatsApp, Drive) — aquí solo se guarda la referencia para que la participante sepa que ya está listo.</p>
+    </div>
+    <div class="card">
+      <label>Participante *</label>
+      <select id="sel-participante-resultado-admin"></select>
+      <label>Archivo o liga del resultado</label>
+      <input type="text" id="input-resultado-admin" placeholder="Nombre del archivo (ej. resultado_M01.pdf) o liga (https://...)">
+      <button class="btn btn-primary btn-sm" id="btn-guardar-resultado-admin" type="button">Guardar</button>
+    </div>
+    <div id="resultados-test-admin"></div>
+
+    <!-- 10. COMENTARIOS DE FACILITADORES -->
+    <div class="section-head" style="margin-top:34px;">
+      <span class="eyebrow">Entre facilitadores</span>
+      <h2>Comentarios de facilitadores</h2>
+      <p>Misma lista que se ve en "Comentarios" dentro del portal de facilitadores.</p>
+    </div>
+    <div id="comentarios-facilitadores-admin"></div>
+    <div class="callout">Esta vista se arma con lo que se ha guardado en ESTE navegador. Para ver los envíos hechos por otras personas desde SUS propios navegadores, revisa Netlify Forms → comentario-facilitador.</div>
   </section>
 
   <!-- FORMULARIOS -->
@@ -88,6 +175,7 @@
         <li><a href="#" data-form="semblanzas-ponentes" target="_blank">Semblanzas de facilitadores <small>Directorio de especialistas</small><span>→</span></a></li>
         <li><a href="#" data-form="cuestionario-previo" target="_blank">Cuestionarios previos <small>Por módulo</small><span>→</span></a></li>
         <li><a href="#" data-form="cuestionario-previo-modulo" target="_blank">Cuestionario previo al módulo (admin) <small>Archivo por módulo, lo suben las participantes antes de la sesión</small><span>→</span></a></li>
+        <li><a href="#" data-form="cuestionario-previo-respuesta" target="_blank">Cuestionario previo contestado <small>Archivo que sube cada participante, por módulo</small><span>→</span></a></li>
         <li><a href="#" data-form="feedback-sesion" target="_blank">Feedback de sesión <small>Calificaciones y comentarios</small><span>→</span></a></li>
         <li><a href="#" data-form="materiales-ponente" target="_blank">Materiales de facilitadores <small>Presentaciones y ligas</small><span>→</span></a></li>
         <li><a href="#" data-form="resultado-test-asistente" target="_blank">Resultados del Test Trimetrix <small>Archivo subido por el facilitador, por asistente</small><span>→</span></a></li>
@@ -325,6 +413,45 @@
   // Reporte de asistencia (local — ver assets/js/app.js)
   const asistenciaReporteAdminWrap = document.getElementById("asistencia-reporte-admin");
   if(asistenciaReporteAdminWrap) asistenciaReporteAdminWrap.innerHTML = renderAsistenciaReporteHTML(getAsistenciaRegistros());
+
+  // ---------- Resumen ejecutivo: secciones 1 a 10 (ver assets/js/app.js) ----------
+  document.getElementById("registro-asistentes-admin").innerHTML = renderRegistroAsistentesHTML();
+  document.getElementById("semblanzas-asistentes-admin").innerHTML = renderSemblanzasAsistentesHTML();
+  document.getElementById("semblanzas-facilitadores-admin").innerHTML = renderSemblanzasFacilitadoresHTML();
+  document.getElementById("cuestionarios-previos-estado").innerHTML = renderCuestionariosPreviosEstadoHTML();
+  document.getElementById("cuestionario-respuestas-admin").innerHTML = renderCuestionarioRespuestasHTML();
+  document.getElementById("feedback-sesiones-admin").innerHTML = renderFeedbackSesionesHTML();
+  document.getElementById("materiales-facilitadores-admin").innerHTML = renderMaterialesFacilitadoresHTML(true);
+  document.getElementById("comentarios-facilitadores-admin").innerHTML = renderComentariosFacilitadoresHTML(getComentariosFacilitadores());
+
+  // Resultados del test: select de participante + guardar referencia local
+  const selParticipanteResultadoAdmin = document.getElementById("sel-participante-resultado-admin");
+  if(typeof ASISTENTES !== "undefined" && ASISTENTES.length){
+    selParticipanteResultadoAdmin.innerHTML = ASISTENTES.map(a=>`<option value="${a.id}">${asistenteEtiqueta(a)}</option>`).join("");
+  }
+  document.getElementById("resultados-test-admin").innerHTML = renderResultadosTestEstadoHTML();
+  document.getElementById("btn-guardar-resultado-admin").addEventListener("click", ()=>{
+    const id = selParticipanteResultadoAdmin.value;
+    const inputResultado = document.getElementById("input-resultado-admin");
+    const valor = inputResultado.value.trim();
+    if(!id || !valor) return;
+    guardarResultadoTest(id, valor);
+    inputResultado.value = "";
+    document.getElementById("resultados-test-admin").innerHTML = renderResultadosTestEstadoHTML();
+  });
+
+  // Cuestionario previo al módulo: al subirlo, además de Netlify Forms,
+  // guarda el estado en este navegador para la sección "Cuestionarios
+  // previos — estado por módulo" de arriba.
+  document.getElementById("form-cuestionario-modulo").addEventListener("submit", ()=>{
+    const sel = document.getElementById("sel-modulo-cuestionario-admin");
+    const fileInput = document.querySelector('#form-cuestionario-modulo input[type=file]');
+    const moduloId = sel.value ? sel.value.split(" - ")[0] : "";
+    const archivoNombre = fileInput && fileInput.files && fileInput.files[0] ? fileInput.files[0].name : "";
+    if(!moduloId) return;
+    guardarCuestionarioPrevioSubido(moduloId, archivoNombre);
+    document.getElementById("cuestionarios-previos-estado").innerHTML = renderCuestionariosPreviosEstadoHTML();
+  });
 
   // Directorio de ponentes
   const dirWrap = document.getElementById("directorio-list");

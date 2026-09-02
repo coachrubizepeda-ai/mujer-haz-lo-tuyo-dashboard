@@ -193,6 +193,30 @@
         <tbody id="tareas-body"></tbody>
       </table>
     </div>
+
+    <div class="section-head" style="margin-top:34px;">
+      <span class="eyebrow">Antes de cada módulo</span>
+      <h2>Sube tu cuestionario previo contestado</h2>
+      <p>Cuando Rubí te comparta (por correo o WhatsApp) el cuestionario previo de tu módulo, contéstalo y sube aquí tu archivo.</p>
+    </div>
+    <div class="card">
+      <form name="cuestionario-previo-respuesta" method="POST" data-netlify="true" netlify-honeypot="bot-field" enctype="multipart/form-data" id="form-cuestionario-respuesta">
+        <input type="hidden" name="form-name" value="cuestionario-previo-respuesta">
+        <p class="hp-field"><label>No llenar: <input name="bot-field"></label></p>
+        <div class="form-msg"></div>
+        <div class="field-row">
+          <div><label>Tu nombre *</label>
+            <select name="participante" id="sel-participante-cuestionario-respuesta" required><option value="">Selecciona tu nombre…</option></select>
+          </div>
+          <div><label>Módulo *</label>
+            <select name="modulo" id="sel-modulo-cuestionario-respuesta" required></select>
+          </div>
+        </div>
+        <label>Tu cuestionario contestado (PDF) *</label>
+        <input type="file" name="archivo" accept=".pdf" required>
+        <button class="btn btn-primary" type="submit">Enviar cuestionario contestado</button>
+      </form>
+    </div>
   </section>
 
   <!-- PONENTES -->
@@ -247,7 +271,7 @@
         <p class="hp-field"><label>No llenar: <input name="bot-field"></label></p>
         <div class="form-msg"></div>
         <div class="field-row">
-          <div><label>Nombre (opcional, puedes dejarlo en blanco)</label><input type="text" name="nombre"></div>
+          <div><label>Tu nombre (opcional)</label><select name="nombre" id="sel-nombre-feedback"><option value="">Prefiero no decir mi nombre</option></select></div>
           <div><label>Módulo *</label>
             <select name="modulo" id="sel-modulo-feedback" required></select>
           </div>
@@ -430,13 +454,62 @@
   });
 
   // Selects de módulo en formularios
-  ["sel-modulo-cuestionario","sel-modulo-feedback"].forEach(id=>{
+  ["sel-modulo-cuestionario","sel-modulo-feedback","sel-modulo-cuestionario-respuesta"].forEach(id=>{
     const sel = document.getElementById(id);
     MODULOS.forEach(m=>{
       const opt = document.createElement("option");
       opt.value = `${m.id} - ${m.tema}`;
       opt.textContent = `${typeof m.id==="number"?"Módulo "+m.id:"Cierre"} · ${m.tema}`;
       sel.appendChild(opt);
+    });
+  });
+
+  // Dropdown de nombre en "Feedback de la sesión" — mismo roster oficial
+  const selNombreFeedback = document.getElementById("sel-nombre-feedback");
+  if(typeof ASISTENTES !== "undefined" && ASISTENTES.length){
+    selNombreFeedback.innerHTML = '<option value="">Prefiero no decir mi nombre</option>' +
+      ASISTENTES.map(a=>`<option value="${a.nombre}">${asistenteEtiqueta(a)}</option>`).join("");
+  }
+
+  // Espejo local de "Feedback de la sesión" (ver assets/js/app.js) — además
+  // de Netlify Forms, guarda un registro clasificable por módulo para que
+  // el admin lo pueda ver agrupado en su Resumen ejecutivo.
+  const formFeedback = document.querySelector('form[name="feedback-sesion"]');
+  formFeedback.addEventListener("submit", ()=>{
+    const nombre = formFeedback.nombre.value;
+    const asistente = buscarAsistentePorNombre(nombre);
+    const moduloSel = document.getElementById("sel-modulo-feedback");
+    const meLlevo = formFeedback.me_llevo.value.trim();
+    const mejoraria = formFeedback.mejoraria.value.trim();
+    const calificacion = formFeedback.calificacion.value;
+    const partes = [];
+    if(calificacion) partes.push(`Calificación: ${calificacion}/5`);
+    if(meLlevo) partes.push(`Me llevo: ${meLlevo}`);
+    if(mejoraria) partes.push(`Mejoraría: ${mejoraria}`);
+    guardarFeedbackSesion({
+      participante_id: asistente ? asistente.id : "",
+      participante_nombre: nombre || "Anónimo",
+      modulo: moduloSel.value,
+      feedback: partes.join(" · ") || "(sin comentario)",
+      fecha: new Date().toISOString()
+    });
+  });
+
+  // Selects de "Sube tu cuestionario previo contestado" + espejo local
+  const selParticipanteCR = document.getElementById("sel-participante-cuestionario-respuesta");
+  if(typeof ASISTENTES !== "undefined" && ASISTENTES.length){
+    selParticipanteCR.innerHTML = '<option value="">Selecciona tu nombre…</option>' +
+      ASISTENTES.map(a=>`<option value="${a.id}">${asistenteEtiqueta(a)}</option>`).join("");
+  }
+  const formCuestionarioRespuesta = document.getElementById("form-cuestionario-respuesta");
+  formCuestionarioRespuesta.addEventListener("submit", ()=>{
+    const idSel = selParticipanteCR.value;
+    const asistente = (typeof ASISTENTES !== "undefined") ? ASISTENTES.find(a=>a.id===idSel) : null;
+    guardarCuestionarioRespuesta({
+      participante_id: idSel || "",
+      participante_nombre: asistente ? asistente.nombre : "",
+      modulo: document.getElementById("sel-modulo-cuestionario-respuesta").value,
+      fecha: new Date().toISOString()
     });
   });
 
@@ -449,6 +522,18 @@
   } else {
     selNombreSemblanza.outerHTML = '<input type="text" name="nombre" id="sel-nombre-semblanza" placeholder="Tu nombre completo" required>';
   }
+
+  // Espejo local de "Mi semblanza" (ver assets/js/app.js) — además de
+  // Netlify Forms, guarda una copia en este navegador para que el admin
+  // pueda mostrar en el momento quién ya envió su semblanza.
+  const formSemblanza = document.querySelector('form[name="semblanzas"]');
+  formSemblanza.addEventListener("submit", ()=>{
+    const nombre = formSemblanza.nombre.value;
+    const semblanza = formSemblanza.semblanza.value.trim();
+    const asistente = buscarAsistentePorNombre(nombre);
+    const id = asistente ? asistente.id : nombre;
+    guardarSemblanzaAsistente(id, nombre, semblanza);
+  });
 
   // ---------- Test Trimetrix: "Tus resultados" ----------
   // Lee de RESULTADOS_TEST (assets/js/data.js), keyed por nombre exacto del
@@ -471,10 +556,27 @@
     const el = document.getElementById("sel-nombre-resultado");
     const nombre = el.value.trim();
     if(!nombre){ resultadoTestWrap.innerHTML = ""; return; }
-    const liga = typeof RESULTADOS_TEST !== "undefined" ? RESULTADOS_TEST[nombre] : null;
-    resultadoTestWrap.innerHTML = liga
-      ? `<a class="btn btn-primary" href="${liga}" target="_blank" rel="noopener">Descargar mi resultado ↓</a>`
-      : `<div class="callout warn">Aún no se ha subido tu resultado. En cuanto tu facilitadora lo suba, vas a poder descargarlo aquí.</div>`;
+    // Primero busca en el registro local que sube la administradora
+    // (mjht_resultados_test, ver "Resultados del test" en el panel de
+    // admin); si no hay nada ahí, cae de vuelta a RESULTADOS_TEST de
+    // assets/js/data.js (llenado a mano por Rubí).
+    const asistente = buscarAsistentePorNombre(nombre);
+    const local = asistente ? getResultadosTestLocal()[asistente.id] : null;
+    let bodyHTML;
+    if(local && local.archivo_nombre_o_url){
+      const valor = local.archivo_nombre_o_url;
+      const esLiga = /^https?:\/\//i.test(valor);
+      bodyHTML = esLiga
+        ? `<a class="btn btn-primary" href="${valor}" target="_blank" rel="noopener">Descargar mi resultado ↓</a>`
+        : `<div class="callout"><b>Referencia registrada:</b> ${valor}<br><small>Como este sitio no tiene backend, aquí solo se guarda la referencia — tu facilitadora o Rubí te lo comparte por correo, WhatsApp o Drive.</small></div>`;
+    } else {
+      const liga = typeof RESULTADOS_TEST !== "undefined" ? RESULTADOS_TEST[nombre] : null;
+      bodyHTML = liga
+        ? `<a class="btn btn-primary" href="${liga}" target="_blank" rel="noopener">Descargar mi resultado ↓</a>`
+        : `<div class="callout warn">Aún no se ha subido tu resultado. En cuanto se suba, vas a poder descargarlo aquí.</div>`;
+    }
+    resultadoTestWrap.innerHTML = bodyHTML +
+      `<p class="file-hint" style="margin-top:10px;">Por ahora cualquiera con la contraseña de participante puede ver esta lista completa — cuando tengamos cuentas individuales por participante, cada quien verá solo la suya.</p>`;
   }
   document.getElementById("sel-nombre-resultado").addEventListener(
     document.getElementById("sel-nombre-resultado").tagName === "SELECT" ? "change" : "input",
