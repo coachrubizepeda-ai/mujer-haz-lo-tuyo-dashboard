@@ -9,7 +9,7 @@
 //
 // POST body: { email, password }
 
-const { getStore } = require("@netlify/blobs");
+const { abrirStore } = require("./_blobs");
 
 exports.handler = async (event) => {
   const headers = { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" };
@@ -36,7 +36,7 @@ exports.handler = async (event) => {
   }
 
   try {
-    const store = getStore("participantes-auth");
+    const store = abrirStore("participantes-auth");
     const { blobs } = await store.list();
     for (const b of blobs) {
       const val = await store.get(b.key, { type: "json" });

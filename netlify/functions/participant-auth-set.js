@@ -12,7 +12,7 @@
 // con la URL de esta función la use sin conocerla, igual que el resto del
 // sitio.
 
-const { getStore } = require("@netlify/blobs");
+const { abrirStore } = require("./_blobs");
 
 const ADMIN_KEY = "RUBI2026";
 
@@ -50,7 +50,7 @@ exports.handler = async (event) => {
   };
 
   try {
-    const store = getStore("participantes-auth");
+    const store = abrirStore("participantes-auth");
     await store.setJSON(String(participanteId), registro);
     return { statusCode: 200, headers, body: JSON.stringify({ ok: true }) };
   } catch (e) {

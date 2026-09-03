@@ -6,7 +6,7 @@
 // GET /.netlify/functions/test-download?key=...&dl=1
 //   forzar descarga (para "Descargar")
 
-const { getStore } = require("@netlify/blobs");
+const { abrirStore } = require("./_blobs");
 
 exports.handler = async (event) => {
   if (event.httpMethod !== "GET") {
@@ -20,7 +20,7 @@ exports.handler = async (event) => {
   }
 
   try {
-    const store = getStore("resultados-test");
+    const store = abrirStore("resultados-test");
     const info = await store.getMetadata(key);
     if (!info) {
       return { statusCode: 404, body: "No se encontró ese archivo" };

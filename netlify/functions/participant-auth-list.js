@@ -6,7 +6,7 @@
 //
 // GET /.netlify/functions/participant-auth-list?adminKey=...
 
-const { getStore } = require("@netlify/blobs");
+const { abrirStore } = require("./_blobs");
 
 const ADMIN_KEY = "RUBI2026";
 
@@ -26,7 +26,7 @@ exports.handler = async (event) => {
   }
 
   try {
-    const store = getStore("participantes-auth");
+    const store = abrirStore("participantes-auth");
     const { blobs } = await store.list();
     const items = {};
     await Promise.all(

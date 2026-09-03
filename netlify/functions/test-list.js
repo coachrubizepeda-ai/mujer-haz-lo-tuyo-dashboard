@@ -4,7 +4,7 @@
 // GET /.netlify/functions/test-list                     -> todos
 // GET /.netlify/functions/test-list?participanteId=M01  -> solo esa persona
 
-const { getStore } = require("@netlify/blobs");
+const { abrirStore } = require("./_blobs");
 
 exports.handler = async (event) => {
   const headers = { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" };
@@ -19,7 +19,7 @@ exports.handler = async (event) => {
   const participanteId = (event.queryStringParameters || {}).participanteId;
 
   try {
-    const store = getStore("resultados-test");
+    const store = abrirStore("resultados-test");
     const { blobs } = await store.list({ prefix: participanteId ? `${participanteId}/` : undefined });
 
     const items = await Promise.all(

@@ -38,4 +38,5 @@ const ASISTENTES = [
   { id: "M08", nombre: "Sara Rivero Rugerio", empresa: "", cargo: "", semblanza: "", linkedin: "" },
   { id: "M09", nombre: "Mildred Sosa", empresa: "", cargo: "", semblanza: "", linkedin: "", perfil: "Mildred Erosa" },
   { id: "M10", nombre: "Lupita Prósperi", empresa: "", cargo: "", semblanza: "", linkedin: "" },
+  { id: "M11", nombre: "Rocío González", empresa: "", cargo: "", semblanza: "", linkedin: "" },
 ];

@@ -7,7 +7,7 @@
 // propia (el sitio no maneja cuentas reales) — el botón de eliminar solo
 // aparece en el panel de administradora.
 
-const { getStore } = require("@netlify/blobs");
+const { abrirStore } = require("./_blobs");
 
 exports.handler = async (event) => {
   const headers = { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" };
@@ -32,7 +32,7 @@ exports.handler = async (event) => {
   }
 
   try {
-    const store = getStore("resultados-test");
+    const store = abrirStore("resultados-test");
     await store.delete(key);
     return { statusCode: 200, headers, body: JSON.stringify({ ok: true }) };
   } catch (e) {

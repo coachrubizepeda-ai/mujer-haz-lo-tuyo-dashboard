@@ -10,7 +10,7 @@
 // cualquier navegador, de cualquier persona, sin pasar por localStorage
 // ni por Netlify Forms.
 
-const { getStore } = require("@netlify/blobs");
+const { abrirStore } = require("./_blobs");
 
 const MAX_BYTES = 8 * 1024 * 1024; // 8 MB por archivo
 
@@ -63,7 +63,7 @@ exports.handler = async (event) => {
   const fecha = new Date().toISOString();
 
   try {
-    const store = getStore("resultados-test");
+    const store = abrirStore("resultados-test");
     await store.set(key, buffer, {
       metadata: {
         filename: safeName,

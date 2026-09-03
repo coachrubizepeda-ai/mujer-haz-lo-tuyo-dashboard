@@ -11,13 +11,14 @@
 
    PENDIENTE (no se pudo autocompletar — edítalo aquí o directo en
    el panel una vez que tengas el dato):
-   - M02 Liz Cárcamo: no venía correo en la lista.
+   - M02 Liz Cárcamo: todavía no hay correo — Rubí dijo que lo va a
+     conseguir. En cuanto lo tengas, agrégalo aquí (o directo en el
+     panel, es lo mismo) y ya queda incluida en la próxima carga.
    - M09 Mildred Sosa: no venía correo en la lista.
-   - "Rocío González" (rociogonzalezgalvan@gmail.com) apareció en la
-     lista pero NO está en el roster (M01–M10 en assets/js/roster.js)
-     — si es una participante nueva, primero agrégala al roster
-     (por ejemplo como M11) y luego agrega su acceso aquí o desde
-     el panel.
+
+   "Rocío González" (rociogonzalezgalvan@gmail.com) ya se agregó como
+   M11 tanto aquí como en el roster (assets/js/roster.js) — es
+   facilitadora y también asistente al diplomado.
 
    Las contraseñas son "Nombre2026" (fácil de decir por teléfono) —
    cámbialas por lo que prefieras, desde el panel, en cualquier
@@ -32,4 +33,5 @@ const ACCESOS_SEED = [
   { id: "M07", email: "ana180103@yahoo.com.mx",        password: "Ana2026" },
   { id: "M08", email: "empaques_sanjose@outlook.com",  password: "Sara2026" },
   { id: "M10", email: "lupitapro@gmail.com",           password: "Lupita2026" },
+  { id: "M11", email: "rociogonzalezgalvan@gmail.com", password: "Rocio2026" },
 ];
