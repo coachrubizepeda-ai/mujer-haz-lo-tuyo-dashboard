@@ -78,10 +78,10 @@
     <div class="section-head" style="margin-top:34px;">
       <span class="eyebrow">Login individual</span>
       <h2>Acceso a la plataforma</h2>
-      <p>Correo y contraseña personales de cada participante — así su Test Trimetrix (y en el futuro, cualquier otra cosa individual) solo lo puede ver ella y los facilitadores, nunca las demás participantes. Guarda el acceso y mándaselo por WhatsApp con un clic.</p>
+      <p>Correo y contraseña personales de cada participante — así su Test Trimetrix (y en el futuro, cualquier otra cosa individual) solo lo puede ver ella y los facilitadores, nunca las demás participantes. Guarda el acceso y mándaselo por WhatsApp o por correo con un clic.</p>
     </div>
     <div class="callout">Igual que el resto del sitio, esto no es seguridad de grado bancario: las contraseñas se guardan en texto simple. Es suficiente para diferenciar a cada participante dentro de un diplomado cerrado — no lo uses para nada más delicado.</div>
-    <div class="callout">El botón "WhatsApp" abre el chat con el link, correo y contraseña ya escritos, y de paso descarga el flyer de esa persona a tu computadora — pero WhatsApp no deja adjuntar imágenes automáticamente desde una liga, así que el único paso manual es arrastrar (o adjuntar) el flyer que se acaba de descargar dentro de esa misma conversación antes de enviar.</div>
+    <div class="callout">Los botones "WhatsApp" y "Correo" abren el chat o tu programa de correo con el link, correo y contraseña ya escritos, y de paso descargan el flyer de esa persona a tu computadora — pero ni WhatsApp ni un link de correo dejan adjuntar imágenes automáticamente, así que el único paso manual es arrastrar (o adjuntar) el flyer que se acaba de descargar dentro de esa misma conversación o correo antes de enviar. El botón "Correo" abre tu programa de correo predeterminado (Mail, Outlook, o lo que tengas configurado en tu computadora) con el correo de la participante, el asunto y el mensaje ya listos.</div>
     <button type="button" class="btn btn-outline btn-sm" style="margin-bottom:14px;" onclick="mjhtCargarAccesosDesdeLista()">Cargar accesos desde la lista que compartiste (una sola vez)</button>
     <div id="accesos-asistentes-admin"></div>
     <div id="qr-temp" style="display:none;"></div>
@@ -477,6 +477,7 @@
             <button type="button" class="btn btn-outline btn-sm" onclick="mjhtGuardarAccesoAsistente('${a.id}')">Guardar</button>
             <button type="button" class="btn btn-outline btn-sm" onclick="mjhtDescargarFlyerAsistente('${a.id}')">Flyer</button>
             <button type="button" class="btn btn-primary btn-sm" onclick="mjhtEnviarAccesoWhatsapp('${a.id}')">WhatsApp</button>
+            <button type="button" class="btn btn-primary btn-sm" onclick="mjhtEnviarAccesoCorreo('${a.id}')">Correo</button>
           </td>
         </tr>`;
       }).join("")}</tbody>
@@ -512,6 +513,22 @@
     // archivo que se acaba de descargar antes de enviar.
     try { await mjhtDescargarFlyerAsistente(id); } catch(e){ /* si falla el flyer, igual mandamos el texto */ }
     window.open(`https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`, "_blank");
+  };
+
+  window.mjhtEnviarAccesoCorreo = async function(id){
+    const asistente = (typeof ASISTENTES !== "undefined") ? ASISTENTES.find(a=>a.id===id) : null;
+    const email = document.getElementById("acc-email-"+id).value.trim();
+    const password = document.getElementById("acc-pass-"+id).value.trim();
+    if(!email || !password){ alert("Escribe su correo y contraseña, dale Guardar, y luego manda el correo."); return; }
+    const siteUrl = location.origin + "/";
+    const primerNombre = asistente ? asistente.nombre.split(" ")[0] : "";
+    const asunto = "Tu acceso al portal — Mujer, Haz lo Tuyo";
+    const cuerpo = `Hola ${primerNombre}!\n\nAquí está tu acceso al portal del diplomado Mujer, Haz lo Tuyo:\n\n${siteUrl}\n\nCorreo: ${email}\nContraseña: ${password}\n\nTe adjunto también tu flyer con el QR de acceso (se acaba de descargar a tu computadora — solo arrástralo aquí antes de enviar).\n\n¡Nos vemos pronto!\nRubí`;
+    // Igual que con WhatsApp: un link mailto: no puede adjuntar archivos por
+    // sí solo, así que descargamos el flyer primero y ella lo arrastra a mano
+    // dentro del correo que se abre con el texto ya listo.
+    try { await mjhtDescargarFlyerAsistente(id); } catch(e){ /* si falla el flyer, igual mandamos el texto */ }
+    window.location.href = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpo)}`;
   };
 
   // ---------- Flyer con QR (correo + contraseña + liga de acceso) ----------
