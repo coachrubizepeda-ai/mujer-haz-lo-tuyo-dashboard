@@ -87,6 +87,21 @@
     <div id="qr-temp" style="display:none;"></div>
     <canvas id="flyer-canvas" width="1080" height="1350" style="display:none;"></canvas>
 
+    <!-- 1c. AGENTE CLAUDE -->
+    <div class="section-head" style="margin-top:34px;">
+      <span class="eyebrow">Agente flotante</span>
+      <h2>Agente Claude</h2>
+      <p>El botón 💬 que aparece abajo a la derecha en los 3 portales, para que cualquiera pregunte del calendario, los módulos, los facilitadores o los datos de contacto. Necesita tu propia API key de Claude (de <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>) para funcionar.</p>
+    </div>
+    <div class="callout">Tu API key se guarda del lado del servidor (Netlify Blobs) y nunca se manda de vuelta al navegador — ni a ti misma se te vuelve a mostrar completa, solo los últimos 4 caracteres para confirmar que quedó guardada. Aun así, es tu cuenta de Claude la que paga cada pregunta que conteste el agente — revisa tu consumo de vez en cuando en console.anthropic.com.</div>
+    <div class="callout">Por ahora el agente SOLO contesta preguntas con lo que ya está cargado en cada portal (calendario, módulos, facilitadoras, contacto) — todavía no puede leer archivos ni escribir/guardar nada en el dashboard por ti. Eso quedaría para una siguiente versión.</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px;">
+      <input type="password" id="agent-api-key" placeholder="sk-ant-…" style="flex:1;min-width:260px;margin:0;" autocomplete="off">
+      <button type="button" class="btn btn-primary btn-sm" onclick="mjhtGuardarApiKeyAgente()">Guardar</button>
+      <button type="button" class="btn btn-outline btn-sm" onclick="mjhtBorrarApiKeyAgente()">Quitar key</button>
+    </div>
+    <p id="agent-key-status" style="font-size:.85rem;margin-top:8px;color:var(--gris-claro);">Consultando…</p>
+
     <!-- 2. SEMBLANZA DE ASISTENTES -->
     <div class="section-head" style="margin-top:34px;">
       <span class="eyebrow">Directorio del grupo</span>
@@ -380,6 +395,7 @@
 <script src="../assets/js/accesos-seed.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="../assets/js/app.js"></script>
+<script src="../assets/js/agent-widget.js"></script>
 <script>
   renderCourseProgress("course-progress");
 
@@ -675,6 +691,60 @@
   };
 
   refrescarAccesosAsistentesAdmin();
+
+  // ---------- Agente Claude: guardar/quitar/consultar la API key ----------
+  async function refrescarEstadoApiKeyAgente(){
+    const statusEl = document.getElementById("agent-key-status");
+    if(!statusEl) return;
+    try {
+      const resp = await fetch("/.netlify/functions/agent-config-status?adminKey=" + encodeURIComponent(MJHT_ADMIN_KEY));
+      const data = await resp.json().catch(()=>({}));
+      if(!resp.ok || !data.ok) throw new Error((data && data.error) || ("Error " + resp.status));
+      statusEl.textContent = data.configured
+        ? `Agente activo — key guardada terminada en …${data.ultimos4}.`
+        : "El agente todavía no está activado — pega tu API key arriba y dale Guardar.";
+    } catch(e){
+      statusEl.textContent = "No se pudo consultar el estado (" + (e.message || e) + ").";
+    }
+  }
+  window.mjhtGuardarApiKeyAgente = async function(){
+    const input = document.getElementById("agent-api-key");
+    const statusEl = document.getElementById("agent-key-status");
+    const apiKey = input.value.trim();
+    if(!apiKey){ alert("Pega tu API key de Claude antes de guardar."); return; }
+    if(statusEl) statusEl.textContent = "Guardando…";
+    try {
+      const resp = await fetch("/.netlify/functions/agent-config-set", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ adminKey: MJHT_ADMIN_KEY, apiKey }),
+      });
+      const data = await resp.json().catch(()=>({}));
+      if(!resp.ok || !data.ok) throw new Error((data && data.error) || ("Error " + resp.status));
+      input.value = "";
+      await refrescarEstadoApiKeyAgente();
+    } catch(e){
+      if(statusEl) statusEl.textContent = "No se pudo guardar: " + (e.message || e);
+    }
+  };
+  window.mjhtBorrarApiKeyAgente = async function(){
+    if(!confirm("¿Quitar la API key guardada? El botón del agente dejará de funcionar hasta que pongas una nueva.")) return;
+    const statusEl = document.getElementById("agent-key-status");
+    if(statusEl) statusEl.textContent = "Quitando…";
+    try {
+      const resp = await fetch("/.netlify/functions/agent-config-set", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ adminKey: MJHT_ADMIN_KEY, apiKey: "" }),
+      });
+      const data = await resp.json().catch(()=>({}));
+      if(!resp.ok || !data.ok) throw new Error((data && data.error) || ("Error " + resp.status));
+      await refrescarEstadoApiKeyAgente();
+    } catch(e){
+      if(statusEl) statusEl.textContent = "No se pudo quitar: " + (e.message || e);
+    }
+  };
+  refrescarEstadoApiKeyAgente();
 
   // Test Trimetrix (Netlify Functions + Blobs): una fila por participante,
   // con su propio botón "Cargar Test" — en cuanto se sube un PDF, queda
