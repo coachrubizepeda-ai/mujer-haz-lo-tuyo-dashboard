@@ -832,15 +832,68 @@ function renderFeedbackSesionesHTML(){
 
 /* ---------- 7. Materiales de facilitadores + recomendaciones del admin ---------- */
 const LS_KEY_MATERIALES_COMPARTIDOS = "mjht_materiales_compartidos";
+function _mjhtNuevoIdMaterial(){
+  return "m_" + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+}
 function getMaterialesCompartidos(){
-  try { return JSON.parse(localStorage.getItem(LS_KEY_MATERIALES_COMPARTIDOS) || "[]"); }
-  catch(e){ return []; }
+  let arr;
+  try { arr = JSON.parse(localStorage.getItem(LS_KEY_MATERIALES_COMPARTIDOS) || "[]"); }
+  catch(e){ arr = []; }
+  // Registros guardados antes de que existiera "id" (para poder editar/borrar
+  // uno por uno) lo reciben aquí mismo, una sola vez, y se guardan de vuelta.
+  let necesitaGuardar = false;
+  arr.forEach(x=>{ if(!x.id){ x.id = _mjhtNuevoIdMaterial(); necesitaGuardar = true; } });
+  if(necesitaGuardar){ try { localStorage.setItem(LS_KEY_MATERIALES_COMPARTIDOS, JSON.stringify(arr)); } catch(e){} }
+  return arr;
 }
 function guardarMaterialCompartido(registro){
   const arr = getMaterialesCompartidos();
+  if(!registro.id) registro.id = _mjhtNuevoIdMaterial();
   arr.push(registro);
   try { localStorage.setItem(LS_KEY_MATERIALES_COMPARTIDOS, JSON.stringify(arr)); } catch(e){}
   return arr;
+}
+function eliminarMaterialCompartido(id){
+  const arr = getMaterialesCompartidos().filter(x=>x.id !== id);
+  try { localStorage.setItem(LS_KEY_MATERIALES_COMPARTIDOS, JSON.stringify(arr)); } catch(e){}
+  return arr;
+}
+function actualizarModuloMaterialCompartido(id, nuevoModulo){
+  const arr = getMaterialesCompartidos();
+  const item = arr.find(x=>x.id === id);
+  if(item) item.modulo = nuevoModulo;
+  try { localStorage.setItem(LS_KEY_MATERIALES_COMPARTIDOS, JSON.stringify(arr)); } catch(e){}
+  return arr;
+}
+// Vista propia del facilitador (en "Mi módulo"): todo lo que ha compartido
+// para ESE módulo, con controles para eliminarlo o moverlo a otro módulo —
+// así puede confirmar que cayó donde debía, sin tener que preguntarle a Rubí.
+function renderMisMaterialesModuloHTML(claveModulo){
+  const materiales = getMaterialesCompartidos().filter(x=>x.modulo === claveModulo);
+  if(!materiales.length){
+    return `<p class="file-hint">Todavía no has compartido nada para este módulo (en este navegador).</p>`;
+  }
+  const opcionesModulo = (typeof MODULOS !== "undefined")
+    ? MODULOS.map(m=>{
+        const val = `${m.id} - ${m.tema}`;
+        const label = `${typeof m.id==="number"?"Módulo "+m.id:"Cierre"} · ${m.tema}`;
+        return `<option value="${val}"${val===claveModulo?" selected":""}>${label}</option>`;
+      }).join("")
+    : "";
+  const filas = materiales.map(x=>`
+    <tr>
+      <td>${x.tipo === "pdf" ? "Archivo" : "Liga"}</td>
+      <td>${x.tipo === "liga" ? `<a href="${x.nombre_o_url}" target="_blank" rel="noopener">${x.nombre_o_url}</a>` : x.nombre_o_url}</td>
+      <td>${x.fecha ? new Date(x.fecha).toLocaleDateString("es-MX") : "—"}</td>
+      <td style="white-space:nowrap;">
+        <select style="display:inline-block;width:auto;margin:0 6px 0 0;font-size:.8rem;" onchange="mjhtCambiarModuloMaterial('${x.id}', this.value)">${opcionesModulo}</select>
+        <button type="button" class="btn-edit-nombre" title="Eliminar" onclick="mjhtEliminarMaterial('${x.id}')">🗑️</button>
+      </td>
+    </tr>`).join("");
+  return `<div class="table-wrap"><table>
+    <thead><tr><th>Tipo</th><th>Contenido</th><th>Fecha</th><th>Módulo</th></tr></thead>
+    <tbody>${filas}</tbody>
+  </table></div>`;
 }
 const LS_KEY_RECOMENDACIONES_MATERIALES = "mjht_recomendaciones_materiales";
 function getRecomendacionesMateriales(){
@@ -916,6 +969,92 @@ function renderResultadosTestEstadoHTML(){
   }).join("");
   return `<div class="table-wrap"><table>
     <thead><tr><th>ID</th><th>Nombre</th><th>Estado</th><th>Referencia</th></tr></thead>
+    <tbody>${filas}</tbody>
+  </table></div>`;
+}
+
+/* ---------- 8b. Resultados del test — subida/descarga REAL (Netlify Functions + Blobs) ----------
+   A diferencia de getResultadosTestLocal()/guardarResultadoTest() de arriba
+   (que solo guardan una REFERENCIA en localStorage, visible únicamente en
+   ese navegador), estas funciones suben y sirven el PDF real desde el
+   servidor: en cuanto alguien sube un archivo, cualquier persona —
+   administradora, facilitadores, participantes— lo ve y lo descarga de
+   inmediato, sin depender de este navegador ni de Netlify Forms. */
+
+function archivoABase64(file){
+  return new Promise((resolve, reject)=>{
+    const lector = new FileReader();
+    lector.onload = () => {
+      // lector.result viene como "data:application/pdf;base64,AAAA..."
+      const base64 = String(lector.result).split(",")[1] || "";
+      resolve(base64);
+    };
+    lector.onerror = () => reject(new Error("No se pudo leer el archivo"));
+    lector.readAsDataURL(file);
+  });
+}
+
+async function subirResultadoTestArchivo(participanteId, participanteNombre, file, subidoPor){
+  if(!file) throw new Error("Falta el archivo");
+  const contentBase64 = await archivoABase64(file);
+  const resp = await fetch("/.netlify/functions/test-upload", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      participanteId, participanteNombre, subidoPor,
+      filename: file.name, contentBase64,
+    }),
+  });
+  const data = await resp.json().catch(()=>({}));
+  if(!resp.ok) throw new Error((data && data.error) || ("Error " + resp.status));
+  return data;
+}
+
+async function listarResultadosTest(participanteId){
+  const url = "/.netlify/functions/test-list" + (participanteId ? ("?participanteId=" + encodeURIComponent(participanteId)) : "");
+  const resp = await fetch(url);
+  const data = await resp.json().catch(()=>({}));
+  if(!resp.ok) throw new Error((data && data.error) || ("Error " + resp.status));
+  return data.items || [];
+}
+
+async function eliminarResultadoTest(key){
+  const resp = await fetch("/.netlify/functions/test-delete", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ key }),
+  });
+  const data = await resp.json().catch(()=>({}));
+  if(!resp.ok) throw new Error((data && data.error) || ("Error " + resp.status));
+  return data;
+}
+
+function renderResultadosTestListaHTML(items, opts){
+  opts = opts || {};
+  if(!items || !items.length){
+    return `<div class="callout">Todavía no hay resultados subidos.</div>`;
+  }
+  const filas = items.map(it=>{
+    const verUrl = `/.netlify/functions/test-download?key=${encodeURIComponent(it.key)}`;
+    const descargarUrl = verUrl + "&dl=1";
+    const fechaLabel = it.fecha ? new Date(it.fecha).toLocaleString("es-MX") : "—";
+    const eliminarBtn = opts.editable
+      ? `<button type="button" class="btn-edit-nombre" title="Eliminar" onclick="mjhtEliminarResultadoTest('${it.key.replace(/'/g,"\\'")}')">🗑️</button>`
+      : "";
+    return `<tr>
+      <td><b>${it.participanteId || ""}</b></td>
+      <td>${it.participanteNombre || ""}</td>
+      <td>${it.filename}</td>
+      <td>${fechaLabel}</td>
+      <td style="white-space:nowrap;">
+        <a class="btn btn-outline btn-sm" href="${verUrl}" target="_blank" rel="noopener">Ver</a>
+        <a class="btn btn-primary btn-sm" href="${descargarUrl}">Descargar</a>
+        ${eliminarBtn}
+      </td>
+    </tr>`;
+  }).join("");
+  return `<div class="table-wrap"><table>
+    <thead><tr><th>ID</th><th>Nombre</th><th>Archivo</th><th>Subido</th><th></th></tr></thead>
     <tbody>${filas}</tbody>
   </table></div>`;
 }

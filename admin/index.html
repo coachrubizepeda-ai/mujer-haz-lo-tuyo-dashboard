@@ -32,6 +32,7 @@
   </div>
   <nav class="side-nav">
     <button class="tab-btn active" data-tab="t-resumen">Resumen</button>
+    <button class="tab-btn" data-tab="t-test-trimetrix">Test Trimetrix</button>
     <button class="tab-btn" data-tab="t-formularios">Formularios recibidos</button>
     <button class="tab-btn" data-tab="t-asistencia">Reporte de asistencia</button>
     <button class="tab-btn" data-tab="t-directorio">Directorio de facilitadores</button>
@@ -72,6 +73,19 @@
     </div>
     <div id="registro-asistentes-admin"></div>
     <div class="callout">Para agregar o corregir un registro, edita el roster del equipo o pide a la asistente que use el botón ✏️ en el portal de facilitador.</div>
+
+    <!-- 1b. ACCESO INDIVIDUAL A LA PLATAFORMA -->
+    <div class="section-head" style="margin-top:34px;">
+      <span class="eyebrow">Login individual</span>
+      <h2>Acceso a la plataforma</h2>
+      <p>Correo y contraseña personales de cada participante — así su Test Trimetrix (y en el futuro, cualquier otra cosa individual) solo lo puede ver ella y los facilitadores, nunca las demás participantes. Guarda el acceso y mándaselo por WhatsApp con un clic.</p>
+    </div>
+    <div class="callout">Igual que el resto del sitio, esto no es seguridad de grado bancario: las contraseñas se guardan en texto simple. Es suficiente para diferenciar a cada participante dentro de un diplomado cerrado — no lo uses para nada más delicado.</div>
+    <div class="callout">El botón "WhatsApp" abre el chat con el link, correo y contraseña ya escritos, y de paso descarga el flyer de esa persona a tu computadora — pero WhatsApp no deja adjuntar imágenes automáticamente desde una liga, así que el único paso manual es arrastrar (o adjuntar) el flyer que se acaba de descargar dentro de esa misma conversación antes de enviar.</div>
+    <button type="button" class="btn btn-outline btn-sm" style="margin-bottom:14px;" onclick="mjhtCargarAccesosDesdeLista()">Cargar accesos desde la lista que compartiste (una sola vez)</button>
+    <div id="accesos-asistentes-admin"></div>
+    <div id="qr-temp" style="display:none;"></div>
+    <canvas id="flyer-canvas" width="1080" height="1350" style="display:none;"></canvas>
 
     <!-- 2. SEMBLANZA DE ASISTENTES -->
     <div class="section-head" style="margin-top:34px;">
@@ -127,42 +141,12 @@
     <div id="materiales-facilitadores-admin"></div>
     <div class="callout">La lista de materiales se arma con lo que se ha guardado en ESTE navegador. Para ver todos los envíos, revisa Netlify Forms → materiales-ponente.</div>
 
-    <!-- 8. RESULTADOS DEL TEST -->
+    <!-- 8. RESULTADOS DEL TEST: movido a su propia pestaña "Test Trimetrix" -->
     <div class="section-head" style="margin-top:34px;">
       <span class="eyebrow">Test Trimetrix</span>
       <h2>Resultados del test</h2>
-      <p>Registra la referencia (archivo o liga) del resultado de cada participante. Como este sitio no tiene backend, el archivo real se comparte por otro medio (correo, WhatsApp, Drive) — aquí solo se guarda la referencia para que la participante sepa que ya está listo.</p>
     </div>
-    <div class="card">
-      <label>Participante *</label>
-      <select id="sel-participante-resultado-admin"></select>
-      <label>Archivo o liga del resultado</label>
-      <input type="text" id="input-resultado-admin" placeholder="Nombre del archivo (ej. resultado_M01.pdf) o liga (https://...)">
-      <button class="btn btn-primary btn-sm" id="btn-guardar-resultado-admin" type="button">Guardar</button>
-    </div>
-    <div id="resultados-test-admin"></div>
-
-    <div class="section-head" style="margin-top:28px;">
-      <span class="eyebrow">Subir el archivo real</span>
-      <h2>Subir resultado del test (PDF)</h2>
-      <p>Si ya tienes el PDF de resultados de una participante, súbelo aquí directamente — se envía al mismo formulario que usan los facilitadores.</p>
-    </div>
-    <div class="card">
-      <form name="resultado-test-asistente" method="POST" data-netlify="true" netlify-honeypot="bot-field" enctype="multipart/form-data" id="form-resultado-test-admin">
-        <input type="hidden" name="form-name" value="resultado-test-asistente">
-        <input type="hidden" name="ponente_nombre" value="Rubí (Administradora)">
-        <p class="hp-field"><label>No llenar: <input name="bot-field"></label></p>
-        <div class="form-msg"></div>
-        <label>Participante *</label>
-        <select name="nombre_asistente" id="sel-asistente-resultado-admin-upload" required></select>
-        <label>Archivo de resultados (PDF) *</label>
-        <input type="file" name="archivo" accept=".pdf" required>
-        <button class="btn btn-primary" type="submit">Subir resultado</button>
-      </form>
-      <div class="callout" style="margin-top:16px;">
-        El archivo subido aquí queda guardado en <b>Netlify Forms → resultado-test-asistente</b>. Esta vista solo muestra la referencia (nombre del archivo); para descargar el PDF real entra a tu panel de Netlify.
-      </div>
-    </div>
+    <div class="callout">La subida y revisión de resultados del Test Trimetrix ahora tiene su propia pestaña — ve a <b>Test Trimetrix</b> en el menú de la izquierda.</div>
 
     <!-- 10. COMENTARIOS DE FACILITADORES -->
     <div class="section-head" style="margin-top:34px;">
@@ -172,6 +156,16 @@
     </div>
     <div id="comentarios-facilitadores-admin"></div>
     <div class="callout">Esta vista se arma con lo que se ha guardado en ESTE navegador. Para ver los envíos hechos por otras personas desde SUS propios navegadores, revisa Netlify Forms → comentario-facilitador.</div>
+  </section>
+
+  <!-- TEST TRIMETRIX -->
+  <section class="tab-panel" id="t-test-trimetrix">
+    <div class="section-head">
+      <span class="eyebrow">Confidencial · un archivo por participante</span>
+      <h2>Test Trimetrix</h2>
+      <p>Sube aquí el PDF de resultados de cada participante. En cuanto lo subes queda disponible al instante para verlo y descargarlo — solo para ella y para los facilitadores — sin depender de este navegador ni de ti.</p>
+    </div>
+    <div id="test-trimetrix-lista"></div>
   </section>
 
   <!-- FORMULARIOS -->
@@ -383,6 +377,8 @@
 <script>mjhtGuard("admin");</script>
 <script src="../assets/js/data.js"></script>
 <script src="../assets/js/roster.js"></script>
+<script src="../assets/js/accesos-seed.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="../assets/js/app.js"></script>
 <script>
   renderCourseProgress("course-progress");
@@ -431,39 +427,293 @@
   document.getElementById("materiales-facilitadores-admin").innerHTML = renderMaterialesFacilitadoresHTML(true);
   document.getElementById("comentarios-facilitadores-admin").innerHTML = renderComentariosFacilitadoresHTML(getComentariosFacilitadores());
 
-  // Resultados del test: select de participante + guardar referencia local
-  const selParticipanteResultadoAdmin = document.getElementById("sel-participante-resultado-admin");
-  if(typeof ASISTENTES !== "undefined" && ASISTENTES.length){
-    selParticipanteResultadoAdmin.innerHTML = ASISTENTES.map(a=>`<option value="${a.id}">${asistenteEtiqueta(a)}</option>`).join("");
+  // ---------- Acceso a la plataforma (login individual de participantes) ----------
+  // Guarda correo/contraseña/celular de cada participante en Netlify Blobs
+  // (netlify/functions/participant-auth-*.js), para que su login funcione
+  // desde SU propio celular o laptop, no solo desde este navegador. La
+  // "llave" de administradora aquí es la misma contraseña de admin del
+  // sitio (auth.js) — no es seguridad real, solo evita que cualquiera con
+  // la URL de la función la use sin saberla, igual que el resto del sitio.
+  const MJHT_ADMIN_KEY = "RUBI2026";
+  async function guardarAccesoParticipante(participanteId, datos){
+    const resp = await fetch("/.netlify/functions/participant-auth-set", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(Object.assign({ adminKey: MJHT_ADMIN_KEY, participanteId }, datos)),
+    });
+    const data = await resp.json().catch(()=>({}));
+    if(!resp.ok || !data.ok) throw new Error((data && data.error) || ("Error " + resp.status));
+    return data;
   }
-  document.getElementById("resultados-test-admin").innerHTML = renderResultadosTestEstadoHTML();
-  document.getElementById("btn-guardar-resultado-admin").addEventListener("click", ()=>{
-    const id = selParticipanteResultadoAdmin.value;
-    const inputResultado = document.getElementById("input-resultado-admin");
-    const valor = inputResultado.value.trim();
-    if(!id || !valor) return;
-    guardarResultadoTest(id, valor);
-    inputResultado.value = "";
-    document.getElementById("resultados-test-admin").innerHTML = renderResultadosTestEstadoHTML();
-  });
+  async function listarAccesosParticipantes(){
+    const resp = await fetch("/.netlify/functions/participant-auth-list?adminKey=" + encodeURIComponent(MJHT_ADMIN_KEY));
+    const data = await resp.json().catch(()=>({}));
+    if(!resp.ok || !data.ok) throw new Error((data && data.error) || ("Error " + resp.status));
+    return data.items || {};
+  }
+  async function refrescarAccesosAsistentesAdmin(){
+    const wrap = document.getElementById("accesos-asistentes-admin");
+    if(!wrap) return;
+    if(typeof ASISTENTES === "undefined" || !ASISTENTES.length){
+      wrap.innerHTML = `<div class="callout">Todavía no has cargado el roster de asistentes.</div>`;
+      return;
+    }
+    wrap.innerHTML = `<div class="callout">Cargando…</div>`;
+    let accesos = {};
+    let errorMsg = "";
+    try { accesos = await listarAccesosParticipantes(); }
+    catch(e){ errorMsg = e.message || String(e); }
+    const aviso = errorMsg ? `<div class="callout warn">No se pudo cargar el estado de accesos (${errorMsg}). Puedes seguir guardando de todas formas.</div>` : "";
+    wrap.innerHTML = aviso + `<div class="table-wrap"><table>
+      <thead><tr><th>Participante</th><th>Correo</th><th>Contraseña</th><th>Celular (WhatsApp)</th><th></th></tr></thead>
+      <tbody>${ASISTENTES.map(a=>{
+        const acc = accesos[a.id] || {};
+        return `<tr>
+          <td><b>${asistenteEtiqueta(a)}</b></td>
+          <td><input type="text" id="acc-email-${a.id}" value="${acc.email || ""}" placeholder="correo@ejemplo.com" style="min-width:180px;margin:0;"></td>
+          <td><input type="text" id="acc-pass-${a.id}" value="${acc.password || ""}" placeholder="contraseña" style="min-width:130px;margin:0;"></td>
+          <td><input type="text" id="acc-tel-${a.id}" value="${acc.telefono || ""}" placeholder="2221133443" style="min-width:130px;margin:0;"></td>
+          <td style="white-space:nowrap;">
+            <button type="button" class="btn btn-outline btn-sm" onclick="mjhtGuardarAccesoAsistente('${a.id}')">Guardar</button>
+            <button type="button" class="btn btn-outline btn-sm" onclick="mjhtDescargarFlyerAsistente('${a.id}')">Flyer</button>
+            <button type="button" class="btn btn-primary btn-sm" onclick="mjhtEnviarAccesoWhatsapp('${a.id}')">WhatsApp</button>
+          </td>
+        </tr>`;
+      }).join("")}</tbody>
+    </table></div>
+    <p id="accesos-status" style="font-size:.85rem;margin-top:8px;color:var(--gris-claro);"></p>`;
+  }
+  window.mjhtGuardarAccesoAsistente = async function(id){
+    const email = document.getElementById("acc-email-"+id).value.trim();
+    const password = document.getElementById("acc-pass-"+id).value.trim();
+    const telefono = document.getElementById("acc-tel-"+id).value.trim();
+    const statusEl = document.getElementById("accesos-status");
+    if(statusEl) statusEl.textContent = "Guardando…";
+    try {
+      await guardarAccesoParticipante(id, { email, password, telefono });
+      if(statusEl) statusEl.textContent = "¡Listo! Acceso guardado.";
+    } catch(e){
+      if(statusEl) statusEl.textContent = "No se pudo guardar: " + (e.message || e);
+    }
+  };
+  window.mjhtEnviarAccesoWhatsapp = async function(id){
+    const asistente = (typeof ASISTENTES !== "undefined") ? ASISTENTES.find(a=>a.id===id) : null;
+    const email = document.getElementById("acc-email-"+id).value.trim();
+    const password = document.getElementById("acc-pass-"+id).value.trim();
+    let telefono = document.getElementById("acc-tel-"+id).value.trim().replace(/\D/g,"");
+    if(!telefono){ alert("Agrega el celular antes de enviar por WhatsApp — y dale Guardar."); return; }
+    if(!email || !password){ alert("Escribe su correo y contraseña, dale Guardar, y luego manda el WhatsApp."); return; }
+    if(telefono.length === 10) telefono = "52" + telefono; // código de país México, autodetectado
+    const siteUrl = location.origin + "/";
+    const primerNombre = asistente ? asistente.nombre.split(" ")[0] : "";
+    const mensaje = `Hola ${primerNombre}! 👋 Aquí está tu acceso al portal del diplomado *Mujer, Haz lo Tuyo*:\n\n${siteUrl}\n\nCorreo: ${email}\nContraseña: ${password}\n\n¡Nos vemos pronto!`;
+    // Descarga el flyer primero (WhatsApp no permite adjuntar archivos desde
+    // una liga wa.me): al abrir la conversación, ella misma arrastra el
+    // archivo que se acaba de descargar antes de enviar.
+    try { await mjhtDescargarFlyerAsistente(id); } catch(e){ /* si falla el flyer, igual mandamos el texto */ }
+    window.open(`https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`, "_blank");
+  };
 
-  // Subir resultado del test (PDF real) — envía a Netlify Forms
-  // (resultado-test-asistente, mismo formulario que usan los facilitadores)
-  // y además guarda la referencia local (nombre del archivo) para que se
-  // vea de inmediato en la tabla de arriba.
-  const selAsistenteResultadoAdminUpload = document.getElementById("sel-asistente-resultado-admin-upload");
-  if(typeof ASISTENTES !== "undefined" && ASISTENTES.length){
-    selAsistenteResultadoAdminUpload.innerHTML = ASISTENTES.map(a=>`<option value="${a.nombre}">${asistenteEtiqueta(a)}</option>`).join("");
+  // ---------- Flyer con QR (correo + contraseña + liga de acceso) ----------
+  // Se dibuja en el <canvas id="flyer-canvas"> oculto y se descarga como PNG.
+  // El QR lo genera la librería qrcodejs (cargada por CDN arriba) en el
+  // <div id="qr-temp"> oculto; de ahí se copia al canvas final.
+  const PALETA_FLYER = {
+    azulOscuro: "#007DA5", azulClaro: "#00ADBB", amarillo: "#FFDD00",
+    grisOscuro: "#3D4543", blanco: "#FFFFFF",
+  };
+  function generarQR(texto){
+    return new Promise((resolve)=>{
+      const cont = document.getElementById("qr-temp");
+      cont.innerHTML = "";
+      new QRCode(cont, { text: texto, width: 420, height: 420, colorDark: PALETA_FLYER.azulOscuro, colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.M });
+      // qrcodejs dibuja de forma síncrona en navegadores modernos (usa
+      // <canvas>), pero damos un respiro de un tick por si acaso.
+      setTimeout(()=>{
+        const qrCanvas = cont.querySelector("canvas");
+        const qrImg = cont.querySelector("img");
+        resolve(qrCanvas || qrImg || null);
+      }, 60);
+    });
   }
-  document.getElementById("form-resultado-test-admin").addEventListener("submit", ()=>{
-    const nombreSel = selAsistenteResultadoAdminUpload.value;
-    const asistente = buscarAsistentePorNombre(nombreSel);
-    const fileInput = document.querySelector('#form-resultado-test-admin input[type=file]');
-    const archivoNombre = fileInput && fileInput.files && fileInput.files[0] ? fileInput.files[0].name : "";
-    if(!asistente || !archivoNombre) return;
-    guardarResultadoTest(asistente.id, archivoNombre);
-    document.getElementById("resultados-test-admin").innerHTML = renderResultadosTestEstadoHTML();
-  });
+  function envolverTexto(ctx, texto, x, y, maxAncho, lineHeight){
+    const palabras = texto.split(" ");
+    let linea = "";
+    let lineasY = y;
+    for(let i=0; i<palabras.length; i++){
+      const prueba = linea + palabras[i] + " ";
+      if(ctx.measureText(prueba).width > maxAncho && i > 0){
+        ctx.fillText(linea, x, lineasY);
+        linea = palabras[i] + " ";
+        lineasY += lineHeight;
+      } else {
+        linea = prueba;
+      }
+    }
+    ctx.fillText(linea, x, lineasY);
+    return lineasY + lineHeight;
+  }
+  window.mjhtDescargarFlyerAsistente = async function(id){
+    const asistente = (typeof ASISTENTES !== "undefined") ? ASISTENTES.find(a=>a.id===id) : null;
+    const email = document.getElementById("acc-email-"+id).value.trim();
+    const password = document.getElementById("acc-pass-"+id).value.trim();
+    if(!email || !password){ alert("Escribe su correo y contraseña (y dale Guardar) antes de generar el flyer."); throw new Error("faltan datos"); }
+    const siteUrl = location.origin + "/";
+    if(document.fonts && document.fonts.ready){ try { await document.fonts.ready; } catch(e){} }
+    const qrEl = await generarQR(siteUrl);
+    const canvas = document.getElementById("flyer-canvas");
+    const ctx = canvas.getContext("2d");
+    const W = canvas.width, H = canvas.height;
+
+    // Fondo: degradado azul de marca
+    const grad = ctx.createLinearGradient(0, 0, 0, H);
+    grad.addColorStop(0, PALETA_FLYER.azulOscuro);
+    grad.addColorStop(1, PALETA_FLYER.azulClaro);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    // Encabezado
+    ctx.textAlign = "center";
+    ctx.fillStyle = PALETA_FLYER.amarillo;
+    ctx.font = "800 64px Poppins, Arial, sans-serif";
+    ctx.fillText("MUJER, HAZ LO TUYO", W/2, 130);
+    ctx.fillStyle = PALETA_FLYER.blanco;
+    ctx.font = "500 34px Poppins, Arial, sans-serif";
+    ctx.fillText("Tu acceso a la plataforma del diplomado", W/2, 180);
+
+    // Tarjeta blanca central
+    const cardX = 80, cardY = 240, cardW = W - 160, cardH = 560, cardR = 28;
+    ctx.fillStyle = PALETA_FLYER.blanco;
+    ctx.beginPath();
+    ctx.moveTo(cardX + cardR, cardY);
+    ctx.arcTo(cardX + cardW, cardY, cardX + cardW, cardY + cardH, cardR);
+    ctx.arcTo(cardX + cardW, cardY + cardH, cardX, cardY + cardH, cardR);
+    ctx.arcTo(cardX, cardY + cardH, cardX, cardY, cardR);
+    ctx.arcTo(cardX, cardY, cardX + cardW, cardY, cardR);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = PALETA_FLYER.azulOscuro;
+    ctx.font = "700 46px Poppins, Arial, sans-serif";
+    ctx.fillText(asistente ? asistente.nombre : id, W/2, cardY + 80);
+
+    ctx.font = "500 30px Poppins, Arial, sans-serif";
+    ctx.fillStyle = PALETA_FLYER.grisOscuro;
+    ctx.fillText("Correo", W/2, cardY + 150);
+    ctx.font = "700 34px Poppins, Arial, sans-serif";
+    ctx.fillText(email, W/2, cardY + 195);
+
+    ctx.font = "500 30px Poppins, Arial, sans-serif";
+    ctx.fillStyle = PALETA_FLYER.grisOscuro;
+    ctx.fillText("Contraseña", W/2, cardY + 260);
+    ctx.font = "700 40px Poppins, Arial, sans-serif";
+    ctx.fillStyle = PALETA_FLYER.azulOscuro;
+    ctx.fillText(password, W/2, cardY + 310);
+
+    // QR
+    const qrSize = 300, qrX = W/2 - qrSize/2, qrY = cardY + 360;
+    ctx.fillStyle = PALETA_FLYER.blanco;
+    ctx.fillRect(qrX - 12, qrY - 12, qrSize + 24, qrSize + 24);
+    if(qrEl) ctx.drawImage(qrEl, qrX, qrY, qrSize, qrSize);
+
+    // Pie
+    ctx.fillStyle = PALETA_FLYER.blanco;
+    ctx.font = "600 32px Poppins, Arial, sans-serif";
+    ctx.fillText("Escanea el código para entrar directo", W/2, cardY + cardH + 100);
+    ctx.font = "500 26px Poppins, Arial, sans-serif";
+    ctx.fillText(siteUrl.replace(/^https?:\/\//, ""), W/2, cardY + cardH + 145);
+    ctx.font = "500 24px Poppins, Arial, sans-serif";
+    ctx.fillStyle = "rgba(255,255,255,.85)";
+    ctx.fillText("The Ok People", W/2, H - 50);
+
+    const url = canvas.toDataURL("image/png");
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `flyer-acceso-${id}.png`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  };
+
+  // ---------- Carga inicial de accesos desde assets/js/accesos-seed.js ----------
+  window.mjhtCargarAccesosDesdeLista = async function(){
+    if(typeof ACCESOS_SEED === "undefined" || !ACCESOS_SEED.length){
+      alert("No encontré assets/js/accesos-seed.js con datos para cargar.");
+      return;
+    }
+    if(!confirm(`Esto va a guardar (o sobreescribir) el correo y contraseña de ${ACCESOS_SEED.length} participantes con los datos de assets/js/accesos-seed.js. ¿Continuar?`)) return;
+    const statusEl = document.getElementById("accesos-status");
+    let ok = 0, fallidos = [];
+    for(const item of ACCESOS_SEED){
+      try {
+        const telefonoActual = document.getElementById("acc-tel-"+item.id) ? document.getElementById("acc-tel-"+item.id).value.trim() : "";
+        await guardarAccesoParticipante(item.id, { email: item.email, password: item.password, telefono: telefonoActual });
+        ok++;
+      } catch(e){ fallidos.push(item.id); }
+    }
+    if(statusEl) statusEl.textContent = fallidos.length
+      ? `Se guardaron ${ok} de ${ACCESOS_SEED.length}. Fallaron: ${fallidos.join(", ")}.`
+      : `¡Listo! Se guardaron los ${ok} accesos de la lista.`;
+    refrescarAccesosAsistentesAdmin();
+  };
+
+  refrescarAccesosAsistentesAdmin();
+
+  // Test Trimetrix (Netlify Functions + Blobs): una fila por participante,
+  // con su propio botón "Cargar Test" — en cuanto se sube un PDF, queda
+  // disponible al instante para ella y para los facilitadores.
+  async function refrescarTestTrimetrixAdmin(){
+    const wrap = document.getElementById("test-trimetrix-lista");
+    if(!wrap) return;
+    if(typeof ASISTENTES === "undefined" || !ASISTENTES.length){
+      wrap.innerHTML = `<div class="callout">Todavía no has cargado el roster de asistentes en <code>assets/js/roster.js</code>.</div>`;
+      return;
+    }
+    wrap.innerHTML = `<div class="callout">Cargando…</div>`;
+    let items = [];
+    let errorMsg = "";
+    try { items = await listarResultadosTest(); }
+    catch(e){ errorMsg = e.message || String(e); }
+    const avisoError = errorMsg ? `<div class="callout warn">No se pudo cargar la lista de resultados (${errorMsg}). Puedes seguir subiendo — al recargar la página se debería ver.</div>` : "";
+    wrap.innerHTML = avisoError + ASISTENTES.map(a=>{
+      const propios = items.filter(x=>x.participanteId === a.id);
+      return `<div class="card" style="margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+          <div>
+            <b>${asistenteEtiqueta(a)}</b>
+            ${a.empresa ? `<br><small style="color:var(--gris-claro);">${a.empresa}</small>` : ""}
+          </div>
+          <div>
+            <input type="file" accept=".pdf" id="test-file-${a.id}" style="display:none;" onchange="mjhtCargarTestAsistente('${a.id}', this)">
+            <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('test-file-${a.id}').click()">Cargar Test</button>
+          </div>
+        </div>
+        <p id="test-status-${a.id}" style="font-size:.85rem;margin:8px 0 0;color:var(--gris-claro);"></p>
+        <div style="margin-top:10px;">${renderResultadosTestListaHTML(propios, {editable:true})}</div>
+      </div>`;
+    }).join("");
+  }
+  window.mjhtCargarTestAsistente = async function(participanteId, inputEl){
+    const file = inputEl.files && inputEl.files[0];
+    if(!file) return;
+    const asistente = (typeof ASISTENTES !== "undefined") ? ASISTENTES.find(a=>a.id===participanteId) : null;
+    const statusEl = document.getElementById("test-status-"+participanteId);
+    if(statusEl) statusEl.textContent = "Subiendo…";
+    try {
+      await subirResultadoTestArchivo(participanteId, asistente ? asistente.nombre : participanteId, file, "Rubí (Administradora)");
+      if(statusEl) statusEl.textContent = "¡Listo!";
+      inputEl.value = "";
+      refrescarTestTrimetrixAdmin();
+    } catch(e){
+      if(statusEl) statusEl.textContent = "No se pudo subir: " + (e.message || e);
+    }
+  };
+  window.mjhtEliminarResultadoTest = async function(key){
+    if(!confirm("¿Eliminar este resultado? Esta acción no se puede deshacer.")) return;
+    try { await eliminarResultadoTest(key); refrescarTestTrimetrixAdmin(); }
+    catch(e){ alert("No se pudo eliminar: " + (e.message || e)); }
+  };
+  refrescarTestTrimetrixAdmin();
 
   // Cuestionario previo al módulo: al subirlo, además de Netlify Forms,
   // guarda el estado en este navegador para la sección "Cuestionarios

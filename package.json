@@ -1,0 +1,9 @@
+{
+  "name": "mujer-haz-lo-tuyo-dashboard",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Dashboard del Diplomado Mujer, Haz lo Tuyo. Sitio estático + funciones Netlify para la subida/descarga de resultados del Test Trimetrix.",
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0"
+  }
+}

@@ -60,10 +60,11 @@
         <p>Registro, semblanza, calendario, materiales, cuestionarios y feedback de cada sesión.</p>
         <button class="btn btn-primary btn-block toggle-pass" data-role="asistente">Entrar</button>
         <div class="pass-box" id="box-asistente">
-          <form class="login-form" data-role="asistente">
-            <input type="password" placeholder="Contraseña de participante" required>
-            <p class="role-error" id="err-asistente">Contraseña incorrecta. Intenta de nuevo.</p>
-            <button type="submit" class="btn btn-accent btn-block">Ingresar al portal</button>
+          <form class="login-form" id="form-login-asistente" data-role="asistente">
+            <input type="email" id="asistente-email" placeholder="Tu correo" autocomplete="username" required>
+            <input type="password" id="asistente-password" placeholder="Tu contraseña" autocomplete="current-password" required>
+            <p class="role-error" id="err-asistente">Correo o contraseña incorrectos. Intenta de nuevo, o pídele a Rubí que te la reenvíe.</p>
+            <button type="submit" class="btn btn-accent btn-block" id="btn-login-asistente">Ingresar al portal</button>
           </form>
         </div>
       </div>
@@ -122,7 +123,9 @@
   <form name="materiales-ponente" data-netlify="true" netlify-honeypot="bot-field" enctype="multipart/form-data"><input name="nombre"><input name="modulo"><input name="link_web"><input name="link_spotify"><input name="link_instagram"><input name="link_x"><input name="link_linkedin"><input type="file" name="archivo"></form>
   <form name="semblanzas-ponentes" data-netlify="true" netlify-honeypot="bot-field"><input name="perfil"><input name="nombre"><input name="modulo"><textarea name="semblanza"></textarea><input name="linkedin"><input name="instagram"><input name="x"></form>
   <form name="asistencia-modulo" data-netlify="true" netlify-honeypot="bot-field"><input name="ponente_nombre"><input name="modulo"><input name="presentes"><textarea name="presentes_texto"></textarea><textarea name="extras"></textarea></form>
-  <form name="resultado-test-asistente" data-netlify="true" netlify-honeypot="bot-field" enctype="multipart/form-data"><input name="ponente_nombre"><input name="nombre_asistente"><input type="file" name="archivo"></form>
+  <!-- resultado-test-asistente ya NO es un formulario de Netlify: la subida de
+       resultados del Test Trimetrix ahora usa funciones (netlify/functions/test-*.js)
+       con Netlify Blobs, para que el PDF real quede disponible al instante para todos. -->
   <form name="cuestionario-previo-modulo" data-netlify="true" netlify-honeypot="bot-field" enctype="multipart/form-data"><input name="modulo"><input type="file" name="archivo"></form>
   <form name="comentario-facilitador" data-netlify="true" netlify-honeypot="bot-field"><input name="autor"><input name="destinatarios"><input name="modulo"><textarea name="comentario"></textarea></form>
   <form name="cuestionario-previo-respuesta" data-netlify="true" netlify-honeypot="bot-field" enctype="multipart/form-data"><input name="participante"><input name="modulo"><input type="file" name="archivo"></form>
@@ -141,6 +144,7 @@
   });
 
   document.querySelectorAll(".login-form").forEach(form=>{
+    if(form.dataset.role === "asistente") return; // manejado aparte, es async (login individual)
     form.addEventListener("submit", (e)=>{
       e.preventDefault();
       const rol = form.dataset.role;
@@ -152,6 +156,28 @@
         err.classList.add("show");
       }
     });
+  });
+
+  // Login individual de participante (correo + contraseña, ver assets/js/auth.js)
+  document.getElementById("form-login-asistente").addEventListener("submit", async (e)=>{
+    e.preventDefault();
+    const email = document.getElementById("asistente-email").value.trim();
+    const password = document.getElementById("asistente-password").value;
+    const err = document.getElementById("err-asistente");
+    const btn = document.getElementById("btn-login-asistente");
+    err.classList.remove("show");
+    btn.disabled = true;
+    const textoOriginal = btn.textContent;
+    btn.textContent = "Verificando…";
+    const resultado = await mjhtLoginAsistente(email, password);
+    if(resultado.ok){
+      location.href = "asistentes/index.html";
+    } else {
+      err.textContent = resultado.error || "Correo o contraseña incorrectos. Intenta de nuevo, o pídele a Rubí que te la reenvíe.";
+      err.classList.add("show");
+      btn.disabled = false;
+      btn.textContent = textoOriginal;
+    }
   });
 
   // Si venimos de un portal por falta de sesión, abre directo su caja

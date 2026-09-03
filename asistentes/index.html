@@ -155,9 +155,7 @@
     </div>
     <div class="card">
       <h4>Tus resultados</h4>
-      <p>Rubí te comparte por correo, antes del Módulo 1, la liga para contestar tu test y la guía de lectura de tus resultados. Cuando tu facilitadora suba tu archivo de resultados, lo vas a poder descargar aquí.</p>
-      <label>¿Quién eres?</label>
-      <select id="sel-nombre-resultado"></select>
+      <p>Rubí te comparte por correo, antes del Módulo 1, la liga para contestar tu test y la guía de lectura de tus resultados. Cuando tu facilitadora o Rubí suban tu archivo de resultados, lo vas a poder ver y descargar aquí — solo tú (y los facilitadores) pueden verlo, con tu login.</p>
       <div id="resultado-test" style="margin-top:14px;"></div>
     </div>
   </section>
@@ -544,52 +542,35 @@
   });
 
   // ---------- Test Trimetrix: "Tus resultados" ----------
-  // Lee de RESULTADOS_TEST (assets/js/data.js), keyed por nombre exacto del
-  // roster. La administradora la llena a mano una vez que el facilitador le
-  // hace llegar el archivo (ver el formulario "resultado-test-asistente"
-  // en el portal de facilitadores). Mientras tanto, muestra el aviso de
-  // pendiente para cada asistente.
-  const selNombreResultado = document.getElementById("sel-nombre-resultado");
+  // Ya no se pregunta "¿Quién eres?" — el login individual (ver assets/js/auth.js
+  // y netlify/functions/participant-login.js) ya sabe qué participanteId
+  // entró, así que se carga directo SU resultado y el de nadie más.
   const resultadoTestWrap = document.getElementById("resultado-test");
-  const nombresRoster = (typeof ASISTENTES !== "undefined" && ASISTENTES.length)
-    ? ASISTENTES.map(a=>a.nombre)
-    : [];
-  if(nombresRoster.length){
-    selNombreResultado.innerHTML = '<option value="">Selecciona tu nombre…</option>' +
-      ASISTENTES.map(a=>`<option value="${a.nombre}">${asistenteEtiqueta(a)}</option>`).join("");
-  } else {
-    selNombreResultado.outerHTML = '<input type="text" id="sel-nombre-resultado" placeholder="Escribe tu nombre completo">';
-  }
-  function mostrarResultadoTest(){
-    const el = document.getElementById("sel-nombre-resultado");
-    const nombre = el.value.trim();
-    if(!nombre){ resultadoTestWrap.innerHTML = ""; return; }
-    // Primero busca en el registro local que sube la administradora
-    // (mjht_resultados_test, ver "Resultados del test" en el panel de
-    // admin); si no hay nada ahí, cae de vuelta a RESULTADOS_TEST de
-    // assets/js/data.js (llenado a mano por Rubí).
-    const asistente = buscarAsistentePorNombre(nombre);
-    const local = asistente ? getResultadosTestLocal()[asistente.id] : null;
-    let bodyHTML;
-    if(local && local.archivo_nombre_o_url){
-      const valor = local.archivo_nombre_o_url;
-      const esLiga = /^https?:\/\//i.test(valor);
-      bodyHTML = esLiga
-        ? `<a class="btn btn-primary" href="${valor}" target="_blank" rel="noopener">Descargar mi resultado ↓</a>`
-        : `<div class="callout"><b>Referencia registrada:</b> ${valor}<br><small>Como este sitio no tiene backend, aquí solo se guarda la referencia — tu facilitadora o Rubí te lo comparte por correo, WhatsApp o Drive.</small></div>`;
-    } else {
-      const liga = typeof RESULTADOS_TEST !== "undefined" ? RESULTADOS_TEST[nombre] : null;
-      bodyHTML = liga
-        ? `<a class="btn btn-primary" href="${liga}" target="_blank" rel="noopener">Descargar mi resultado ↓</a>`
-        : `<div class="callout warn">Aún no se ha subido tu resultado. En cuanto se suba, vas a poder descargarlo aquí.</div>`;
+  async function mostrarResultadoTest(){
+    const sesion = mjhtAsistenteActivo();
+    if(!sesion || !sesion.participanteId){
+      resultadoTestWrap.innerHTML = `<div class="callout warn">No se pudo identificar tu sesión. Cierra sesión y vuelve a entrar.</div>`;
+      return;
     }
-    resultadoTestWrap.innerHTML = bodyHTML +
-      `<p class="file-hint" style="margin-top:10px;">Por ahora cualquiera con la contraseña de participante puede ver esta lista completa — cuando tengamos cuentas individuales por participante, cada quien verá solo la suya.</p>`;
+    const asistente = (typeof ASISTENTES !== "undefined") ? ASISTENTES.find(a=>a.id === sesion.participanteId) : null;
+    resultadoTestWrap.innerHTML = `<div class="callout">Buscando tus resultados…</div>`;
+    try {
+      const items = await listarResultadosTest(sesion.participanteId);
+      if(items.length){
+        resultadoTestWrap.innerHTML = renderResultadosTestListaHTML(items, {editable:false});
+      } else {
+        // Respaldo: liga fija cargada a mano por Rubí en assets/js/data.js,
+        // por si algún resultado no pasó por la subida real.
+        const liga = (typeof RESULTADOS_TEST !== "undefined" && asistente) ? RESULTADOS_TEST[asistente.nombre] : null;
+        resultadoTestWrap.innerHTML = liga
+          ? `<a class="btn btn-primary" href="${liga}" target="_blank" rel="noopener">Descargar mi resultado ↓</a>`
+          : `<div class="callout warn">Aún no se ha subido tu resultado. En cuanto se suba, vas a poder verlo y descargarlo aquí.</div>`;
+      }
+    } catch(e){
+      resultadoTestWrap.innerHTML = `<div class="callout warn">No se pudo cargar tu resultado (${e.message || e}).</div>`;
+    }
   }
-  document.getElementById("sel-nombre-resultado").addEventListener(
-    document.getElementById("sel-nombre-resultado").tagName === "SELECT" ? "change" : "input",
-    mostrarResultadoTest
-  );
+  mostrarResultadoTest();
 
   // ---------- "Mi registro" conectado al roster (assets/js/roster.js) ----------
   // En vez de una base de datos paralela, la participante elige su nombre del
@@ -604,6 +585,13 @@
   if(typeof ASISTENTES !== "undefined" && ASISTENTES.length){
     selNombreRegistro.innerHTML = '<option value="">Selecciona tu nombre…</option>' +
       ASISTENTES.map(a=>`<option value="${a.id}">${asistenteEtiqueta(a)}</option>`).join("");
+  }
+  // Con el login individual ya sabemos quién eres — se preselecciona sola;
+  // igual se puede cambiar si alguna vez comparten dispositivo.
+  const sesionMiRegistro = (typeof mjhtAsistenteActivo === "function") ? mjhtAsistenteActivo() : null;
+  if(sesionMiRegistro && sesionMiRegistro.participanteId){
+    selNombreRegistro.value = sesionMiRegistro.participanteId;
+    selNombreRegistro.dispatchEvent(new Event("change"));
   }
   selNombreRegistro.addEventListener("change", ()=>{
     const a = (typeof ASISTENTES !== "undefined") ? ASISTENTES.find(x=>x.id===selNombreRegistro.value) : null;

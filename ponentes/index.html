@@ -138,28 +138,27 @@
     <div class="section-head" style="margin-top:34px;">
       <span class="eyebrow">Test Trimetrix</span>
       <h2>Subir resultado de test de una asistente</h2>
-      <p>Cuando tengas el archivo de resultados de una participante, súbelo aquí para que quede registrado.</p>
+      <p>Cuando tengas el archivo de resultados de una participante, súbelo aquí — queda disponible al instante para verlo y descargarlo, tanto para ti como para la participante y la administradora.</p>
     </div>
     <div class="card">
-      <div class="callout" style="margin-bottom:16px;">
-        Los archivos subidos aquí los gestiona la administradora para publicarlos en el resultado de cada asistente — Netlify Forms no expone los archivos automáticamente en este portal.
-      </div>
-      <form name="resultado-test-asistente" method="POST" data-netlify="true" netlify-honeypot="bot-field" enctype="multipart/form-data">
-        <input type="hidden" name="form-name" value="resultado-test-asistente">
-        <p class="hp-field"><label>No llenar: <input name="bot-field"></label></p>
-        <div class="form-msg"></div>
-        <div class="field-row">
-          <div><label>Tu nombre (facilitador) *</label>
-            <select name="ponente_nombre" id="sel-ponente-nombre-resultado" required><option value="">Selecciona tu nombre…</option></select>
-          </div>
-          <div><label>Nombre de la asistente *</label>
-            <select name="nombre_asistente" id="sel-asistente-resultado" required></select>
-          </div>
-        </div>
-        <label>Archivo de resultados (PDF) *</label>
-        <input type="file" name="archivo" accept=".pdf" required>
-        <button class="btn btn-primary" type="submit">Enviar resultado</button>
-      </form>
+      <label>Tu nombre (facilitador) *</label>
+      <select id="sel-ponente-nombre-resultado"><option value="">Selecciona tu nombre…</option></select>
+      <label>Nombre de la asistente *</label>
+      <select id="sel-asistente-resultado"></select>
+      <label>Archivo de resultados (PDF) *</label>
+      <input type="file" id="input-resultado-ponente-archivo" accept=".pdf">
+      <button class="btn btn-primary" type="button" id="btn-subir-resultado-ponente">Subir resultado</button>
+      <p id="resultado-ponente-status" style="font-size:.85rem;margin-top:8px;color:var(--gris-claro);"></p>
+    </div>
+
+    <div class="section-head" style="margin-top:28px;">
+      <span class="eyebrow">Ya subidos</span>
+      <h2>Ver resultados de una asistente</h2>
+    </div>
+    <div class="card">
+      <label>Elige a la asistente</label>
+      <select id="sel-asistente-ver-resultado"></select>
+      <div id="resultado-test-ponente-lista" style="margin-top:14px;"></div>
     </div>
   </section>
 
@@ -182,7 +181,7 @@
     <div class="section-head">
       <span class="eyebrow">Tu presentación</span>
       <h2>Compartir materiales</h2>
-      <p>Sube tu presentación en PDF, o comparte cualquier liga que le sirva al grupo: página web, podcast, video, red social. Rubí lo publica en tu módulo para las asistentes.</p>
+      <p>Sube tu presentación en PDF, un .zip (por ejemplo, con las skills que las participantes deban instalar), o comparte cualquier liga que le sirva al grupo: página web, podcast, video, red social. Rubí lo publica en tu módulo para las asistentes.</p>
     </div>
     <div class="card">
       <form name="materiales-ponente" method="POST" data-netlify="true" netlify-honeypot="bot-field" enctype="multipart/form-data">
@@ -197,24 +196,48 @@
             <select name="modulo" id="sel-modulo-materiales" required></select>
           </div>
         </div>
-        <label>Sube tu(s) presentación(es) (PDF, PPT, etc.)</label>
-        <input type="file" name="archivo" accept=".pdf,.ppt,.pptx,.key">
+        <label>Sube tu(s) presentación(es) o archivo(s) (PDF, PPT, ZIP, etc.)</label>
+        <input type="file" name="archivo" accept=".pdf,.ppt,.pptx,.key,.zip">
         <div id="pdfs-extra"></div>
         <button type="button" class="btn btn-outline btn-sm" style="margin:6px 0 4px;" onclick="mjhtAgregarPDF()">+ Agregar otro archivo</button>
         <p class="file-hint">Los envíos con archivo llegan al panel de formularios de Netlify; si tu archivo es muy pesado, mejor comparte la liga de Drive/Canva abajo.</p>
         <label>Ligas que quieras compartir (todas opcionales)</label>
-        <div class="field-row">
-          <div><label class="field-icon-label"><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 3.8 5.7 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.7-3.8-9S9.5 5.5 12 3Z"/></svg>Sitio web / Drive / Canva</label><input type="text" name="link_web" placeholder="https://"></div>
-          <div><label class="field-icon-label"><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 14v-2a9 9 0 0 1 18 0v2"/><rect x="15" y="14" width="5" height="7" rx="1.5"/><rect x="4" y="14" width="5" height="7" rx="1.5"/></svg>Podcast (Spotify)</label><input type="text" name="link_spotify" placeholder="https://open.spotify.com/..."></div>
+
+        <div class="link-group">
+          <label class="field-icon-label"><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 3.8 5.7 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.7-3.8-9S9.5 5.5 12 3Z"/></svg>Sitio web / Drive / Canva</label>
+          <input type="text" name="link_web" placeholder="https://">
+          <div id="link_web-extra"></div>
+          <button type="button" class="btn btn-outline btn-sm" style="margin:6px 0 14px;" onclick="mjhtAgregarLigaTipo('link_web','link_web-extra','https://')">+ Agregar otro sitio web</button>
         </div>
-        <div class="field-row">
-          <div><label class="field-icon-label"><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r="1"/></svg>Instagram</label><input type="text" name="link_instagram" placeholder="https://instagram.com/..."></div>
-          <div><label class="field-icon-label"><svg class="icon-inline" viewBox="0 0 24 24" fill="currentColor"><path d="M18.24 3H21l-6.5 7.43L22 21h-6.24l-4.88-6.4L5.24 21H2.47l7-8L2 3h6.4l4.4 5.86L18.24 3zm-1.1 16h1.66L7.9 4.9H6.13L17.14 19z"/></svg>X</label><input type="text" name="link_x" placeholder="https://x.com/..."></div>
+
+        <div class="link-group">
+          <label class="field-icon-label"><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 14v-2a9 9 0 0 1 18 0v2"/><rect x="15" y="14" width="5" height="7" rx="1.5"/><rect x="4" y="14" width="5" height="7" rx="1.5"/></svg>Podcast (Spotify)</label>
+          <input type="text" name="link_spotify" placeholder="https://open.spotify.com/...">
+          <div id="link_spotify-extra"></div>
+          <button type="button" class="btn btn-outline btn-sm" style="margin:6px 0 14px;" onclick="mjhtAgregarLigaTipo('link_spotify','link_spotify-extra','https://open.spotify.com/...')">+ Agregar otro podcast</button>
         </div>
-        <label class="field-icon-label"><svg class="icon-inline" viewBox="0 0 24 24" fill="currentColor"><path d="M6.94 5a2 2 0 1 1-4-.002 2 2 0 0 1 4 .002zM7 8.48H3V21h4zm6.32 0H9.34V21h3.94v-6.57c0-1.74.33-3.42 2.48-3.42 2.12 0 2.15 1.98 2.15 3.53V21H22v-7.18c0-3.86-.83-6.83-5.34-6.83-2.16 0-3.6 1.19-4.2 2.31h-.06z"/></svg>LinkedIn</label>
-        <input type="text" name="link_linkedin" placeholder="https://linkedin.com/in/...">
-        <div id="links-extra"></div>
-        <button type="button" class="btn btn-outline btn-sm" style="margin:6px 0 4px;" onclick="mjhtAgregarLiga()">+ Agregar otra liga</button>
+
+        <div class="link-group">
+          <label class="field-icon-label"><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r="1"/></svg>Instagram</label>
+          <input type="text" name="link_instagram" placeholder="https://instagram.com/...">
+          <div id="link_instagram-extra"></div>
+          <button type="button" class="btn btn-outline btn-sm" style="margin:6px 0 14px;" onclick="mjhtAgregarLigaTipo('link_instagram','link_instagram-extra','https://instagram.com/...')">+ Agregar otro Instagram</button>
+        </div>
+
+        <div class="link-group">
+          <label class="field-icon-label"><svg class="icon-inline" viewBox="0 0 24 24" fill="currentColor"><path d="M18.24 3H21l-6.5 7.43L22 21h-6.24l-4.88-6.4L5.24 21H2.47l7-8L2 3h6.4l4.4 5.86L18.24 3zm-1.1 16h1.66L7.9 4.9H6.13L17.14 19z"/></svg>X</label>
+          <input type="text" name="link_x" placeholder="https://x.com/...">
+          <div id="link_x-extra"></div>
+          <button type="button" class="btn btn-outline btn-sm" style="margin:6px 0 14px;" onclick="mjhtAgregarLigaTipo('link_x','link_x-extra','https://x.com/...')">+ Agregar otro de X</button>
+        </div>
+
+        <div class="link-group">
+          <label class="field-icon-label"><svg class="icon-inline" viewBox="0 0 24 24" fill="currentColor"><path d="M6.94 5a2 2 0 1 1-4-.002 2 2 0 0 1 4 .002zM7 8.48H3V21h4zm6.32 0H9.34V21h3.94v-6.57c0-1.74.33-3.42 2.48-3.42 2.12 0 2.15 1.98 2.15 3.53V21H22v-7.18c0-3.86-.83-6.83-5.34-6.83-2.16 0-3.6 1.19-4.2 2.31h-.06z"/></svg>LinkedIn</label>
+          <input type="text" name="link_linkedin" placeholder="https://linkedin.com/in/...">
+          <div id="link_linkedin-extra"></div>
+          <button type="button" class="btn btn-outline btn-sm" style="margin:6px 0 14px;" onclick="mjhtAgregarLigaTipo('link_linkedin','link_linkedin-extra','https://linkedin.com/in/...')">+ Agregar otro de LinkedIn</button>
+        </div>
+
         <button class="btn btn-primary" type="submit" style="margin-top:14px;">Enviar material</button>
       </form>
     </div>
@@ -418,17 +441,78 @@
           <a class="btn btn-outline btn-sm" href="https://maps.app.goo.gl/ztEceM1G5nqtjuRw8" target="_blank" rel="noopener">Google Maps</a>
           <a class="btn btn-outline btn-sm" href="https://waze.com/ul?q=Club%20de%20Empresarios%20Torre%20Inxignia" target="_blank" rel="noopener">Waze</a>
         </div>
+        <div style="margin-top:18px;">
+          <h4 style="margin-bottom:8px;">Materiales que has compartido para este módulo</h4>
+          <p class="file-hint" style="margin-top:-4px;">Así puedes confirmar que cayeron donde deben. Si algo cayó en el módulo equivocado, cámbialo aquí mismo con el selector; si ya no aplica, elimínalo.</p>
+          ${renderMisMaterialesModuloHTML(`${m.id} - ${m.tema}`)}
+        </div>
       </div>`).join("");
   });
+  // Eliminar / mover de módulo un material ya compartido (solo afecta el
+  // registro espejo de este navegador — el archivo real sigue en Netlify
+  // Forms si se subió como archivo).
+  window.mjhtEliminarMaterial = function(id){
+    if(!confirm("¿Eliminar este material de tu lista? Esta acción no se puede deshacer.")) return;
+    eliminarMaterialCompartido(id);
+    selPonente.dispatchEvent(new Event("change"));
+  };
+  window.mjhtCambiarModuloMaterial = function(id, nuevoModulo){
+    actualizarModuloMaterialCompartido(id, nuevoModulo);
+    selPonente.dispatchEvent(new Event("change"));
+  };
 
   // Select de asistentes para "Subir resultado de test"
   const selAsistenteResultado = document.getElementById("sel-asistente-resultado");
   if(typeof ASISTENTES !== "undefined" && ASISTENTES.length){
     selAsistenteResultado.innerHTML = '<option value="">Selecciona…</option>' +
-      ASISTENTES.map(a=>`<option value="${a.nombre}">${asistenteEtiqueta(a)}</option>`).join("");
+      ASISTENTES.map(a=>`<option value="${a.id}">${asistenteEtiqueta(a)}</option>`).join("");
   } else {
-    selAsistenteResultado.outerHTML = '<input type="text" name="nombre_asistente" id="sel-asistente-resultado" placeholder="Nombre de la asistente" required>';
+    selAsistenteResultado.outerHTML = '<input type="text" id="sel-asistente-resultado" placeholder="Nombre de la asistente">';
   }
+
+  // Subir resultado del test (Netlify Functions + Blobs) — disponible al
+  // instante para todos, sin pasar por Netlify Forms.
+  document.getElementById("btn-subir-resultado-ponente").addEventListener("click", async ()=>{
+    const ponenteNombre = document.getElementById("sel-ponente-nombre-resultado").value;
+    const asistenteId = document.getElementById("sel-asistente-resultado").value;
+    const asistente = (typeof ASISTENTES !== "undefined") ? ASISTENTES.find(a=>a.id===asistenteId) : null;
+    const fileInput = document.getElementById("input-resultado-ponente-archivo");
+    const file = fileInput.files && fileInput.files[0];
+    const statusEl = document.getElementById("resultado-ponente-status");
+    if(!ponenteNombre || !asistenteId || !file){
+      statusEl.textContent = "Completa tu nombre, la asistente y el archivo PDF.";
+      return;
+    }
+    statusEl.textContent = "Subiendo…";
+    try {
+      await subirResultadoTestArchivo(asistenteId, asistente ? asistente.nombre : asistenteId, file, ponenteNombre);
+      statusEl.textContent = "¡Listo! Ya está disponible para todos.";
+      fileInput.value = "";
+      if(selAsistenteVerResultado.value === asistenteId) refrescarResultadoTestPonente();
+    } catch(e){
+      statusEl.textContent = "No se pudo subir: " + (e.message || e);
+    }
+  });
+
+  // Ver resultados ya subidos de una asistente
+  const selAsistenteVerResultado = document.getElementById("sel-asistente-ver-resultado");
+  const resultadoTestPonenteLista = document.getElementById("resultado-test-ponente-lista");
+  if(typeof ASISTENTES !== "undefined" && ASISTENTES.length){
+    selAsistenteVerResultado.innerHTML = '<option value="">Selecciona…</option>' +
+      ASISTENTES.map(a=>`<option value="${a.id}">${asistenteEtiqueta(a)}</option>`).join("");
+  }
+  async function refrescarResultadoTestPonente(){
+    const id = selAsistenteVerResultado.value;
+    if(!id){ resultadoTestPonenteLista.innerHTML = ""; return; }
+    resultadoTestPonenteLista.innerHTML = `<div class="callout">Cargando…</div>`;
+    try {
+      const items = await listarResultadosTest(id);
+      resultadoTestPonenteLista.innerHTML = renderResultadosTestListaHTML(items, {editable:false});
+    } catch(e){
+      resultadoTestPonenteLista.innerHTML = `<div class="callout warn">No se pudo cargar (${e.message || e}).</div>`;
+    }
+  }
+  selAsistenteVerResultado.addEventListener("change", refrescarResultadoTestPonente);
 
   // Selects de módulo en formularios
   ["sel-modulo-semblanza","sel-modulo-materiales","sel-modulo-asistencia"].forEach(id=>{
@@ -440,6 +524,18 @@
       sel.appendChild(opt);
     });
   });
+
+  // Compartir materiales: al elegir tu nombre, preselecciona automáticamente
+  // tu propio módulo (para no tener que buscarlo en la lista cada vez) — si
+  // necesitas compartir algo para otro módulo, lo sigues pudiendo cambiar.
+  const selNombreMateriales = document.getElementById("sel-nombre-materiales");
+  const selModuloMateriales = document.getElementById("sel-modulo-materiales");
+  if(selNombreMateriales && selModuloMateriales){
+    selNombreMateriales.addEventListener("change", ()=>{
+      const propio = MODULOS.find(m=>m.ponente === selNombreMateriales.value);
+      if(propio) selModuloMateriales.value = `${propio.id} - ${propio.tema}`;
+    });
+  }
 
   // ---------- Nombres editables (corrección de errores de escritura) ----------
   // Se guarda solo en este navegador: mapa nombre-original -> nombre-corregido.
@@ -694,19 +790,22 @@
     wrap.style.gap = "8px";
     wrap.style.alignItems = "center";
     wrap.style.marginTop = "8px";
-    wrap.innerHTML = `<input type="file" name="archivo_extra[]" accept=".pdf,.ppt,.pptx,.key" style="flex:1;margin:0;">
+    wrap.innerHTML = `<input type="file" name="archivo_extra[]" accept=".pdf,.ppt,.pptx,.key,.zip" style="flex:1;margin:0;">
       <button type="button" class="btn btn-ghost btn-sm" onclick="this.parentElement.remove()">Quitar</button>`;
     document.getElementById("pdfs-extra").appendChild(wrap);
   };
-  window.mjhtAgregarLiga = function(){
+  // Agrega otro campo de liga del MISMO tipo (sitio web, podcast, Instagram,
+  // X o LinkedIn) justo debajo del campo principal de ese tipo — cada botón
+  // "+ Agregar otro..." llama esto con su propio nombre de campo.
+  window.mjhtAgregarLigaTipo = function(baseName, containerId, placeholder){
     const wrap = document.createElement("div");
     wrap.style.display = "flex";
     wrap.style.gap = "8px";
     wrap.style.alignItems = "center";
     wrap.style.marginTop = "8px";
-    wrap.innerHTML = `<input type="text" name="link_extra[]" placeholder="https://" style="flex:1;margin:0;">
+    wrap.innerHTML = `<input type="text" name="${baseName}_extra[]" placeholder="${placeholder}" style="flex:1;margin:0;">
       <button type="button" class="btn btn-ghost btn-sm" onclick="this.parentElement.remove()">Quitar</button>`;
-    document.getElementById("links-extra").appendChild(wrap);
+    document.getElementById(containerId).appendChild(wrap);
   };
 
   // ---------- Espejo local de "Compartir materiales" (ver assets/js/app.js) ----------
@@ -722,10 +821,21 @@
     if(fileInput && fileInput.files && fileInput.files[0]){
       guardarMaterialCompartido({ modulo, ponente, tipo:"pdf", nombre_o_url: fileInput.files[0].name, fecha: new Date().toISOString() });
     }
+    // Archivos extra agregados con "+ Agregar otro archivo"
+    formMateriales.querySelectorAll('input[name="archivo_extra[]"]').forEach(extraInput=>{
+      if(extraInput.files && extraInput.files[0]){
+        guardarMaterialCompartido({ modulo, ponente, tipo:"pdf", nombre_o_url: extraInput.files[0].name, fecha: new Date().toISOString() });
+      }
+    });
     ["link_web","link_spotify","link_instagram","link_x","link_linkedin"].forEach(name=>{
       const campo = formMateriales.querySelector(`[name="${name}"]`);
       const val = campo ? campo.value.trim() : "";
       if(val) guardarMaterialCompartido({ modulo, ponente, tipo:"liga", nombre_o_url: val, fecha: new Date().toISOString() });
+      // Ligas extra del mismo tipo, agregadas con "+ Agregar otro..."
+      formMateriales.querySelectorAll(`input[name="${name}_extra[]"]`).forEach(extraLink=>{
+        const valExtra = extraLink.value.trim();
+        if(valExtra) guardarMaterialCompartido({ modulo, ponente, tipo:"liga", nombre_o_url: valExtra, fecha: new Date().toISOString() });
+      });
     });
   });
 

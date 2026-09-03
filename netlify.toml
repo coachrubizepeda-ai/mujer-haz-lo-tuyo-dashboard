@@ -1,10 +1,20 @@
 [build]
   publish = "."
 
+[functions]
+  directory = "netlify/functions"
+
 # Sitio 100% estático — no requiere comando de build.
 # Los formularios (data-netlify="true") se detectan automáticamente
 # al desplegar porque están escritos como HTML plano en cada página
 # y replicados en index.html para que Netlify los indexe siempre.
+#
+# La subida/descarga de los resultados del Test Trimetrix (PDF) NO usa
+# Netlify Forms — usa 3 funciones serverless (netlify/functions/test-*.js)
+# con Netlify Blobs como almacenamiento. Esto viene incluido con cualquier
+# sitio en Netlify, sin cuenta ni configuración extra: al hacer "git push",
+# Netlify instala las dependencias (ve package.json) y despliega las
+# funciones automáticamente junto con el resto del sitio.
 
 [[headers]]
   for = "/*"
