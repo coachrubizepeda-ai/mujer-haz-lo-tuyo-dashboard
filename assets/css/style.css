@@ -368,6 +368,7 @@ input[type=text],input[type=email],input[type=tel],input[type=date],textarea,sel
   margin-bottom:16px;
 }
 input:focus,textarea:focus,select:focus{outline:none;border-color:var(--azul-claro);}
+input[readonly]{background:var(--bg-soft);color:var(--gris-claro);cursor:not-allowed;}
 textarea{resize:vertical;min-height:100px;}
 fieldset{border:none;padding:0;margin:0 0 16px;}
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
@@ -382,6 +383,36 @@ fieldset{border:none;padding:0;margin:0 0 16px;}
 .hp-field{position:absolute;left:-9999px;top:-9999px;}
 .form-msg{font-size:.85rem;padding:12px 14px;border-radius:10px;margin-bottom:14px;display:none;}
 .form-msg.show{display:block;}
+
+/* ---------- Retroalimentación del módulo (16 preguntas 1-5 + abiertas) ---------- */
+.retro-cat-titulo{
+  font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;color:var(--azul-oscuro);
+  margin:26px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--border);
+}
+.retro-cat-titulo:first-of-type{margin-top:0;}
+.retro-pregunta{margin-bottom:14px;}
+.retro-pregunta p{margin:0 0 8px;font-size:.88rem;color:var(--gris-oscuro);line-height:1.4;}
+.rating.compact{gap:6px;margin-bottom:0;}
+.rating.compact label{padding:7px 0;font-size:.85rem;border-radius:8px;}
+
+/* Resultados (vista de Facilitador / Administradora) */
+.retro-modulo{border:1px solid var(--border);border-radius:var(--radius);background:var(--card);margin-bottom:18px;overflow:hidden;box-shadow:var(--shadow);}
+.retro-modulo-head{padding:16px 20px;border-bottom:1px solid var(--border);background:var(--bg-soft);}
+.retro-modulo-head h4{margin:0 0 4px;font-size:1rem;}
+.retro-modulo-head small{color:var(--gris-claro);font-size:.82rem;}
+.retro-modulo-body{padding:18px 20px;}
+.retro-cat-row{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.retro-cat-row:last-child{margin-bottom:0;}
+.retro-cat-label{flex:0 0 150px;font-size:.85rem;font-weight:600;color:var(--gris-oscuro);}
+.retro-cat-bar{flex:1;height:10px;background:var(--bg-soft);border-radius:6px;overflow:hidden;}
+.retro-cat-fill{height:100%;background:linear-gradient(90deg,var(--azul-claro),var(--azul-oscuro));border-radius:6px;}
+.retro-cat-val{flex:0 0 36px;text-align:right;font-weight:700;color:var(--azul-oscuro);font-size:.85rem;}
+.retro-comentario{padding:12px 0;border-bottom:1px solid var(--border);}
+.retro-comentario:last-child{border-bottom:none;}
+.retro-comentario-nombre{font-weight:700;font-size:.85rem;margin-bottom:4px;color:var(--gris-oscuro);}
+.retro-comentario-nombre small{font-weight:400;color:var(--gris-claro);margin-left:6px;}
+.retro-comentario p{margin:0 0 4px;font-size:.87rem;color:var(--gris-oscuro);}
+@media(max-width:600px){.retro-cat-label{flex-basis:110px;font-size:.8rem;}}
 .form-msg.ok{background:rgba(46,158,91,.12);color:var(--ok);}
 .form-msg.err{background:rgba(180,40,40,.12);color:#a12727;}
 .file-hint{font-size:.78rem;color:var(--gris-claro);margin:-10px 0 16px;}

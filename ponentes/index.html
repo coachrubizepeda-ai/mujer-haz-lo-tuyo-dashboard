@@ -35,6 +35,7 @@
     <button class="tab-btn" data-tab="t-modulo">Mi módulo</button>
     <button class="tab-btn" data-tab="t-asistencia">Pasar lista</button>
     <button class="tab-btn" data-tab="t-perfiles">Perfiles de asistentes</button>
+    <button class="tab-btn" data-tab="t-retro">Retroalimentación</button>
     <button class="tab-btn" data-tab="t-materiales">Compartir materiales</button>
     <button class="tab-btn" data-tab="t-calendario">Calendario general</button>
     <button class="tab-btn" data-tab="t-lineamientos">Lineamientos</button>
@@ -160,6 +161,20 @@
       <select id="sel-asistente-ver-resultado"></select>
       <div id="resultado-test-ponente-lista" style="margin-top:14px;"></div>
     </div>
+  </section>
+
+  <!-- RETROALIMENTACIÓN DEL MÓDULO (resultados) -->
+  <section class="tab-panel" id="t-retro">
+    <div class="section-head">
+      <span class="eyebrow">Lo que dicen las asistentes</span>
+      <h2>Retroalimentación del módulo</h2>
+      <p>Los resultados del formulario de retroalimentación (instalaciones, tiempos, instructor(a), material, contenido e impacto personal) que las asistentes llenan después de cada sesión.</p>
+    </div>
+    <div class="card">
+      <label>Filtrar por módulo:</label>
+      <select id="sel-retro-filtro-ponente"><option value="">Todos los módulos</option></select>
+    </div>
+    <div id="retro-resultados-ponente"><div class="callout">Cargando…</div></div>
   </section>
 
   <!-- Formulario oculto: guarda en Netlify Forms cada respuesta pegada, para el registro de Rubí -->
@@ -385,6 +400,8 @@
 <script src="../assets/js/data.js"></script>
 <script src="../assets/js/roster.js"></script>
 <script src="../assets/js/perfiles.js"></script>
+<script src="../assets/js/retro-preguntas.js"></script>
+<script src="../assets/js/retro-render.js"></script>
 <script src="../assets/js/app.js"></script>
 <script src="../assets/js/agent-widget.js"></script>
 <script>
@@ -1044,6 +1061,23 @@
     comentarioDestWrap.querySelectorAll(".dest-check:checked").forEach(c=>c.checked=false);
   });
   renderComentariosList();
+
+  // ---------- Retroalimentación del módulo (resultados) ----------
+  const selRetroFiltro = document.getElementById("sel-retro-filtro-ponente");
+  MODULOS.forEach(m=>{
+    const opt = document.createElement("option");
+    opt.value = m.id;
+    opt.textContent = `${typeof m.id==="number"?"Módulo "+m.id:"Cierre"} · ${m.tema}`;
+    selRetroFiltro.appendChild(opt);
+  });
+  function cargarRetroPonente(){
+    const wrap = document.getElementById("retro-resultados-ponente");
+    mjhtCargarRetroalimentacion(selRetroFiltro.value)
+      .then(items=>{ wrap.innerHTML = renderRetroResultadosHTML(items); })
+      .catch(err=>{ wrap.innerHTML = `<div class="callout">No se pudo cargar la retroalimentación (${err.message||err}).</div>`; });
+  }
+  selRetroFiltro.addEventListener("change", cargarRetroPonente);
+  cargarRetroPonente();
 </script>
 </body>
 </html>

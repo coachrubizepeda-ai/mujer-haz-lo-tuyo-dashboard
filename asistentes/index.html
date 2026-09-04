@@ -43,7 +43,7 @@
     <button class="tab-btn" data-tab="t-ponentes">Facilitadores</button>
     <div class="side-sep"><span>Antes de cada sesión</span></div>
     <button class="tab-btn" data-tab="t-cuestionario">Cuestionario previo</button>
-    <button class="tab-btn" data-tab="t-feedback">Feedback</button>
+    <button class="tab-btn" data-tab="t-retro">Retroalimentación</button>
     <div class="side-sep"><span>Información práctica</span></div>
     <button class="tab-btn" data-tab="t-acceso">Acceso a instalaciones</button>
     <button class="tab-btn" data-tab="t-lineamientos">Lineamientos</button>
@@ -264,37 +264,33 @@
     </div>
   </section>
 
-  <!-- FEEDBACK -->
-  <section class="tab-panel" id="t-feedback">
+  <!-- RETROALIMENTACIÓN DEL MÓDULO -->
+  <section class="tab-panel" id="t-retro">
     <div class="section-head">
       <span class="eyebrow">Después de cada módulo</span>
-      <h2>Feedback de la sesión</h2>
-      <p>Tu opinión ayuda a mejorar cada edición del diplomado y es el termómetro que usa Rubí con cada facilitador.</p>
+      <h2>Retroalimentación del módulo</h2>
+      <p>Tu opinión ayuda a mejorar cada edición del diplomado y es el termómetro que usa Rubí con cada facilitador(a). El módulo, la fecha y el/la facilitador(a) se completan solos al elegir la sesión — tu nombre es opcional.</p>
     </div>
     <div class="card">
-      <form name="feedback-sesion" method="POST" data-netlify="true" netlify-honeypot="bot-field">
-        <input type="hidden" name="form-name" value="feedback-sesion">
-        <p class="hp-field"><label>No llenar: <input name="bot-field"></label></p>
+      <form id="form-retro">
         <div class="form-msg"></div>
         <div class="field-row">
-          <div><label>Tu nombre (opcional)</label><select name="nombre" id="sel-nombre-feedback"><option value="">Prefiero no decir mi nombre</option></select></div>
           <div><label>Módulo *</label>
-            <select name="modulo" id="sel-modulo-feedback" required></select>
+            <select id="sel-modulo-retro" required></select>
           </div>
+          <div><label>Tu nombre (opcional)</label><select id="sel-nombre-retro"><option value="">Prefiero no decir mi nombre</option></select></div>
         </div>
-        <label>¿Cómo calificarías esta sesión? *</label>
-        <div class="rating">
-          <input type="radio" name="calificacion" value="1" id="r1"><label for="r1">1</label>
-          <input type="radio" name="calificacion" value="2" id="r2"><label for="r2">2</label>
-          <input type="radio" name="calificacion" value="3" id="r3"><label for="r3">3</label>
-          <input type="radio" name="calificacion" value="4" id="r4"><label for="r4">4</label>
-          <input type="radio" name="calificacion" value="5" id="r5"><label for="r5">5</label>
+        <div class="field-row">
+          <div><label>Fecha</label><input type="text" id="retro-fecha-auto" readonly></div>
+          <div><label>Facilitador(a)</label><input type="text" id="retro-facilitador-auto" readonly></div>
         </div>
-        <label>¿Qué te llevas de esta sesión?</label>
-        <textarea name="me_llevo"></textarea>
-        <label>¿Qué mejorarías?</label>
-        <textarea name="mejoraria"></textarea>
-        <button class="btn btn-primary" type="submit">Enviar feedback</button>
+        <p style="font-size:.85rem;color:var(--gris-claro);margin:-6px 0 6px;">Marca lo que mejor refleje tu experiencia de hoy: 1 = Totalmente en desacuerdo · 3 = Neutral · 5 = Totalmente de acuerdo</p>
+        <div id="retro-preguntas-wrap"></div>
+        <label>¿Qué fue lo más valioso de hoy y por qué?</label>
+        <textarea id="retro-valioso"></textarea>
+        <label>Si pudieras cambiar una sola cosa de este módulo, ¿cuál sería?</label>
+        <textarea id="retro-cambiar"></textarea>
+        <button class="btn btn-primary" type="submit">Enviar retroalimentación</button>
       </form>
     </div>
   </section>
@@ -363,6 +359,7 @@
 <script>mjhtGuard("asistente");</script>
 <script src="../assets/js/data.js"></script>
 <script src="../assets/js/roster.js"></script>
+<script src="../assets/js/retro-preguntas.js"></script>
 <script src="../assets/js/app.js"></script>
 <script src="../assets/js/agent-widget.js"></script>
 <script>
@@ -461,7 +458,7 @@
   });
 
   // Selects de módulo en formularios
-  ["sel-modulo-cuestionario","sel-modulo-feedback","sel-modulo-cuestionario-respuesta"].forEach(id=>{
+  ["sel-modulo-cuestionario","sel-modulo-cuestionario-respuesta"].forEach(id=>{
     const sel = document.getElementById(id);
     MODULOS.forEach(m=>{
       const opt = document.createElement("option");
@@ -471,35 +468,83 @@
     });
   });
 
-  // Dropdown de nombre en "Feedback de la sesión" — mismo roster oficial
-  const selNombreFeedback = document.getElementById("sel-nombre-feedback");
+  // ---------- Retroalimentación del módulo (16 preguntas 1-5 + abiertas) ----------
+  const selModuloRetro = document.getElementById("sel-modulo-retro");
+  selModuloRetro.innerHTML = '<option value="">Selecciona el módulo…</option>' + MODULOS.map(m=>
+    `<option value="${m.id}" data-tema="${m.tema}" data-fecha="${m.fechaLabel}" data-facilitador="${m.ponente}">${typeof m.id==="number"?"Módulo "+m.id:"Cierre"} · ${m.tema}</option>`
+  ).join("");
+
+  const selNombreRetro = document.getElementById("sel-nombre-retro");
   if(typeof ASISTENTES !== "undefined" && ASISTENTES.length){
-    selNombreFeedback.innerHTML = '<option value="">Prefiero no decir mi nombre</option>' +
+    selNombreRetro.innerHTML = '<option value="">Prefiero no decir mi nombre</option>' +
       ASISTENTES.map(a=>`<option value="${a.nombre}">${asistenteEtiqueta(a)}</option>`).join("");
   }
 
-  // Espejo local de "Feedback de la sesión" (ver assets/js/app.js) — además
-  // de Netlify Forms, guarda un registro clasificable por módulo para que
-  // el admin lo pueda ver agrupado en su Resumen ejecutivo.
-  const formFeedback = document.querySelector('form[name="feedback-sesion"]');
-  formFeedback.addEventListener("submit", ()=>{
-    const nombre = formFeedback.nombre.value;
-    const asistente = buscarAsistentePorNombre(nombre);
-    const moduloSel = document.getElementById("sel-modulo-feedback");
-    const meLlevo = formFeedback.me_llevo.value.trim();
-    const mejoraria = formFeedback.mejoraria.value.trim();
-    const calificacion = formFeedback.calificacion.value;
-    const partes = [];
-    if(calificacion) partes.push(`Calificación: ${calificacion}/5`);
-    if(meLlevo) partes.push(`Me llevo: ${meLlevo}`);
-    if(mejoraria) partes.push(`Mejoraría: ${mejoraria}`);
-    guardarFeedbackSesion({
-      participante_id: asistente ? asistente.id : "",
-      participante_nombre: nombre || "Anónimo",
-      modulo: moduloSel.value,
-      feedback: partes.join(" · ") || "(sin comentario)",
-      fecha: new Date().toISOString()
+  selModuloRetro.addEventListener("change", ()=>{
+    const opt = selModuloRetro.selectedOptions[0];
+    document.getElementById("retro-fecha-auto").value = opt && opt.dataset.fecha ? opt.dataset.fecha : "";
+    document.getElementById("retro-facilitador-auto").value = opt && opt.dataset.facilitador ? opt.dataset.facilitador : "";
+  });
+
+  // Preguntas: 6 categorías, 16 filas con escala 1-5 (misma escala visual que .rating)
+  const preguntasWrap = document.getElementById("retro-preguntas-wrap");
+  preguntasWrap.innerHTML = RETRO_CATEGORIAS.map(cat=>`
+    <div class="retro-cat-titulo">${cat.nombre}</div>
+    ${cat.preguntas.map(p=>`
+      <div class="retro-pregunta">
+        <p>${p.id}. ${p.texto}</p>
+        <div class="rating compact">
+          ${[1,2,3,4,5].map(v=>`<input type="radio" name="q${p.id}" value="${v}" id="q${p.id}-${v}" required><label for="q${p.id}-${v}">${v}</label>`).join("")}
+        </div>
+      </div>`).join("")}
+  `).join("");
+
+  const formRetro = document.getElementById("form-retro");
+  formRetro.addEventListener("submit", (e)=>{
+    e.preventDefault();
+    const msg = formRetro.querySelector(".form-msg");
+    const opt = selModuloRetro.selectedOptions[0];
+    if(!opt || !opt.value){
+      if(msg){ msg.textContent = "Selecciona el módulo antes de enviar."; msg.className="form-msg show err"; }
+      return;
+    }
+    const respuestas = {};
+    RETRO_PREGUNTAS.forEach(p=>{
+      const checked = formRetro.querySelector(`input[name="q${p.id}"]:checked`);
+      if(checked) respuestas[p.id] = parseInt(checked.value,10);
     });
+    if(Object.keys(respuestas).length < RETRO_PREGUNTAS.length){
+      if(msg){ msg.textContent = "Marca las 16 preguntas antes de enviar."; msg.className="form-msg show err"; }
+      return;
+    }
+    const btn = formRetro.querySelector("button[type=submit]");
+    btn.disabled = true;
+    fetch("/.netlify/functions/feedback-modulo-submit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        moduloId: opt.value,
+        moduloTema: opt.dataset.tema,
+        fecha: opt.dataset.fecha,
+        facilitador: opt.dataset.facilitador,
+        nombre: selNombreRetro.value,
+        respuestas,
+        valioso: document.getElementById("retro-valioso").value.trim(),
+        cambiar: document.getElementById("retro-cambiar").value.trim(),
+      }),
+    })
+      .then(async (resp)=>{
+        const data = await resp.json().catch(()=>({}));
+        if(!resp.ok || !data.ok) throw new Error((data && data.error) || "Error al enviar");
+        if(msg){ msg.textContent = "¡Gracias! Tu retroalimentación quedó registrada."; msg.className="form-msg show ok"; }
+        formRetro.reset();
+        document.getElementById("retro-fecha-auto").value = "";
+        document.getElementById("retro-facilitador-auto").value = "";
+      })
+      .catch((err)=>{
+        if(msg){ msg.textContent = "No se pudo enviar (" + (err.message||err) + "). Intenta de nuevo o escribe a hazlotuyo@theokpeople.com."; msg.className="form-msg show err"; }
+      })
+      .finally(()=>{ btn.disabled = false; });
   });
 
   // Selects de "Sube tu cuestionario previo contestado" + espejo local
