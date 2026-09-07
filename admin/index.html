@@ -442,7 +442,10 @@
   document.getElementById("semblanzas-facilitadores-admin").innerHTML = renderSemblanzasFacilitadoresHTML();
   document.getElementById("cuestionarios-previos-estado").innerHTML = renderCuestionariosPreviosEstadoHTML();
   document.getElementById("cuestionario-respuestas-admin").innerHTML = renderCuestionarioRespuestasHTML();
-  document.getElementById("materiales-facilitadores-admin").innerHTML = renderMaterialesFacilitadoresHTML(true);
+  document.getElementById("materiales-facilitadores-admin").innerHTML = `<p class="file-hint">Cargando…</p>`;
+  renderMaterialesFacilitadoresHTML(true)
+    .then(html=>{ document.getElementById("materiales-facilitadores-admin").innerHTML = html; })
+    .catch(err=>{ document.getElementById("materiales-facilitadores-admin").innerHTML = `<div class="callout">No se pudieron cargar los materiales (${err.message||err}).</div>`; });
   document.getElementById("comentarios-facilitadores-admin").innerHTML = renderComentariosFacilitadoresHTML(getComentariosFacilitadores());
 
   // ---------- Acceso a la plataforma (login individual de participantes) ----------

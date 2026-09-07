@@ -409,6 +409,7 @@
   const accWrap = document.getElementById("modulos-acc");
   MODULOS.forEach(m=>{
     const num = moduloNum(m);
+    const claveModulo = `${m.id} - ${m.tema}`;
     const el = document.createElement("div");
     el.className = "acc-item";
     el.innerHTML = `
@@ -423,10 +424,27 @@
         <h5>Tarea</h5><p>${m.tarea}</p>
         ${m.presentacion ? `<a class="btn btn-outline btn-sm" href="${m.presentacion}" target="_blank">Descargar presentación ↓</a>` : ""}
         ${socialChipsHTML(m.redes)}
+        <h5 style="margin-top:14px;">Materiales compartidos por tu facilitador(a)</h5>
+        <div class="materiales-modulo-asistente" data-modulo="${claveModulo}"><p class="file-hint">Cargando…</p></div>
       </div></div>`;
     accWrap.appendChild(el);
   });
   initAccordion();
+
+  // Materiales reales (Netlify Functions + Blobs) por módulo — visibles para
+  // todas, en cualquier navegador, no solo en el de quien los compartió.
+  getMaterialesCompartidos()
+    .then(todos=>{
+      accWrap.querySelectorAll(".materiales-modulo-asistente").forEach(wrap=>{
+        const items = todos.filter(x=>x.modulo === wrap.dataset.modulo);
+        wrap.innerHTML = mjhtMaterialesAsistenteHTML(items);
+      });
+    })
+    .catch(err=>{
+      accWrap.querySelectorAll(".materiales-modulo-asistente").forEach(wrap=>{
+        wrap.innerHTML = `<p class="file-hint">No se pudieron cargar los materiales (${err.message||err}).</p>`;
+      });
+    });
 
   // Tareas por módulo
   const tareasBody = document.getElementById("tareas-body");

@@ -830,48 +830,70 @@ function renderFeedbackSesionesHTML(){
   return grupos || `<div class="callout">Todavía no se ha registrado feedback de sesión desde este navegador.</div>`;
 }
 
-/* ---------- 7. Materiales de facilitadores + recomendaciones del admin ---------- */
-const LS_KEY_MATERIALES_COMPARTIDOS = "mjht_materiales_compartidos";
-function _mjhtNuevoIdMaterial(){
-  return "m_" + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+/* ---------- 7. Materiales de facilitadores (Netlify Functions + Blobs) ----------
+   A diferencia de la versión anterior (que solo guardaba una copia en
+   localStorage — visible únicamente en el navegador de quien lo compartió),
+   estas funciones suben y sirven los materiales reales desde el servidor:
+   en cuanto un facilitador comparte un archivo o una liga, cualquier
+   persona — asistentes, otros facilitadores, administradora — lo ve de
+   inmediato, en cualquier dispositivo. */
+async function mjhtCompartirMaterialLiga(modulo, ponente, nombre_o_url){
+  const resp = await fetch("/.netlify/functions/materiales-submit", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ modulo, ponente, tipo: "liga", nombre_o_url }),
+  });
+  const data = await resp.json().catch(()=>({}));
+  if(!resp.ok || !data.ok) throw new Error((data && data.error) || ("Error " + resp.status));
+  return data;
 }
-function getMaterialesCompartidos(){
-  let arr;
-  try { arr = JSON.parse(localStorage.getItem(LS_KEY_MATERIALES_COMPARTIDOS) || "[]"); }
-  catch(e){ arr = []; }
-  // Registros guardados antes de que existiera "id" (para poder editar/borrar
-  // uno por uno) lo reciben aquí mismo, una sola vez, y se guardan de vuelta.
-  let necesitaGuardar = false;
-  arr.forEach(x=>{ if(!x.id){ x.id = _mjhtNuevoIdMaterial(); necesitaGuardar = true; } });
-  if(necesitaGuardar){ try { localStorage.setItem(LS_KEY_MATERIALES_COMPARTIDOS, JSON.stringify(arr)); } catch(e){} }
-  return arr;
+async function mjhtCompartirMaterialArchivo(modulo, ponente, file){
+  const contentBase64 = await archivoABase64(file);
+  const resp = await fetch("/.netlify/functions/materiales-submit", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ modulo, ponente, tipo: "archivo", filename: file.name, contentBase64 }),
+  });
+  const data = await resp.json().catch(()=>({}));
+  if(!resp.ok || !data.ok) throw new Error((data && data.error) || ("Error " + resp.status));
+  return data;
 }
-function guardarMaterialCompartido(registro){
-  const arr = getMaterialesCompartidos();
-  if(!registro.id) registro.id = _mjhtNuevoIdMaterial();
-  arr.push(registro);
-  try { localStorage.setItem(LS_KEY_MATERIALES_COMPARTIDOS, JSON.stringify(arr)); } catch(e){}
-  return arr;
+async function getMaterialesCompartidos(modulo){
+  const qs = modulo ? "?modulo=" + encodeURIComponent(modulo) : "";
+  const resp = await fetch("/.netlify/functions/materiales-list" + qs);
+  const data = await resp.json().catch(()=>({}));
+  if(!resp.ok || !data.ok) throw new Error((data && data.error) || ("Error " + resp.status));
+  return data.items || [];
 }
-function eliminarMaterialCompartido(id){
-  const arr = getMaterialesCompartidos().filter(x=>x.id !== id);
-  try { localStorage.setItem(LS_KEY_MATERIALES_COMPARTIDOS, JSON.stringify(arr)); } catch(e){}
-  return arr;
+async function eliminarMaterialCompartido(id){
+  const resp = await fetch("/.netlify/functions/materiales-eliminar", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id }),
+  });
+  const data = await resp.json().catch(()=>({}));
+  if(!resp.ok || !data.ok) throw new Error((data && data.error) || ("Error " + resp.status));
+  return data;
 }
-function actualizarModuloMaterialCompartido(id, nuevoModulo){
-  const arr = getMaterialesCompartidos();
-  const item = arr.find(x=>x.id === id);
-  if(item) item.modulo = nuevoModulo;
-  try { localStorage.setItem(LS_KEY_MATERIALES_COMPARTIDOS, JSON.stringify(arr)); } catch(e){}
-  return arr;
+async function actualizarModuloMaterialCompartido(id, nuevoModulo){
+  const resp = await fetch("/.netlify/functions/materiales-actualizar", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id, modulo: nuevoModulo }),
+  });
+  const data = await resp.json().catch(()=>({}));
+  if(!resp.ok || !data.ok) throw new Error((data && data.error) || ("Error " + resp.status));
+  return data;
+}
+function mjhtLigaMaterialHTML(x){
+  const verUrl = x.tipo === "archivo" ? `/.netlify/functions/materiales-download?key=${encodeURIComponent(x.fileKey)}` : x.nombre_o_url;
+  return x.tipo === "archivo"
+    ? `<a href="${verUrl}" target="_blank" rel="noopener">${x.nombre_o_url} ↓</a>`
+    : `<a href="${x.nombre_o_url}" target="_blank" rel="noopener">${x.nombre_o_url}</a>`;
 }
 // Vista propia del facilitador (en "Mi módulo"): todo lo que ha compartido
 // para ESE módulo, con controles para eliminarlo o moverlo a otro módulo —
 // así puede confirmar que cayó donde debía, sin tener que preguntarle a Rubí.
-function renderMisMaterialesModuloHTML(claveModulo){
-  const materiales = getMaterialesCompartidos().filter(x=>x.modulo === claveModulo);
+async function renderMisMaterialesModuloHTML(claveModulo){
+  const materiales = await getMaterialesCompartidos(claveModulo);
   if(!materiales.length){
-    return `<p class="file-hint">Todavía no has compartido nada para este módulo (en este navegador).</p>`;
+    return `<p class="file-hint">Todavía no has compartido nada para este módulo.</p>`;
   }
   const opcionesModulo = (typeof MODULOS !== "undefined")
     ? MODULOS.map(m=>{
@@ -882,8 +904,8 @@ function renderMisMaterialesModuloHTML(claveModulo){
     : "";
   const filas = materiales.map(x=>`
     <tr>
-      <td>${x.tipo === "pdf" ? "Archivo" : "Liga"}</td>
-      <td>${x.tipo === "liga" ? `<a href="${x.nombre_o_url}" target="_blank" rel="noopener">${x.nombre_o_url}</a>` : x.nombre_o_url}</td>
+      <td>${x.tipo === "archivo" ? "Archivo" : "Liga"}</td>
+      <td>${mjhtLigaMaterialHTML(x)}</td>
       <td>${x.fecha ? new Date(x.fecha).toLocaleDateString("es-MX") : "—"}</td>
       <td style="white-space:nowrap;">
         <select style="display:inline-block;width:auto;margin:0 6px 0 0;font-size:.8rem;" onchange="mjhtCambiarModuloMaterial('${x.id}', this.value)">${opcionesModulo}</select>
@@ -909,9 +931,9 @@ function guardarRecomendacionMaterial(moduloId, texto){
 // withRecomendaciones=true agrega, debajo de cada módulo, el textarea de
 // "Recomendaciones para este módulo" que solo usa la administradora — es de
 // solo lectura/anotación: nunca edita ni borra lo que subió el facilitador.
-function renderMaterialesFacilitadoresHTML(withRecomendaciones){
+async function renderMaterialesFacilitadoresHTML(withRecomendaciones){
   if(typeof MODULOS === "undefined") return "";
-  const materiales = getMaterialesCompartidos();
+  const materiales = await getMaterialesCompartidos();
   const recos = getRecomendacionesMateriales();
   return MODULOS.map(m=>{
     const label = typeof m.id==="number" ? "Módulo "+m.id : "Cierre";
@@ -919,8 +941,8 @@ function renderMaterialesFacilitadoresHTML(withRecomendaciones){
     const propios = materiales.filter(x=>x.modulo === claveModulo);
     const presentacionOficial = m.presentacion ? `<p style="margin-bottom:6px;"><a href="${m.presentacion}" target="_blank">Ver presentación oficial ↗</a></p>` : "";
     const listaPropios = propios.length
-      ? `<ul class="checklist" style="pointer-events:none;">${propios.map(x=>`<li><span class="txt"><b>${x.tipo==="pdf"?"Archivo":"Liga"}</b><span>${x.nombre_o_url} · ${x.fecha ? new Date(x.fecha).toLocaleDateString("es-MX") : "—"}</span></span></li>`).join("")}</ul>`
-      : `<p class="file-hint">Sin materiales registrados en este navegador todavía.</p>`;
+      ? `<ul class="checklist" style="pointer-events:none;">${propios.map(x=>`<li><span class="txt"><b>${x.tipo==="archivo"?"Archivo":"Liga"}</b><span>${mjhtLigaMaterialHTML(x)} · ${x.fecha ? new Date(x.fecha).toLocaleDateString("es-MX") : "—"}</span></span></li>`).join("")}</ul>`
+      : `<p class="file-hint">Sin materiales registrados todavía.</p>`;
     const recoBloque = withRecomendaciones ? `
       <label style="margin-top:12px;">Recomendaciones para este módulo <small style="font-weight:400;color:var(--gris-claro);">(solo lectura/anotación tuya — no edita ni borra lo que subió el facilitador)</small></label>
       <textarea id="reco-modulo-${m.id}" placeholder="Escribe tu recomendación…">${recos[m.id] || ""}</textarea>
@@ -943,6 +965,17 @@ window.mjhtGuardarRecomendacionMaterial = function(btn){
   btn.textContent = "¡Guardado!";
   setTimeout(()=>{ btn.textContent = original; }, 1500);
 };
+
+// Vista para ASISTENTES: todo lo que el/la facilitador(a) compartió para
+// este módulo (archivos + ligas de sitio web/podcast/Instagram/X/LinkedIn),
+// además de la presentación oficial ya cargada en data.js.
+function mjhtMaterialesAsistenteHTML(items){
+  if(!items || !items.length){
+    return `<p class="file-hint">Todavía no hay materiales adicionales compartidos para este módulo.</p>`;
+  }
+  const filas = items.map(x=>`<li><span class="txt"><b>${x.tipo==="archivo"?"Archivo":"Liga"}</b><span>${mjhtLigaMaterialHTML(x)}${x.ponente?` · ${x.ponente}`:""}</span></span></li>`).join("");
+  return `<ul class="checklist" style="pointer-events:none;">${filas}</ul>`;
+}
 
 /* ---------- 8. Resultados del test ---------- */
 const LS_KEY_RESULTADOS_TEST = "mjht_resultados_test";

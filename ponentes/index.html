@@ -443,7 +443,7 @@
   const selPonente = document.getElementById("sel-ponente");
   selPonente.innerHTML = '<option value="">Selecciona tu nombre…</option>' +
     ponentesUnicos.map(p=>`<option value="${p}">${p}</option>`).join("");
-  selPonente.addEventListener("change", ()=>{
+  selPonente.addEventListener("change", async ()=>{
     const detalle = document.getElementById("modulo-detalle");
     const sesiones = MODULOS.filter(m=>m.ponente===selPonente.value);
     if(!sesiones.length){ detalle.innerHTML=""; return; }
@@ -462,21 +462,30 @@
         <div style="margin-top:18px;">
           <h4 style="margin-bottom:8px;">Materiales que has compartido para este módulo</h4>
           <p class="file-hint" style="margin-top:-4px;">Así puedes confirmar que cayeron donde deben. Si algo cayó en el módulo equivocado, cámbialo aquí mismo con el selector; si ya no aplica, elimínalo.</p>
-          ${renderMisMaterialesModuloHTML(`${m.id} - ${m.tema}`)}
+          <div class="mis-materiales-wrap" data-modulo="${m.id} - ${m.tema}"><p class="file-hint">Cargando…</p></div>
         </div>
       </div>`).join("");
+    // Se cargan aparte (async) para no bloquear el resto del render.
+    for(const wrap of detalle.querySelectorAll(".mis-materiales-wrap")){
+      try {
+        wrap.innerHTML = await renderMisMaterialesModuloHTML(wrap.dataset.modulo);
+      } catch(err) {
+        wrap.innerHTML = `<p class="file-hint">No se pudieron cargar (${err.message||err}).</p>`;
+      }
+    }
   });
-  // Eliminar / mover de módulo un material ya compartido (solo afecta el
-  // registro espejo de este navegador — el archivo real sigue en Netlify
-  // Forms si se subió como archivo).
+  // Eliminar / mover de módulo un material ya compartido — afecta el
+  // backend real (Netlify Blobs), visible para todos de inmediato.
   window.mjhtEliminarMaterial = function(id){
     if(!confirm("¿Eliminar este material de tu lista? Esta acción no se puede deshacer.")) return;
-    eliminarMaterialCompartido(id);
-    selPonente.dispatchEvent(new Event("change"));
+    eliminarMaterialCompartido(id)
+      .then(()=> selPonente.dispatchEvent(new Event("change")))
+      .catch(err=> alert("No se pudo eliminar: " + (err.message||err)));
   };
   window.mjhtCambiarModuloMaterial = function(id, nuevoModulo){
-    actualizarModuloMaterialCompartido(id, nuevoModulo);
-    selPonente.dispatchEvent(new Event("change"));
+    actualizarModuloMaterialCompartido(id, nuevoModulo)
+      .then(()=> selPonente.dispatchEvent(new Event("change")))
+      .catch(err=> alert("No se pudo actualizar: " + (err.message||err)));
   };
 
   // Select de asistentes para "Subir resultado de test"
@@ -826,35 +835,60 @@
     document.getElementById(containerId).appendChild(wrap);
   };
 
-  // ---------- Espejo local de "Compartir materiales" (ver assets/js/app.js) ----------
-  // Al enviar el formulario, además de Netlify Forms, guarda una copia en
-  // este navegador (mjht_materiales_compartidos) para que el panel de
-  // administradora pueda listar de un vistazo qué se ha compartido por
-  // módulo — el archivo real solo vive en Netlify Forms.
+  // ---------- "Compartir materiales" — sube al backend real (Netlify Functions + Blobs) ----------
+  // Los archivos y ligas quedan disponibles al instante para TODAS las
+  // asistentes y para Administración, en cualquier navegador — no solo en
+  // el de quien los comparte (antes solo llegaban a Netlify Forms/localStorage).
   const formMateriales = document.querySelector('form[name="materiales-ponente"]');
-  formMateriales.addEventListener("submit", ()=>{
+  formMateriales.addEventListener("submit", (e)=>{
+    e.preventDefault();
+    const msg = formMateriales.querySelector(".form-msg");
     const modulo = document.getElementById("sel-modulo-materiales").value;
     const ponente = document.getElementById("sel-nombre-materiales").value;
+    if(!modulo){ msg.textContent = "Selecciona el módulo."; msg.style.color = "var(--warn)"; return; }
+
+    const tareas = [];
     const fileInput = formMateriales.querySelector('input[name="archivo"]');
     if(fileInput && fileInput.files && fileInput.files[0]){
-      guardarMaterialCompartido({ modulo, ponente, tipo:"pdf", nombre_o_url: fileInput.files[0].name, fecha: new Date().toISOString() });
+      tareas.push(mjhtCompartirMaterialArchivo(modulo, ponente, fileInput.files[0]));
     }
-    // Archivos extra agregados con "+ Agregar otro archivo"
     formMateriales.querySelectorAll('input[name="archivo_extra[]"]').forEach(extraInput=>{
       if(extraInput.files && extraInput.files[0]){
-        guardarMaterialCompartido({ modulo, ponente, tipo:"pdf", nombre_o_url: extraInput.files[0].name, fecha: new Date().toISOString() });
+        tareas.push(mjhtCompartirMaterialArchivo(modulo, ponente, extraInput.files[0]));
       }
     });
     ["link_web","link_spotify","link_instagram","link_x","link_linkedin"].forEach(name=>{
       const campo = formMateriales.querySelector(`[name="${name}"]`);
       const val = campo ? campo.value.trim() : "";
-      if(val) guardarMaterialCompartido({ modulo, ponente, tipo:"liga", nombre_o_url: val, fecha: new Date().toISOString() });
-      // Ligas extra del mismo tipo, agregadas con "+ Agregar otro..."
+      if(val) tareas.push(mjhtCompartirMaterialLiga(modulo, ponente, val));
       formMateriales.querySelectorAll(`input[name="${name}_extra[]"]`).forEach(extraLink=>{
         const valExtra = extraLink.value.trim();
-        if(valExtra) guardarMaterialCompartido({ modulo, ponente, tipo:"liga", nombre_o_url: valExtra, fecha: new Date().toISOString() });
+        if(valExtra) tareas.push(mjhtCompartirMaterialLiga(modulo, ponente, valExtra));
       });
     });
+
+    if(!tareas.length){ msg.textContent = "Agrega al menos un archivo o una liga."; msg.style.color = "var(--warn)"; return; }
+
+    const btn = formMateriales.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    msg.textContent = "Subiendo…"; msg.style.color = "";
+    Promise.all(tareas)
+      .then(()=>{
+        msg.textContent = "¡Listo! Tu material ya es visible para las asistentes.";
+        msg.style.color = "var(--ok)";
+        formMateriales.reset();
+        document.getElementById("pdfs-extra").innerHTML = "";
+        ["link_web","link_spotify","link_instagram","link_x","link_linkedin"].forEach(name=>{
+          const extra = document.getElementById(name+"-extra");
+          if(extra) extra.innerHTML = "";
+        });
+        if(selPonente) selPonente.dispatchEvent(new Event("change"));
+      })
+      .catch(err=>{
+        msg.textContent = "No se pudo subir: " + (err.message || err);
+        msg.style.color = "var(--warn)";
+      })
+      .finally(()=>{ btn.disabled = false; });
   });
 
   // ---------- Espejo local de "Mi semblanza" del facilitador ----------
