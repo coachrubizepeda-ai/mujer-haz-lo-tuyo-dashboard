@@ -684,30 +684,93 @@ function renderRegistroAsistentesHTML(){
   </table></div>`;
 }
 
-const LS_KEY_SEMBLANZAS_ASISTENTES = "mjht_semblanzas_asistentes";
-function getSemblanzasAsistentes(){
-  try { return JSON.parse(localStorage.getItem(LS_KEY_SEMBLANZAS_ASISTENTES) || "{}"); }
-  catch(e){ return {}; }
+// Semblanza de asistentes — documento vivo con backend real (Netlify
+// Blobs, ver netlify/functions/semblanza-submit.js y semblanza-list.js).
+// Reemplaza el viejo mecanismo de localStorage: ahora cada quien puede
+// seguir viendo y editando lo que ya escribió desde cualquier dispositivo,
+// y cada envío guarda el texto completo actualizado (sin perder versiones
+// anteriores, que quedan en "historial").
+async function getSemblanzasAsistentes(){
+  try {
+    const resp = await fetch("/.netlify/functions/semblanza-list");
+    const data = await resp.json();
+    if(!resp.ok || !data.ok) throw new Error(data.error || "Error al leer semblanzas");
+    return data.todas || {};
+  } catch(e){
+    console.error("getSemblanzasAsistentes:", e);
+    return {};
+  }
 }
-function guardarSemblanzaAsistente(id, nombre, semblanza){
-  const todas = getSemblanzasAsistentes();
-  todas[id] = { nombre, semblanza, fecha: new Date().toISOString() };
-  try { localStorage.setItem(LS_KEY_SEMBLANZAS_ASISTENTES, JSON.stringify(todas)); } catch(e){}
-  return todas;
+async function getSemblanzaAsistente(participanteId){
+  if(!participanteId) return null;
+  try {
+    const resp = await fetch("/.netlify/functions/semblanza-list?participanteId=" + encodeURIComponent(participanteId));
+    const data = await resp.json();
+    if(!resp.ok || !data.ok) throw new Error(data.error || "Error al leer la semblanza");
+    return data.registro || null;
+  } catch(e){
+    console.error("getSemblanzaAsistente:", e);
+    return null;
+  }
 }
-function renderSemblanzasAsistentesHTML(){
+// Código de Honor para participantes — real backend (Netlify Blobs) para
+// que lo que se edite en el portal de Facilitador se vea de inmediato,
+// para todas, en Asistentes y Administradora (antes solo vivía en
+// localStorage del navegador donde se editaba, por eso Asistentes nunca
+// lo veía completo). Si nunca se ha guardado nada, cae al placeholder de
+// assets/js/data.js (CODIGO_HONOR_PARTICIPANTES).
+async function getLineamientosParticipantes(){
+  try {
+    const resp = await fetch("/.netlify/functions/lineamientos-participantes-get");
+    const data = await resp.json();
+    if(!resp.ok || !data.ok) throw new Error(data.error || "Error al leer lineamientos");
+    if(data.items && data.items.length) return data.items;
+  } catch(e){
+    console.error("getLineamientosParticipantes:", e);
+  }
+  return (typeof CODIGO_HONOR_PARTICIPANTES !== "undefined") ? CODIGO_HONOR_PARTICIPANTES : [];
+}
+async function guardarLineamientosParticipantes(items){
+  const resp = await fetch("/.netlify/functions/lineamientos-participantes-set", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ items }),
+  });
+  const data = await resp.json().catch(()=>({}));
+  if(!resp.ok || !data.ok) throw new Error((data && data.error) || "No se pudo guardar");
+  return data.registro;
+}
+function lineamientosParticipantesItemHTML(titulo, texto){
+  return `<div class="lineamiento-item"><h4>${titulo}</h4><p>${texto}</p></div>`;
+}
+async function renderLineamientosParticipantesHTML(){
+  const items = await getLineamientosParticipantes();
+  if(!items.length) return `<p class="file-hint">Todavía no hay lineamientos cargados.</p>`;
+  return items.map(([titulo, texto])=>lineamientosParticipantesItemHTML(titulo, texto)).join("");
+}
+async function guardarSemblanzaAsistente(id, nombre, texto){
+  const resp = await fetch("/.netlify/functions/semblanza-submit", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ participanteId: id, nombre, texto }),
+  });
+  const data = await resp.json().catch(()=>({}));
+  if(!resp.ok || !data.ok) throw new Error((data && data.error) || "No se pudo guardar la semblanza");
+  return data.registro;
+}
+async function renderSemblanzasAsistentesHTML(){
   if(typeof ASISTENTES === "undefined" || !ASISTENTES.length){
     return `<div class="callout">Todavía no has cargado el roster de asistentes.</div>`;
   }
-  const guardadas = getSemblanzasAsistentes();
+  const guardadas = await getSemblanzasAsistentes();
   const filas = ASISTENTES.map(a=>{
     const s = guardadas[a.id];
     return `<tr><td><b>${a.id}</b></td><td>${a.nombre}</td>
-      <td>${s ? "✅ Semblanza enviada" : "⏳ Pendiente"}</td>
+      <td>${s ? "✅ Semblanza registrada" : "⏳ Pendiente"}</td>
       <td>${s ? new Date(s.fecha).toLocaleDateString("es-MX") : "—"}</td></tr>`;
   }).join("");
   return `<div class="table-wrap"><table>
-    <thead><tr><th>ID</th><th>Nombre</th><th>Estado</th><th>Última actualización (este navegador)</th></tr></thead>
+    <thead><tr><th>ID</th><th>Nombre</th><th>Estado</th><th>Última actualización</th></tr></thead>
     <tbody>${filas}</tbody>
   </table></div>`;
 }

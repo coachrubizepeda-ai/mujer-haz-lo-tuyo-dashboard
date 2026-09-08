@@ -463,6 +463,13 @@
           <h4 style="margin-bottom:8px;">Materiales que has compartido para este módulo</h4>
           <p class="file-hint" style="margin-top:-4px;">Así puedes confirmar que cayeron donde deben. Si algo cayó en el módulo equivocado, cámbialo aquí mismo con el selector; si ya no aplica, elimínalo.</p>
           <div class="mis-materiales-wrap" data-modulo="${m.id} - ${m.tema}"><p class="file-hint">Cargando…</p></div>
+          <div class="subida-rapida-modulo" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--gris-claro);" data-modulo="${m.id} - ${m.tema}">
+            <p class="file-hint" style="margin-top:0;"><b>Subir directo a este módulo</b> — lo que subas aquí es exactamente lo que la asistente ve y puede bajar en su portal, en "Módulos y materiales".</p>
+            <input type="file" class="subida-rapida-archivo">
+            <input type="url" class="subida-rapida-liga" placeholder="O pega una liga (podcast, Instagram, sitio, etc.)" style="margin-top:8px;">
+            <button type="button" class="btn btn-outline btn-sm subida-rapida-btn" style="margin-top:8px;">Subir a este módulo</button>
+            <p class="subida-rapida-status file-hint" style="margin-top:6px;"></p>
+          </div>
         </div>
       </div>`).join("");
     // Se cargan aparte (async) para no bloquear el resto del render.
@@ -473,6 +480,40 @@
         wrap.innerHTML = `<p class="file-hint">No se pudieron cargar (${err.message||err}).</p>`;
       }
     }
+    // Subida rápida directa desde "Mi módulo": exactamente el mismo backend
+    // (materiales-submit.js) que usa el formulario grande de "Compartir
+    // materiales" — esto es solo un atajo para no tener que ir a otra pestaña.
+    detalle.querySelectorAll(".subida-rapida-modulo").forEach(caja=>{
+      const modulo = caja.dataset.modulo;
+      const btn = caja.querySelector(".subida-rapida-btn");
+      const inputArchivo = caja.querySelector(".subida-rapida-archivo");
+      const inputLiga = caja.querySelector(".subida-rapida-liga");
+      const status = caja.querySelector(".subida-rapida-status");
+      btn.addEventListener("click", async ()=>{
+        const ponente = selPonente.value;
+        const archivo = inputArchivo.files && inputArchivo.files[0];
+        const liga = inputLiga.value.trim();
+        if(!ponente){ status.textContent = "Falta seleccionar tu nombre arriba."; return; }
+        if(!archivo && !liga){ status.textContent = "Elige un archivo o pega una liga."; return; }
+        btn.disabled = true;
+        status.textContent = "Subiendo…";
+        try {
+          const tareas = [];
+          if(archivo) tareas.push(mjhtCompartirMaterialArchivo(modulo, ponente, archivo));
+          if(liga) tareas.push(mjhtCompartirMaterialLiga(modulo, ponente, liga));
+          await Promise.all(tareas);
+          status.textContent = "¡Listo! Ya está disponible para la asistente.";
+          inputArchivo.value = "";
+          inputLiga.value = "";
+          const wrap = caja.parentElement.querySelector(".mis-materiales-wrap");
+          if(wrap) wrap.innerHTML = await renderMisMaterialesModuloHTML(modulo);
+        } catch(err){
+          status.textContent = "No se pudo subir (" + (err.message||err) + ").";
+        } finally {
+          btn.disabled = false;
+        }
+      });
+    });
   });
   // Eliminar / mover de módulo un material ya compartido — afecta el
   // backend real (Netlify Blobs), visible para todos de inmediato.
@@ -945,10 +986,63 @@
     { containerId: "codigo-honor-acc", base: ()=>CODIGO_HONOR,
       extraKey: "mjht_lineamientos_facilitadores_extra", overrideKey: "mjht_lineamientos_facilitadores_overrides" },
     { containerId: "lineamientos-op-acc", base: ()=>LINEAMIENTOS_OP,
-      extraKey: "mjht_lineamientos_operativos_extra", overrideKey: "mjht_lineamientos_operativos_overrides" },
-    { containerId: "codigo-honor-participantes-acc", base: ()=> typeof CODIGO_HONOR_PARTICIPANTES !== "undefined" ? CODIGO_HONOR_PARTICIPANTES : [],
-      extraKey: "mjht_codigo_honor_participantes_extra", overrideKey: "mjht_codigo_honor_participantes_overrides" }
+      extraKey: "mjht_lineamientos_operativos_extra", overrideKey: "mjht_lineamientos_operativos_overrides" }
   ];
+  // "Código de Honor para participantes" ya NO usa localStorage — se edita
+  // aquí pero se guarda con un backend real (Netlify Blobs, ver
+  // assets/js/app.js → getLineamientosParticipantes/guardarLineamientosParticipantes),
+  // así lo que se edite/agregue aquí se ve de inmediato, para todas, en
+  // Asistentes y Administradora (antes solo quedaba en este navegador).
+  let lineamientosParticipantesItems = [];
+  function renderLineamientosParticipantesPonente(){
+    const wrap = document.getElementById("codigo-honor-participantes-acc");
+    if(!wrap) return;
+    const itemsHTML = lineamientosParticipantesItems.map(([titulo, texto], idx)=>`
+      <div class="lineamiento-item">
+        <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;">
+          <div style="flex:1;min-width:0;"><h4>${titulo}</h4><p>${texto}</p></div>
+          <div style="display:flex;gap:2px;flex-shrink:0;">
+            <button type="button" class="btn-edit-nombre" title="Editar punto" onclick="mjhtEditarLineamientoParticipantes(${idx})">✏️</button>
+            <button type="button" class="btn-edit-nombre" title="Eliminar punto" onclick="mjhtEliminarLineamientoParticipantes(${idx})">🗑️</button>
+          </div>
+        </div>
+      </div>`).join("");
+    wrap.innerHTML = itemsHTML + `<div class="lineamiento-item" style="border-bottom:none;">
+      <button type="button" class="btn btn-outline btn-sm" onclick="mjhtAgregarLineamientoParticipantes()">+ Agregar punto</button>
+    </div>`;
+  }
+  window.mjhtAgregarLineamientoParticipantes = async function(){
+    const titulo = prompt("Título del nuevo punto:");
+    if(titulo === null || !titulo.trim()) return;
+    const texto = prompt("Descripción:", "") || "";
+    lineamientosParticipantesItems.push([titulo.trim(), texto.trim()]);
+    renderLineamientosParticipantesPonente();
+    try { await guardarLineamientosParticipantes(lineamientosParticipantesItems); }
+    catch(e){ alert("No se pudo guardar: " + (e.message||e)); }
+  };
+  window.mjhtEditarLineamientoParticipantes = async function(idx){
+    const item = lineamientosParticipantesItems[idx];
+    if(!item) return;
+    const titulo = prompt("Título:", item[0]);
+    if(titulo === null) return;
+    const texto = prompt("Descripción:", item[1]);
+    if(texto === null) return;
+    lineamientosParticipantesItems[idx] = [titulo.trim(), texto.trim()];
+    renderLineamientosParticipantesPonente();
+    try { await guardarLineamientosParticipantes(lineamientosParticipantesItems); }
+    catch(e){ alert("No se pudo guardar: " + (e.message||e)); }
+  };
+  window.mjhtEliminarLineamientoParticipantes = async function(idx){
+    if(!confirm("¿Eliminar este punto? Se quita para todas (también se ve así en Asistentes y Administradora).")) return;
+    lineamientosParticipantesItems.splice(idx, 1);
+    renderLineamientosParticipantesPonente();
+    try { await guardarLineamientosParticipantes(lineamientosParticipantesItems); }
+    catch(e){ alert("No se pudo guardar: " + (e.message||e)); }
+  };
+  (async ()=>{
+    lineamientosParticipantesItems = await getLineamientosParticipantes();
+    renderLineamientosParticipantesPonente();
+  })();
   function lineamientoItemHTML(titulo, texto, ref, containerId){
     const refAttr = JSON.stringify(ref).replace(/'/g, "&#39;");
     return `

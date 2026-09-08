@@ -39,4 +39,5 @@ const ASISTENTES = [
   { id: "M09", nombre: "Mildred Sosa", empresa: "", cargo: "", semblanza: "", linkedin: "", perfil: "Mildred Erosa" },
   { id: "M10", nombre: "Lupita Prósperi", empresa: "", cargo: "", semblanza: "", linkedin: "" },
   { id: "M11", nombre: "Rocío González", empresa: "", cargo: "", semblanza: "", linkedin: "" },
+  { id: "M12", nombre: "Rubí Zepeda", empresa: "The Ok People", cargo: "Directora del diplomado", semblanza: "", linkedin: "" },
 ];

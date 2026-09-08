@@ -438,7 +438,10 @@
 
   // ---------- Resumen ejecutivo: secciones 1 a 10 (ver assets/js/app.js) ----------
   document.getElementById("registro-asistentes-admin").innerHTML = renderRegistroAsistentesHTML();
-  document.getElementById("semblanzas-asistentes-admin").innerHTML = renderSemblanzasAsistentesHTML();
+  document.getElementById("semblanzas-asistentes-admin").innerHTML = `<p class="file-hint">Cargando…</p>`;
+  renderSemblanzasAsistentesHTML()
+    .then(html=>{ document.getElementById("semblanzas-asistentes-admin").innerHTML = html; })
+    .catch(err=>{ document.getElementById("semblanzas-asistentes-admin").innerHTML = `<div class="callout">No se pudieron cargar las semblanzas (${err.message||err}).</div>`; });
   document.getElementById("semblanzas-facilitadores-admin").innerHTML = renderSemblanzasFacilitadoresHTML();
   document.getElementById("cuestionarios-previos-estado").innerHTML = renderCuestionariosPreviosEstadoHTML();
   document.getElementById("cuestionario-respuestas-admin").innerHTML = renderCuestionarioRespuestasHTML();
@@ -857,14 +860,11 @@
     asisWrap.innerHTML = `<div class="callout">Aún no has cargado el directorio de asistentes. Agrégalas en <code>assets/js/roster.js</code> (o pídeme que las suba cuando me compartas la información).</div>`;
   }
 
-  // Código de Honor para participantes (contenido borrador, ver assets/js/data.js)
-  if(typeof CODIGO_HONOR_PARTICIPANTES !== "undefined"){
-    document.getElementById("codigo-honor-participantes-acc").innerHTML = CODIGO_HONOR_PARTICIPANTES.map(([titulo, texto])=>`
-      <div class="lineamiento-item">
-        <h4>${titulo}</h4>
-        <p>${texto}</p>
-      </div>`).join("");
-  }
+  // Código de Honor para participantes — mismo backend que edita
+  // Facilitador (ver assets/js/app.js), para ver siempre lo más reciente.
+  (async ()=>{
+    document.getElementById("codigo-honor-participantes-acc").innerHTML = await renderLineamientosParticipantesHTML();
+  })();
 
   // Select de módulo para "Cuestionario previo al módulo"
   const selModuloCuestionarioAdmin = document.getElementById("sel-modulo-cuestionario-admin");

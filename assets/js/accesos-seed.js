@@ -20,6 +20,9 @@
    M11 tanto aquí como en el roster (assets/js/roster.js) — es
    facilitadora y también asistente al diplomado.
 
+   M12 es la propia Rubí — cuenta de Participante para que ella pueda
+   ver el portal exactamente como lo ve una asistente.
+
    Las contraseñas son "Nombre2026" (fácil de decir por teléfono) —
    cámbialas por lo que prefieras, desde el panel, en cualquier
    momento.
@@ -34,4 +37,5 @@ const ACCESOS_SEED = [
   { id: "M08", email: "empaques_sanjose@outlook.com",  password: "Sara2026" },
   { id: "M10", email: "lupitapro@gmail.com",           password: "Lupita2026" },
   { id: "M11", email: "rociogonzalezgalvan@gmail.com", password: "Rocio2026" },
+  { id: "M12", email: "hazlotuyo@theokpeople.com",     password: "Rubi2026" },
 ];
