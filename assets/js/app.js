@@ -27,12 +27,48 @@ function initTabs(){
       document.getElementById(btn.dataset.tab).classList.add("active");
       history.replaceState(null,"","#"+btn.dataset.tab);
       window.scrollTo({top:0,behavior:"smooth"});
+      mjhtCerrarMenuMovil();
     });
   });
   const hash = location.hash.replace("#","");
   if(hash && document.getElementById(hash)){
     document.querySelector('.tab-btn[data-tab="'+hash+'"]')?.click();
   }
+}
+
+/* ---------- Menú móvil (hoja deslizable con la lista de pestañas) ----------
+   En pantallas angostas el listado de pestañas deja de ser una franja
+   horizontal (confundía: no se notaba que había más opciones y las
+   etiquetas de grupo parecían otra pestaña) y se vuelve una lista vertical
+   oculta por default, que se abre con el botón "Menú" y se cierra sola al
+   elegir una opción, con un fondo oscuro detrás para poder cerrarla
+   tocando afuera. */
+function mjhtAbrirMenuMovil(){
+  const nav = document.getElementById("mjhtSideNav");
+  const backdrop = document.getElementById("mjhtNavBackdrop");
+  const toggle = document.getElementById("mjhtNavToggle");
+  if(!nav) return;
+  nav.classList.add("open");
+  backdrop?.classList.add("open");
+  toggle?.setAttribute("aria-expanded","true");
+}
+function mjhtCerrarMenuMovil(){
+  const nav = document.getElementById("mjhtSideNav");
+  const backdrop = document.getElementById("mjhtNavBackdrop");
+  const toggle = document.getElementById("mjhtNavToggle");
+  nav?.classList.remove("open");
+  backdrop?.classList.remove("open");
+  toggle?.setAttribute("aria-expanded","false");
+}
+function initMobileNav(){
+  const toggle = document.getElementById("mjhtNavToggle");
+  const backdrop = document.getElementById("mjhtNavBackdrop");
+  const nav = document.getElementById("mjhtSideNav");
+  if(!toggle || !nav) return;
+  toggle.addEventListener("click", ()=>{
+    nav.classList.contains("open") ? mjhtCerrarMenuMovil() : mjhtAbrirMenuMovil();
+  });
+  backdrop?.addEventListener("click", mjhtCerrarMenuMovil);
 }
 
 // Delegado a nivel documento e idempotente: se puede llamar tantas veces como
@@ -71,6 +107,7 @@ function wireNetlifyForm(form){
 
 document.addEventListener("DOMContentLoaded", ()=>{
   initTabs();
+  initMobileNav();
   initAccordion();
   document.querySelectorAll("form[data-netlify]").forEach(wireNetlifyForm);
 });
