@@ -1003,11 +1003,23 @@ async function actualizarModuloMaterialCompartido(id, nuevoModulo){
   if(!resp.ok || !data.ok) throw new Error((data && data.error) || ("Error " + resp.status));
   return data;
 }
+// Título amigable para una liga compartida — en vez de mostrar la URL
+// pelona, describe qué se va a encontrar del otro lado (Canva/Drive =
+// presentación, Spotify = podcast, redes = publicación, etc.)
+function mjhtTituloLigaHTML(url){
+  const u = (url || "").toLowerCase();
+  if(u.includes("canva.com") || u.includes("drive.google") || u.includes("docs.google")) return "Accede a la presentación ↗";
+  if(u.includes("spotify.com")) return "Escuchar podcast ↗";
+  if(u.includes("instagram.com")) return "Ver en Instagram ↗";
+  if(u.includes("linkedin.com")) return "Ver en LinkedIn ↗";
+  if(u.includes("x.com") || u.includes("twitter.com")) return "Ver publicación ↗";
+  return "Abrir liga ↗";
+}
 function mjhtLigaMaterialHTML(x){
   const verUrl = x.tipo === "archivo" ? `/.netlify/functions/materiales-download?key=${encodeURIComponent(x.fileKey)}` : x.nombre_o_url;
   return x.tipo === "archivo"
     ? `<a href="${verUrl}" target="_blank" rel="noopener">${x.nombre_o_url} ↓</a>`
-    : `<a href="${x.nombre_o_url}" target="_blank" rel="noopener">${x.nombre_o_url}</a>`;
+    : `<a href="${x.nombre_o_url}" target="_blank" rel="noopener">${mjhtTituloLigaHTML(x.nombre_o_url)}</a>`;
 }
 // Vista propia del facilitador (en "Mi módulo"): todo lo que ha compartido
 // para ESE módulo, con controles para eliminarlo o moverlo a otro módulo —
@@ -1063,7 +1075,7 @@ async function renderMaterialesFacilitadoresHTML(withRecomendaciones){
     const propios = materiales.filter(x=>x.modulo === claveModulo);
     const presentacionOficial = m.presentacion ? `<p style="margin-bottom:6px;"><a href="${m.presentacion}" target="_blank">Ver presentación oficial ↗</a></p>` : "";
     const listaPropios = propios.length
-      ? `<ul class="checklist" style="pointer-events:none;">${propios.map(x=>`<li><span class="txt"><b>${x.tipo==="archivo"?"Archivo":"Liga"}</b><span>${mjhtLigaMaterialHTML(x)} · ${x.fecha ? new Date(x.fecha).toLocaleDateString("es-MX") : "—"}</span></span></li>`).join("")}</ul>`
+      ? `<ul class="checklist">${propios.map(x=>`<li><span class="txt"><b>${x.tipo==="archivo"?"Archivo":"Liga"}</b><span>${mjhtLigaMaterialHTML(x)} · ${x.fecha ? new Date(x.fecha).toLocaleDateString("es-MX") : "—"}</span></span></li>`).join("")}</ul>`
       : `<p class="file-hint">Sin materiales registrados todavía.</p>`;
     const recoBloque = withRecomendaciones ? `
       <label style="margin-top:12px;">Recomendaciones para este módulo <small style="font-weight:400;color:var(--gris-claro);">(solo lectura/anotación tuya — no edita ni borra lo que subió el facilitador)</small></label>
@@ -1096,7 +1108,7 @@ function mjhtMaterialesAsistenteHTML(items){
     return `<p class="file-hint">Todavía no hay materiales adicionales compartidos para este módulo.</p>`;
   }
   const filas = items.map(x=>`<li><span class="txt"><b>${x.tipo==="archivo"?"Archivo":"Liga"}</b><span>${mjhtLigaMaterialHTML(x)}${x.ponente?` · ${x.ponente}`:""}</span></span></li>`).join("");
-  return `<ul class="checklist" style="pointer-events:none;">${filas}</ul>`;
+  return `<ul class="checklist">${filas}</ul>`;
 }
 
 /* ---------- 8. Resultados del test ---------- */

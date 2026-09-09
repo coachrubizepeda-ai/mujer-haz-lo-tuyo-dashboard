@@ -527,6 +527,11 @@ footer.site a:hover{color:var(--azul-oscuro);}
 .callout.warn{border-color:var(--amarillo);background:rgba(255,221,0,.12);}
 .callout.dark{border-color:var(--gris-oscuro);background:rgba(61,69,67,.06);}
 
+/* Botón "Descargar presentación": atenuado hasta confirmar que el
+   archivo sí existe en el servidor (evita el error 404 cuando el
+   módulo todavía no tiene una presentación oficial cargada). */
+.pres-pendiente{opacity:.4;pointer-events:none;cursor:default;}
+
 .checklist{list-style:none;margin:0;padding:0;}
 .checklist li{
   display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);
@@ -651,10 +656,12 @@ footer.site a:hover{color:var(--azul-oscuro);}
      en una sola columna angosta: el número (01, 02, 03...) en grande y
      el tema abajo en chico. Así la columna de Contenido queda angosta
      y el resto del ancho lo aprovecha la columna de Tarea. */
-  .table-tareas{min-width:0;}
+  .table-tareas{min-width:0;table-layout:fixed;width:100%;}
   .table-tareas th:first-child,.table-tareas td:first-child{
     width:74px;max-width:74px;padding-right:8px;
+    overflow-wrap:break-word;word-break:break-word;
   }
+  .table-tareas th:last-child,.table-tareas td:last-child{overflow-wrap:break-word;word-break:break-word;}
   .tarea-modulo-num{font-weight:700;font-size:1rem;color:var(--azul-oscuro);}
   .tarea-modulo-tema{font-size:.74rem;color:var(--gris-claro);margin-top:2px;line-height:1.25;}
 }
