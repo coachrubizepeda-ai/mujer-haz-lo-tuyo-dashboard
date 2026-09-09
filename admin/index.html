@@ -198,12 +198,12 @@
 
   </section>
 
-  <!-- RETROALIMENTACIÓN (captura manual de las respuestas de Microsoft Forms) -->
+  <!-- RETROALIMENTACIÓN (subir el Excel exportado de Microsoft Forms) -->
   <section class="tab-panel" id="t-retroalimentacion-admin">
     <div class="section-head">
       <span class="eyebrow">Cada semana</span>
       <h2>Retroalimentación</h2>
-      <p>Las participantes contestan de forma anónima en Microsoft Forms. Aquí capturas cada respuesta completa (una por una, tal como venga en el reporte de Microsoft Forms) para que se refleje en el portal del Facilitador, con el resumen y el detalle por evaluadora.</p>
+      <p>Las participantes contestan de forma anónima en Microsoft Forms. Aquí subes el Excel con todas las respuestas del módulo de una sola vez — el sitio calcula el promedio de cada pregunta y junta los comentarios, y el resultado se refleja igual en el portal del Facilitador.</p>
     </div>
     <div class="card">
       <div class="field-row">
@@ -212,22 +212,21 @@
         </div>
         <div><label>Facilitador(a)</label><input type="text" id="retro-admin-facilitador" readonly></div>
       </div>
-      <label>Nombre de quien contestó (opcional — el formulario es anónimo, déjalo en blanco si no lo sabes)</label>
-      <input type="text" id="retro-admin-nombre" placeholder="Déjalo en blanco si no lo sabes">
-      <form id="form-retro-admin">
-        <div class="form-msg"></div>
-        <p style="font-size:.85rem;color:var(--gris-claro);margin:10px 0 6px;">Captura las 16 respuestas (escala 1-5) tal como vienen en el reporte de Microsoft Forms:</p>
-        <div id="retro-admin-preguntas-wrap"></div>
-        <label>¿Qué fue lo más valioso? (si lo escribió)</label>
-        <textarea id="retro-admin-valioso"></textarea>
-        <label>¿Qué cambiaría? (si lo escribió)</label>
-        <textarea id="retro-admin-cambiar"></textarea>
-        <button class="btn btn-primary" type="submit">Guardar esta respuesta</button>
-        <p class="file-hint">Después de guardar, el módulo se queda seleccionado para que captures a la siguiente participante sin tener que volver a elegirlo.</p>
-      </form>
+      <label>Archivo Excel exportado de Microsoft Forms (.xlsx)</label>
+      <input type="file" id="retro-admin-archivo" accept=".xlsx,.xls">
+      <p class="file-hint">En Microsoft Forms: pestaña "Respuestas" → botón "Abrir en Excel" → sube ese mismo archivo aquí, sin modificarlo.</p>
+      <button class="btn btn-primary" type="button" id="btn-retro-analizar">Analizar archivo</button>
+      <div class="form-msg" id="retro-admin-msg"></div>
+      <div id="retro-admin-preview" style="display:none;margin-top:16px;">
+        <h4 style="margin-bottom:6px;">Vista previa antes de guardar</h4>
+        <div id="retro-admin-preview-resumen" style="font-size:.9rem;color:var(--gris-claro);margin-bottom:10px;"></div>
+        <div id="retro-admin-preview-tabla"></div>
+        <button class="btn btn-primary" type="button" id="btn-retro-guardar" style="margin-top:14px;">Guardar estos resultados</button>
+        <button class="btn" type="button" id="btn-retro-cancelar" style="margin-top:14px;">Cancelar</button>
+      </div>
     </div>
     <div class="card">
-      <h4 style="margin-top:0;">Respuestas capturadas para este módulo: <span id="retro-admin-contador">0</span></h4>
+      <h4 style="margin-top:0;">Respuestas guardadas para este módulo: <span id="retro-admin-contador">0</span></h4>
     </div>
   </section>
 
@@ -396,6 +395,7 @@
 <script src="../assets/js/retro-preguntas.js"></script>
 <script src="../assets/js/retro-render.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="../assets/js/app.js"></script>
 <script src="../assets/js/agent-widget.js"></script>
 <script>
@@ -1066,18 +1066,22 @@
     cargarRetroAdmin();
   }
 
-  // ---------- Retroalimentación: captura manual de encuestas de Microsoft Forms ----------
+  // ---------- Retroalimentación: subir el Excel exportado de Microsoft Forms ----------
   // Reusa el mismo backend (feedback-modulo-submit, store "retroalimentacion")
   // que antes llenaba la Participante directo en el sitio — así el resumen y
   // el detalle en el portal del Facilitador siguen funcionando igual, solo
-  // que ahora Rubí es quien captura cada respuesta desde el reporte externo.
+  // que ahora se cargan todas las respuestas de golpe desde el Excel de MS Forms.
   const selModuloRetroAdmin = document.getElementById("sel-modulo-retro-admin");
   const retroAdminFacilitador = document.getElementById("retro-admin-facilitador");
-  const retroAdminNombre = document.getElementById("retro-admin-nombre");
-  const retroAdminValioso = document.getElementById("retro-admin-valioso");
-  const retroAdminCambiar = document.getElementById("retro-admin-cambiar");
+  const retroAdminArchivo = document.getElementById("retro-admin-archivo");
   const retroAdminContador = document.getElementById("retro-admin-contador");
-  const formRetroAdmin = document.getElementById("form-retro-admin");
+  const retroAdminMsg = document.getElementById("retro-admin-msg");
+  const btnRetroAnalizar = document.getElementById("btn-retro-analizar");
+  const btnRetroGuardar = document.getElementById("btn-retro-guardar");
+  const btnRetroCancelar = document.getElementById("btn-retro-cancelar");
+  const retroAdminPreview = document.getElementById("retro-admin-preview");
+  const retroAdminPreviewResumen = document.getElementById("retro-admin-preview-resumen");
+  const retroAdminPreviewTabla = document.getElementById("retro-admin-preview-tabla");
 
   if(selModuloRetroAdmin){
     selModuloRetroAdmin.innerHTML = '<option value="">Selecciona el módulo…</option>' + MODULOS.map(m=>
@@ -1085,26 +1089,12 @@
     ).join("");
   }
 
-  const preguntasWrapAdmin = document.getElementById("retro-admin-preguntas-wrap");
-  if(preguntasWrapAdmin){
-    preguntasWrapAdmin.innerHTML = RETRO_CATEGORIAS.map(cat=>`
-      <div class="retro-cat-titulo">${cat.nombre}</div>
-      ${cat.preguntas.map(p=>`
-        <div class="retro-pregunta">
-          <p>${p.id}. ${p.texto}</p>
-          <div class="rating compact">
-            ${[1,2,3,4,5].map(v=>`<input type="radio" name="q${p.id}" value="${v}" id="qa${p.id}-${v}" required><label for="qa${p.id}-${v}">${v}</label>`).join("")}
-          </div>
-        </div>`).join("")}
-    `).join("");
-  }
-
   async function actualizarContadorRetroAdmin(){
     if(!retroAdminContador || !selModuloRetroAdmin.value) return;
     try {
       const items = await mjhtCargarRetroalimentacion(selModuloRetroAdmin.value);
       retroAdminContador.textContent = items.length;
-    } catch(e){ /* sin bloquear la captura si esto falla */ }
+    } catch(e){ /* sin bloquear si esto falla */ }
   }
 
   if(selModuloRetroAdmin){
@@ -1114,58 +1104,214 @@
       actualizarContadorRetroAdmin();
     });
   }
+  actualizarContadorRetroAdmin();
 
-  if(formRetroAdmin){
-    formRetroAdmin.addEventListener("submit", (e)=>{
-      e.preventDefault();
-      const msg = formRetroAdmin.querySelector(".form-msg");
+  // Quita acentos/mayúsculas para comparar encabezados de columnas sin
+  // depender de que Microsoft Forms los escriba idéntico letra por letra.
+  function mjhtNormalizarTexto(s){
+    return String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().trim();
+  }
+
+  const RETRO_METADATA_HEADERS = ["id","hora de inicio","hora de finalizacion","correo electronico","nombre","hora de creacion","completado"];
+
+  let retroAdminFilasParseadas = null; // se llena al analizar, se usa al guardar
+
+  function mjhtParsearExcelRetro(filas){
+    // filas: array de objetos {encabezado: valor} (una fila por respuesta).
+    if(!filas.length) return { filas: [], comentarioCols: [] };
+
+    const encabezados = Object.keys(filas[0]);
+
+    // 1) Intenta emparejar cada una de las 16 preguntas por coincidencia de
+    //    texto con el encabezado de la columna (ignorando acentos/mayúsculas).
+    const colPorPregunta = {};
+    RETRO_PREGUNTAS.forEach(p=>{
+      const textoNorm = mjhtNormalizarTexto(p.texto).slice(0, 40);
+      const encontrado = encabezados.find(h=>{
+        const hNorm = mjhtNormalizarTexto(h);
+        return hNorm.includes(textoNorm) || textoNorm.includes(hNorm.slice(0,40));
+      });
+      if(encontrado) colPorPregunta[p.id] = encontrado;
+    });
+
+    let columnasPreguntas = RETRO_PREGUNTAS.map(p=>colPorPregunta[p.id]);
+
+    // 2) Si no se pudieron emparejar las 16 por texto, usa como respaldo el
+    //    orden de aparición: toma, en orden, las columnas cuyos valores son
+    //    números 1-5 en la mayoría de las filas (así vienen las preguntas de
+    //    escala en el reporte de Microsoft Forms) y descarta las de metadata.
+    if(columnasPreguntas.some(c=>!c)){
+      const candidatas = encabezados.filter(h=>{
+        const hNorm = mjhtNormalizarTexto(h);
+        if(RETRO_METADATA_HEADERS.some(m=>hNorm===m || hNorm.includes(m))) return false;
+        let numOk = 0, total = 0;
+        filas.forEach(f=>{
+          const v = f[h];
+          if(v===undefined || v===null || v==="") return;
+          total++;
+          const n = Number(v);
+          if(Number.isInteger(n) && n>=1 && n<=5) numOk++;
+        });
+        return total>0 && numOk/total >= 0.8;
+      });
+      columnasPreguntas = candidatas.slice(0, 16);
+    }
+
+    // 3) Comentarios: las columnas de texto largo que no sean metadata ni
+    //    columnas de pregunta — "las 2 últimas preguntas" del formulario.
+    const usadas = new Set(columnasPreguntas.filter(Boolean));
+    const colsTexto = encabezados.filter(h=>{
+      if(usadas.has(h)) return false;
+      const hNorm = mjhtNormalizarTexto(h);
+      if(RETRO_METADATA_HEADERS.some(m=>hNorm===m || hNorm.includes(m))) return false;
+      return true;
+    });
+    const comentarioCols = colsTexto.slice(-2);
+
+    const colNombre = encabezados.find(h=>mjhtNormalizarTexto(h)==="nombre");
+    const colFecha = encabezados.find(h=>mjhtNormalizarTexto(h).includes("hora de inicio")) ||
+                      encabezados.find(h=>mjhtNormalizarTexto(h).includes("hora de creacion"));
+
+    const filasListas = filas.map(f=>{
+      const respuestas = {};
+      RETRO_PREGUNTAS.forEach((p,i)=>{
+        const col = columnasPreguntas[i];
+        const v = col ? Number(f[col]) : NaN;
+        if(!isNaN(v) && v>=1 && v<=5) respuestas[p.id] = v;
+      });
+      return {
+        respuestas,
+        valioso: comentarioCols[0] ? String(f[comentarioCols[0]]||"").trim() : "",
+        cambiar: comentarioCols[1] ? String(f[comentarioCols[1]]||"").trim() : "",
+        nombre: colNombre ? String(f[colNombre]||"").trim() : "",
+        fecha: colFecha ? f[colFecha] : "",
+      };
+    }).filter(f=>Object.keys(f.respuestas).length>0); // descarta filas vacías
+
+    return { filas: filasListas, comentarioCols, columnasPreguntas };
+  }
+
+  if(btnRetroAnalizar){
+    btnRetroAnalizar.addEventListener("click", async ()=>{
+      retroAdminMsg.textContent = "";
+      retroAdminMsg.className = "form-msg";
       const opt = selModuloRetroAdmin.selectedOptions[0];
       if(!opt || !opt.value){
-        if(msg){ msg.textContent = "Selecciona el módulo antes de guardar."; msg.className="form-msg show err"; }
+        retroAdminMsg.textContent = "Selecciona el módulo antes de analizar el archivo.";
+        retroAdminMsg.className = "form-msg show err";
         return;
       }
-      const respuestas = {};
-      RETRO_PREGUNTAS.forEach(p=>{
-        const checked = formRetroAdmin.querySelector(`input[name="q${p.id}"]:checked`);
-        if(checked) respuestas[p.id] = parseInt(checked.value,10);
-      });
-      if(Object.keys(respuestas).length < RETRO_PREGUNTAS.length){
-        if(msg){ msg.textContent = "Faltan preguntas por capturar (deben ser las 16)."; msg.className="form-msg show err"; }
+      const archivo = retroAdminArchivo.files[0];
+      if(!archivo){
+        retroAdminMsg.textContent = "Elige el archivo Excel exportado de Microsoft Forms.";
+        retroAdminMsg.className = "form-msg show err";
         return;
       }
-      const btn = formRetroAdmin.querySelector("button[type=submit]");
-      btn.disabled = true;
-      fetch("/.netlify/functions/feedback-modulo-submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          moduloId: opt.value,
-          moduloTema: opt.dataset.tema,
-          fecha: opt.dataset.fecha,
-          facilitador: opt.dataset.facilitador,
-          nombre: retroAdminNombre.value.trim(),
-          respuestas,
-          valioso: retroAdminValioso.value.trim(),
-          cambiar: retroAdminCambiar.value.trim(),
-        }),
-      })
-        .then(async (resp)=>{
+      try {
+        btnRetroAnalizar.disabled = true;
+        const buffer = await archivo.arrayBuffer();
+        const wb = XLSX.read(buffer, { type: "array" });
+        const hoja = wb.Sheets[wb.SheetNames[0]];
+        const filasCrudas = XLSX.utils.sheet_to_json(hoja, { defval: "" });
+        const { filas, columnasPreguntas, comentarioCols } = mjhtParsearExcelRetro(filasCrudas);
+
+        if(!filas.length){
+          retroAdminMsg.textContent = "No se encontraron respuestas con las 16 preguntas de escala 1-5 en este archivo. Revisa que sea el Excel exportado tal cual desde Microsoft Forms.";
+          retroAdminMsg.className = "form-msg show err";
+          retroAdminPreview.style.display = "none";
+          return;
+        }
+
+        retroAdminFilasParseadas = { filas, opt };
+
+        const promedios = RETRO_PREGUNTAS.map(p=>{
+          const vals = filas.map(f=>f.respuestas[p.id]).filter(v=>v!==undefined);
+          const prom = vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
+          return { id: p.id, texto: p.texto, prom };
+        });
+
+        const faltantes = columnasPreguntas ? columnasPreguntas.filter(c=>!c).length : 0;
+
+        retroAdminPreviewResumen.innerHTML = `
+          <b>${filas.length}</b> respuesta${filas.length===1?"":"s"} encontrada${filas.length===1?"":"s"} para <b>${opt.textContent}</b>.
+          ${faltantes ? `<br><span style="color:#b45309;">Ojo: no se pudieron identificar ${faltantes} de las 16 preguntas de escala — revisa la tabla abajo antes de guardar.</span>` : ""}
+          ${comentarioCols && comentarioCols.length<2 ? `<br><span style="color:#b45309;">Ojo: no se encontraron 2 columnas de comentarios abiertos — revisa que el Excel tenga las preguntas de texto libre.</span>` : ""}
+        `;
+
+        retroAdminPreviewTabla.innerHTML = `
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>#</th><th>Pregunta</th><th>Promedio</th></tr></thead>
+              <tbody>
+                ${promedios.map(p=>`<tr><td>${p.id}</td><td>${p.texto}</td><td>${p.prom!==null?p.prom.toFixed(1):"—"}</td></tr>`).join("")}
+              </tbody>
+            </table>
+          </div>
+          <p style="font-size:.85rem;color:var(--gris-claro);margin-top:10px;">Comentarios encontrados: ${filas.filter(f=>f.valioso||f.cambiar).length} de ${filas.length} respuestas.</p>
+        `;
+
+        retroAdminPreview.style.display = "block";
+        retroAdminMsg.textContent = "";
+        retroAdminMsg.className = "form-msg";
+      } catch(err){
+        retroAdminMsg.textContent = "No se pudo leer el archivo (" + (err.message||err) + "). Confirma que sea un Excel válido (.xlsx).";
+        retroAdminMsg.className = "form-msg show err";
+      } finally {
+        btnRetroAnalizar.disabled = false;
+      }
+    });
+  }
+
+  if(btnRetroCancelar){
+    btnRetroCancelar.addEventListener("click", ()=>{
+      retroAdminFilasParseadas = null;
+      retroAdminPreview.style.display = "none";
+      retroAdminArchivo.value = "";
+    });
+  }
+
+  if(btnRetroGuardar){
+    btnRetroGuardar.addEventListener("click", async ()=>{
+      if(!retroAdminFilasParseadas){ return; }
+      const { filas, opt } = retroAdminFilasParseadas;
+      btnRetroGuardar.disabled = true;
+      retroAdminMsg.textContent = `Guardando 0 de ${filas.length}…`;
+      retroAdminMsg.className = "form-msg show";
+      let guardadas = 0, errores = 0;
+      for(const f of filas){
+        try {
+          const resp = await fetch("/.netlify/functions/feedback-modulo-submit", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              moduloId: opt.value,
+              moduloTema: opt.dataset.tema,
+              fecha: opt.dataset.fecha,
+              facilitador: opt.dataset.facilitador,
+              nombre: f.nombre,
+              respuestas: f.respuestas,
+              valioso: f.valioso,
+              cambiar: f.cambiar,
+            }),
+          });
           const data = await resp.json().catch(()=>({}));
           if(!resp.ok || !data.ok) throw new Error((data && data.error) || "Error al guardar");
-          if(msg){ msg.textContent = "¡Guardada! Ya se ve en el portal del Facilitador."; msg.className="form-msg show ok"; }
-          // El módulo se queda seleccionado a propósito, para capturar a la
-          // siguiente participante sin tener que volver a elegirlo — solo
-          // se limpian las respuestas y comentarios de esta captura.
-          formRetroAdmin.querySelectorAll('input[type="radio"]:checked').forEach(r=>r.checked=false);
-          retroAdminNombre.value = "";
-          retroAdminValioso.value = "";
-          retroAdminCambiar.value = "";
-          actualizarContadorRetroAdmin();
-        })
-        .catch((err)=>{
-          if(msg){ msg.textContent = "No se pudo guardar (" + (err.message||err) + ")."; msg.className="form-msg show err"; }
-        })
-        .finally(()=>{ btn.disabled = false; });
+          guardadas++;
+        } catch(e){ errores++; }
+        retroAdminMsg.textContent = `Guardando ${guardadas+errores} de ${filas.length}…`;
+      }
+      if(errores){
+        retroAdminMsg.textContent = `Se guardaron ${guardadas} de ${filas.length} respuestas (${errores} fallaron — intenta subir el archivo otra vez).`;
+        retroAdminMsg.className = "form-msg show err";
+      } else {
+        retroAdminMsg.textContent = `¡Listo! Se guardaron ${guardadas} respuestas. Ya se ven en el portal del Facilitador.`;
+        retroAdminMsg.className = "form-msg show ok";
+      }
+      retroAdminFilasParseadas = null;
+      retroAdminPreview.style.display = "none";
+      retroAdminArchivo.value = "";
+      btnRetroGuardar.disabled = false;
+      actualizarContadorRetroAdmin();
     });
   }
 </script>
