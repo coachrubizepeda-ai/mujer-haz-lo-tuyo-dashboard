@@ -391,7 +391,7 @@
         <p>${m.descripcion}</p>
         <h5>Lectura previa</h5><p>${m.lectura}</p>
         <h5>Tarea</h5><p>${m.tarea}</p>
-        ${m.presentacion ? `<a class="btn btn-outline btn-sm pres-pendiente" id="pres-link-${m.id}" href="${m.presentacion}" target="_blank" title="Verificando disponibilidad…">Descargar presentación ↓</a>` : ""}
+        <div class="pres-oficial-wrap" data-modulo="${claveModulo}"><a class="btn btn-outline btn-sm pres-pendiente" title="Tu facilitador(a) aún no ha subido la presentación.">Presentación pendiente</a></div>
         ${socialChipsHTML(m.redes)}
         <h5 style="margin-top:14px;">Contenido compartido por tu facilitador(a)</h5>
         <div class="materiales-modulo-asistente" data-modulo="${claveModulo}"><p class="file-hint">Cargando…</p></div>
@@ -400,36 +400,20 @@
   });
   initAccordion();
 
-  // El botón "Descargar presentación" solo se activa si el archivo
-  // realmente existe en el servidor — así evitamos que dé error 404
-  // cuando el módulo todavía no tiene una presentación oficial cargada
-  // (por ejemplo, cuando el facilitador comparte una liga de Canva en
-  // vez de subir el PDF pesado).
-  MODULOS.forEach(m=>{
-    if(!m.presentacion) return;
-    const link = document.getElementById(`pres-link-${m.id}`);
-    if(!link) return;
-    fetch(m.presentacion, { method: "HEAD" })
-      .then(r=>{
-        if(r.ok){
-          link.classList.remove("pres-pendiente");
-          link.removeAttribute("title");
-        } else {
-          link.title = "Todavía no está disponible — pronto la sube tu facilitador(a).";
-        }
-      })
-      .catch(()=>{
-        link.title = "Todavía no está disponible — pronto la sube tu facilitador(a).";
-      });
-  });
-
-  // Materiales reales (Netlify Functions + Blobs) por módulo — visibles para
-  // todas, en cualquier navegador, no solo en el de quien los compartió.
+  // El botón "Presentación oficial" se activa cuando el facilitador marca
+  // un material de ese módulo con es_presentacion=true desde su portal
+  // ("Mi módulo") — ya no depende de un archivo fijo en data.js (ver
+  // diseño con Rubí, sep-2026).
   getMaterialesCompartidos()
     .then(todos=>{
       accWrap.querySelectorAll(".materiales-modulo-asistente").forEach(wrap=>{
         const items = todos.filter(x=>x.modulo === wrap.dataset.modulo);
         wrap.innerHTML = mjhtMaterialesAsistenteHTML(items);
+      });
+      accWrap.querySelectorAll(".pres-oficial-wrap").forEach(wrap=>{
+        const items = todos.filter(x=>x.modulo === wrap.dataset.modulo);
+        const oficial = items.find(x=>x.es_presentacion);
+        if(oficial) wrap.innerHTML = mjhtBotonPresentacionOficialHTML(oficial);
       });
     })
     .catch(err=>{

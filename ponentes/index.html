@@ -233,9 +233,10 @@
         </div>
         <label>Sube tu(s) presentación(es) o archivo(s) (PDF, PPT, ZIP, etc.)</label>
         <input type="file" name="archivo" accept=".pdf,.ppt,.pptx,.key,.zip">
+        <label class="check-row" style="margin-top:8px;"><input type="checkbox" name="es_presentacion" id="chk-presentacion-materiales"><span>📌 Este archivo es <b>la presentación oficial</b> de este módulo</span></label>
         <div id="pdfs-extra"></div>
         <button type="button" class="btn btn-outline btn-sm" style="margin:6px 0 4px;" onclick="mjhtAgregarPDF()">+ Agregar otro archivo</button>
-        <p class="file-hint">Los envíos con archivo llegan al panel de formularios de Netlify; si tu archivo es muy pesado, mejor comparte la liga de Drive/Canva abajo.</p>
+        <p class="file-hint">Si tu archivo es muy pesado, mejor comparte la liga de Drive/Canva abajo.</p>
         <label>Ligas que quieras compartir (todas opcionales)</label>
 
         <div class="link-group">
@@ -522,6 +523,7 @@
             <p class="file-hint" style="margin-top:0;"><b>Subir directo a este módulo</b> — lo que subas aquí es exactamente lo que la asistente ve y puede bajar en su portal, en "Contenido".</p>
             <input type="file" class="subida-rapida-archivo">
             <input type="url" class="subida-rapida-liga" placeholder="O pega una liga (podcast, Instagram, sitio, etc.)" style="margin-top:8px;">
+            <label class="check-row" style="margin-top:8px;"><input type="checkbox" class="subida-rapida-presentacion"><span>📌 Marcar como <b>la presentación oficial</b> de este módulo (lo que suban las asistentes verán como "Presentación oficial")</span></label>
             <button type="button" class="btn btn-outline btn-sm subida-rapida-btn" style="margin-top:8px;">Subir a este módulo</button>
             <p class="subida-rapida-status file-hint" style="margin-top:6px;"></p>
           </div>
@@ -543,23 +545,26 @@
       const btn = caja.querySelector(".subida-rapida-btn");
       const inputArchivo = caja.querySelector(".subida-rapida-archivo");
       const inputLiga = caja.querySelector(".subida-rapida-liga");
+      const chkPresentacion = caja.querySelector(".subida-rapida-presentacion");
       const status = caja.querySelector(".subida-rapida-status");
       btn.addEventListener("click", async ()=>{
         const ponente = selPonente.value;
         const archivo = inputArchivo.files && inputArchivo.files[0];
         const liga = inputLiga.value.trim();
+        const esPresentacion = chkPresentacion && chkPresentacion.checked;
         if(!ponente){ status.textContent = "Falta seleccionar tu nombre arriba."; return; }
         if(!archivo && !liga){ status.textContent = "Elige un archivo o pega una liga."; return; }
         btn.disabled = true;
         status.textContent = "Subiendo…";
         try {
           const tareas = [];
-          if(archivo) tareas.push(mjhtCompartirMaterialArchivo(modulo, ponente, archivo));
-          if(liga) tareas.push(mjhtCompartirMaterialLiga(modulo, ponente, liga));
+          if(archivo) tareas.push(mjhtCompartirMaterialArchivo(modulo, ponente, archivo, esPresentacion));
+          if(liga) tareas.push(mjhtCompartirMaterialLiga(modulo, ponente, liga, esPresentacion));
           await Promise.all(tareas);
           status.textContent = "¡Listo! Ya está disponible para la asistente.";
           inputArchivo.value = "";
           inputLiga.value = "";
+          if(chkPresentacion) chkPresentacion.checked = false;
           const wrap = caja.parentElement.querySelector(".mis-materiales-wrap");
           if(wrap) wrap.innerHTML = await renderMisMaterialesModuloHTML(modulo);
         } catch(err){
@@ -580,6 +585,11 @@
   };
   window.mjhtCambiarModuloMaterial = function(id, nuevoModulo){
     actualizarModuloMaterialCompartido(id, nuevoModulo)
+      .then(()=> selPonente.dispatchEvent(new Event("change")))
+      .catch(err=> alert("No se pudo actualizar: " + (err.message||err)));
+  };
+  window.mjhtMarcarPresentacion = function(id, modulo, valor){
+    marcarPresentacionMaterial(id, modulo, valor)
       .then(()=> selPonente.dispatchEvent(new Event("change")))
       .catch(err=> alert("No se pudo actualizar: " + (err.message||err)));
   };
@@ -1096,8 +1106,10 @@
 
     const tareas = [];
     const fileInput = formMateriales.querySelector('input[name="archivo"]');
+    const chkPresentacionMateriales = document.getElementById("chk-presentacion-materiales");
+    const esPresentacionMateriales = chkPresentacionMateriales && chkPresentacionMateriales.checked;
     if(fileInput && fileInput.files && fileInput.files[0]){
-      tareas.push(mjhtCompartirMaterialArchivo(modulo, ponente, fileInput.files[0]));
+      tareas.push(mjhtCompartirMaterialArchivo(modulo, ponente, fileInput.files[0], esPresentacionMateriales));
     }
     formMateriales.querySelectorAll('input[name="archivo_extra[]"]').forEach(extraInput=>{
       if(extraInput.files && extraInput.files[0]){

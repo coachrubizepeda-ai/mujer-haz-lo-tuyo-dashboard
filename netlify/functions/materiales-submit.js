@@ -41,14 +41,17 @@ exports.handler = async (event) => {
     return { statusCode: 400, headers, body: JSON.stringify({ error: "JSON inválido" }) };
   }
 
-  const { modulo, ponente, tipo } = payload;
+  const { modulo, ponente, tipo, es_presentacion } = payload;
   if (!modulo || !tipo) {
     return { statusCode: 400, headers, body: JSON.stringify({ error: "Falta modulo o tipo" }) };
   }
 
   const id = nuevoId();
   const fecha = new Date().toISOString();
-  const registro = { id, modulo, ponente: ponente || "", tipo, fecha };
+  // es_presentacion marca este material como LA presentación oficial del
+  // módulo (ver diseño con Rubí, sep-2026): solo uno por módulo puede
+  // tener la marca — se desmarca cualquier otro más abajo, sin borrarlo.
+  const registro = { id, modulo, ponente: ponente || "", tipo, fecha, es_presentacion: !!es_presentacion };
 
   try {
     const storeIndice = abrirStore("materiales-compartidos");
@@ -85,6 +88,9 @@ exports.handler = async (event) => {
     }
 
     const actuales = (await storeIndice.get("todas", { type: "json" })) || [];
+    if (registro.es_presentacion) {
+      actuales.forEach((x) => { if (x.modulo === modulo) x.es_presentacion = false; });
+    }
     actuales.push(registro);
     await storeIndice.setJSON("todas", actuales);
   } catch (e) {

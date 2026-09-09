@@ -531,6 +531,9 @@ footer.site a:hover{color:var(--azul-oscuro);}
    archivo sí existe en el servidor (evita el error 404 cuando el
    módulo todavía no tiene una presentación oficial cargada). */
 .pres-pendiente{opacity:.4;pointer-events:none;cursor:default;}
+.pres-oficial{background:var(--azul-claro);color:#fff;border-color:var(--azul-claro);font-weight:600;}
+.pres-oficial:hover{background:var(--azul-oscuro);border-color:var(--azul-oscuro);}
+.badge-presentacion{display:inline-block;margin-left:6px;padding:2px 8px;border-radius:999px;background:var(--azul-claro);color:#fff;font-size:.72rem;font-weight:600;white-space:nowrap;}
 
 .checklist{list-style:none;margin:0;padding:0;}
 .checklist li{

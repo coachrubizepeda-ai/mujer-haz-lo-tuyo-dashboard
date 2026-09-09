@@ -431,8 +431,26 @@
     return `<td>${num}</td><td>${m.fechaLabel}</td>
         <td><b>${m.tema}</b><br><small style="color:var(--gris-claro)">${m.subtitulo}</small></td>
         <td>${GRUPO_LABEL[m.grupo]}</td><td>${m.ponente}</td>
-        <td>${m.presentacion ? `<a href="${m.presentacion}" target="_blank">ver ↗</a>` : "—"}</td>`;
+        <td class="cal-presentacion" data-modulo="${m.id} - ${m.tema}">Cargando…</td>`;
   }, 6);
+  // La columna "Presentación" ya no depende de un archivo fijo en data.js:
+  // se llena con lo que el facilitador haya marcado como presentación
+  // oficial de su módulo desde su portal (ver Mi módulo, sep-2026).
+  getMaterialesCompartidos()
+    .then(todos=>{
+      calBody.querySelectorAll(".cal-presentacion").forEach(celda=>{
+        const items = todos.filter(x=>x.modulo === celda.dataset.modulo);
+        const oficial = items.find(x=>x.es_presentacion);
+        if(!oficial){ celda.textContent = "Pendiente"; return; }
+        const url = oficial.tipo === "archivo"
+          ? `/.netlify/functions/materiales-download?key=${encodeURIComponent(oficial.fileKey)}`
+          : oficial.nombre_o_url;
+        celda.innerHTML = `<a href="${url}" target="_blank">✓ ver ↗</a>`;
+      });
+    })
+    .catch(()=>{
+      calBody.querySelectorAll(".cal-presentacion").forEach(celda=>{ celda.textContent = "—"; });
+    });
 
   // Reporte de asistencia (local — ver assets/js/app.js). Se pasa
   // {editable:true} SOLO aquí (admin) para que la matriz muestre los

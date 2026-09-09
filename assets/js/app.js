@@ -959,20 +959,32 @@ function renderFeedbackSesionesHTML(){
    en cuanto un facilitador comparte un archivo o una liga, cualquier
    persona — asistentes, otros facilitadores, administradora — lo ve de
    inmediato, en cualquier dispositivo. */
-async function mjhtCompartirMaterialLiga(modulo, ponente, nombre_o_url){
+async function mjhtCompartirMaterialLiga(modulo, ponente, nombre_o_url, esPresentacion){
   const resp = await fetch("/.netlify/functions/materiales-submit", {
     method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ modulo, ponente, tipo: "liga", nombre_o_url }),
+    body: JSON.stringify({ modulo, ponente, tipo: "liga", nombre_o_url, es_presentacion: !!esPresentacion }),
   });
   const data = await resp.json().catch(()=>({}));
   if(!resp.ok || !data.ok) throw new Error((data && data.error) || ("Error " + resp.status));
   return data;
 }
-async function mjhtCompartirMaterialArchivo(modulo, ponente, file){
+async function mjhtCompartirMaterialArchivo(modulo, ponente, file, esPresentacion){
   const contentBase64 = await archivoABase64(file);
   const resp = await fetch("/.netlify/functions/materiales-submit", {
     method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ modulo, ponente, tipo: "archivo", filename: file.name, contentBase64 }),
+    body: JSON.stringify({ modulo, ponente, tipo: "archivo", filename: file.name, contentBase64, es_presentacion: !!esPresentacion }),
+  });
+  const data = await resp.json().catch(()=>({}));
+  if(!resp.ok || !data.ok) throw new Error((data && data.error) || ("Error " + resp.status));
+  return data;
+}
+// Marca (o desmarca) un material ya compartido como LA presentación
+// oficial del módulo — ver diseño con Rubí (sep-2026). Solo puede haber
+// uno marcado por módulo; el backend desmarca cualquier otro sin borrarlo.
+async function marcarPresentacionMaterial(id, modulo, valor){
+  const resp = await fetch("/.netlify/functions/materiales-marcar-presentacion", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id, modulo, valor: !!valor }),
   });
   const data = await resp.json().catch(()=>({}));
   if(!resp.ok || !data.ok) throw new Error((data && data.error) || ("Error " + resp.status));
@@ -1039,10 +1051,11 @@ async function renderMisMaterialesModuloHTML(claveModulo){
   const filas = materiales.map(x=>`
     <tr>
       <td>${x.tipo === "archivo" ? "Archivo" : "Liga"}</td>
-      <td>${mjhtLigaMaterialHTML(x)}</td>
+      <td>${mjhtLigaMaterialHTML(x)}${x.es_presentacion ? ' <span class="badge-presentacion">📌 Presentación oficial</span>' : ""}</td>
       <td>${x.fecha ? new Date(x.fecha).toLocaleDateString("es-MX") : "—"}</td>
       <td style="white-space:nowrap;">
         <select style="display:inline-block;width:auto;margin:0 6px 0 0;font-size:.8rem;" onchange="mjhtCambiarModuloMaterial('${x.id}', this.value)">${opcionesModulo}</select>
+        <button type="button" class="btn-edit-nombre" title="${x.es_presentacion ? "Quitar la marca de presentación oficial" : "Marcar como la presentación oficial de este módulo"}" onclick="mjhtMarcarPresentacion('${x.id}', '${claveModulo}', ${x.es_presentacion ? "false" : "true"})">${x.es_presentacion ? "📌 Quitar" : "📌 Marcar"}</button>
         <button type="button" class="btn-edit-nombre" title="Eliminar" onclick="mjhtEliminarMaterial('${x.id}')">🗑️</button>
       </td>
     </tr>`).join("");
@@ -1073,10 +1086,14 @@ async function renderMaterialesFacilitadoresHTML(withRecomendaciones){
     const label = typeof m.id==="number" ? "Módulo "+m.id : "Cierre";
     const claveModulo = `${m.id} - ${m.tema}`;
     const propios = materiales.filter(x=>x.modulo === claveModulo);
-    const presentacionOficial = m.presentacion ? `<p style="margin-bottom:6px;"><a href="${m.presentacion}" target="_blank">Ver presentación oficial ↗</a></p>` : "";
-    const listaPropios = propios.length
-      ? `<ul class="checklist">${propios.map(x=>`<li><span class="txt"><b>${x.tipo==="archivo"?"Archivo":"Liga"}</b><span>${mjhtLigaMaterialHTML(x)} · ${x.fecha ? new Date(x.fecha).toLocaleDateString("es-MX") : "—"}</span></span></li>`).join("")}</ul>`
-      : `<p class="file-hint">Sin materiales registrados todavía.</p>`;
+    const oficial = propios.find(x=>x.es_presentacion);
+    const resto = propios.filter(x=>!x.es_presentacion);
+    const presentacionOficial = oficial
+      ? `<p style="margin-bottom:6px;">📌 <b>Presentación oficial:</b> ${mjhtLigaMaterialHTML(oficial)}</p>`
+      : `<p class="file-hint" style="margin-bottom:6px;">Todavía no hay presentación oficial marcada para este módulo.</p>`;
+    const listaPropios = resto.length
+      ? `<ul class="checklist">${resto.map(x=>`<li><span class="txt"><b>${x.tipo==="archivo"?"Archivo":"Liga"}</b><span>${mjhtLigaMaterialHTML(x)} · ${x.fecha ? new Date(x.fecha).toLocaleDateString("es-MX") : "—"}</span></span></li>`).join("")}</ul>`
+      : `<p class="file-hint">Sin materiales adicionales registrados todavía.</p>`;
     const recoBloque = withRecomendaciones ? `
       <label style="margin-top:12px;">Recomendaciones para este módulo <small style="font-weight:400;color:var(--gris-claro);">(solo lectura/anotación tuya — no edita ni borra lo que subió el facilitador)</small></label>
       <textarea id="reco-modulo-${m.id}" placeholder="Escribe tu recomendación…">${recos[m.id] || ""}</textarea>
@@ -1101,13 +1118,16 @@ window.mjhtGuardarRecomendacionMaterial = function(btn){
 };
 
 // Vista para ASISTENTES: todo lo que el/la facilitador(a) compartió para
-// este módulo (archivos + ligas de sitio web/podcast/Instagram/X/LinkedIn),
-// además de la presentación oficial ya cargada en data.js.
+// este módulo (archivos + ligas de sitio web/podcast/Instagram/X/LinkedIn).
+// La presentación oficial (es_presentacion=true) NO se repite aquí — ya
+// tiene su propio botón destacado arriba (ver mjhtBotonPresentacionOficialHTML),
+// para que quede claro cuál es LA presentación y cuáles son ligas extra.
 function mjhtMaterialesAsistenteHTML(items){
-  if(!items || !items.length){
+  const extra = (items || []).filter(x=>!x.es_presentacion);
+  if(!extra.length){
     return `<p class="file-hint">Todavía no hay materiales adicionales compartidos para este módulo.</p>`;
   }
-  const filas = items.map(x=>`<li><span class="txt"><b>${x.tipo==="archivo"?"Archivo":"Liga"}</b><span>${mjhtLigaMaterialHTML(x)}${x.ponente?` · ${x.ponente}`:""}</span></span></li>`).join("");
+  const filas = extra.map(x=>`<li><span class="txt"><b>${x.tipo==="archivo"?"Archivo":"Liga"}</b><span>${mjhtLigaMaterialHTML(x)}${x.ponente?` · ${x.ponente}`:""}</span></span></li>`).join("");
   return `<ul class="checklist">${filas}</ul>`;
 }
 
