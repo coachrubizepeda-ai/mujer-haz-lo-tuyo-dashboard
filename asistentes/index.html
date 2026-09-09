@@ -276,7 +276,15 @@
     <div class="section-head">
       <span class="eyebrow">Convivencia</span>
       <h2>Lineamientos</h2>
-      <p>Código de Honor para participantes del diplomado.</p>
+      <p>Código de Honor y lineamientos operativos del programa. Los mismos que ven los facilitadores.</p>
+    </div>
+    <div class="lineamiento-block honor-facilitadores">
+      <div class="lb-head">Código de Honor para facilitadores</div>
+      <div class="lb-body" id="codigo-honor-acc"></div>
+    </div>
+    <div class="lineamiento-block operativos">
+      <div class="lb-head">Lineamientos operativos para facilitadores</div>
+      <div class="lb-body" id="lineamientos-op-acc"></div>
     </div>
     <div class="lineamiento-block honor-participantes">
       <div class="lb-head">Código de Honor para participantes<small>Borrador — pendiente de confirmar con Rubí</small></div>
@@ -322,11 +330,14 @@
 <script>
   renderCourseProgress("course-progress");
 
-  // Lineamientos: Código de Honor para participantes (siempre expandido).
-  // Se trae del mismo backend que edita Facilitador (ver assets/js/app.js),
-  // así siempre se ve la versión completa y más reciente, no un placeholder
-  // aparte de este portal.
+  // Lineamientos: los 3 bloques (Código de Honor para facilitadores,
+  // Lineamientos operativos, Código de Honor para participantes), de solo
+  // lectura — se traen del mismo backend real que edita Facilitador y
+  // Administradora (ver assets/js/app.js), así siempre se ve la versión
+  // completa y más reciente, igual que en esos portales.
   (async ()=>{
+    document.getElementById("codigo-honor-acc").innerHTML = await renderLineamientosHTML("facilitadores");
+    document.getElementById("lineamientos-op-acc").innerHTML = await renderLineamientosHTML("operativos");
     document.getElementById("codigo-honor-participantes-acc").innerHTML = await renderLineamientosParticipantesHTML();
   })();
 

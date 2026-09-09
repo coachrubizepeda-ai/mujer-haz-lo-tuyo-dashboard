@@ -267,8 +267,16 @@
 
     <div class="section-head" style="margin-top:34px;">
       <span class="eyebrow">Lineamientos</span>
-      <h2>Código de Honor para participantes</h2>
-      <p>Visible también en el portal de asistentes y en el de facilitadores. Rubí aún debe confirmar el texto definitivo (contenido borrador).</p>
+      <h2>Lineamientos</h2>
+      <p>Los mismos 3 bloques que ve el Facilitador en su pestaña de Lineamientos — puedes editarlos igual desde aquí y se ven al instante en los 3 portales.</p>
+    </div>
+    <div class="lineamiento-block honor-facilitadores">
+      <div class="lb-head">Código de Honor para facilitadores</div>
+      <div class="lb-body" id="codigo-honor-acc"></div>
+    </div>
+    <div class="lineamiento-block operativos">
+      <div class="lb-head">Lineamientos operativos para facilitadores</div>
+      <div class="lb-body" id="lineamientos-op-acc"></div>
     </div>
     <div class="lineamiento-block honor-participantes">
       <div class="lb-head">Código de Honor para participantes<small>Borrador — pendiente de confirmar con Rubí</small></div>
@@ -844,10 +852,83 @@
     asisWrap.innerHTML = `<div class="callout">Aún no has cargado el directorio de asistentes. Agrégalas en <code>assets/js/roster.js</code> (o pídeme que las suba cuando me compartas la información).</div>`;
   }
 
-  // Código de Honor para participantes — mismo backend que edita
-  // Facilitador (ver assets/js/app.js), para ver siempre lo más reciente.
+  // ---------- Lineamientos: Código de Honor + operativos + participantes ----------
+  // Mismo backend real que edita Facilitador (ver assets/js/app.js →
+  // getLineamientos/guardarLineamientos) — editable también desde aquí, y
+  // lo que se cambie se ve al instante en los 3 portales.
+  const LINEAMIENTOS_BLOCKS_ADMIN = [
+    { tipo: "facilitadores", containerId: "codigo-honor-acc" },
+    { tipo: "operativos", containerId: "lineamientos-op-acc" },
+    { tipo: "participantes", containerId: "codigo-honor-participantes-acc" },
+  ];
+  const lineamientosItemsPorTipoAdmin = {};
+  function lineamientoItemHTMLAdmin(titulo, texto, idx, tipo){
+    return `
+      <div class="lineamiento-item">
+        <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;">
+          <div style="flex:1;min-width:0;"><h4>${titulo}</h4><p>${texto}</p></div>
+          <div style="display:flex;gap:2px;flex-shrink:0;">
+            <button type="button" class="btn-edit-nombre" title="Editar punto" onclick="mjhtEditarLineamientoAdmin('${tipo}', ${idx})">✏️</button>
+            <button type="button" class="btn-edit-nombre" title="Eliminar punto" onclick="mjhtEliminarLineamientoAdmin('${tipo}', ${idx})">🗑️</button>
+          </div>
+        </div>
+      </div>`;
+  }
+  function renderLineamientoBlockAdmin(cfg){
+    const wrap = document.getElementById(cfg.containerId);
+    if(!wrap) return;
+    const items = lineamientosItemsPorTipoAdmin[cfg.tipo] || [];
+    const itemsHTML = items.map(([titulo, texto], idx)=>lineamientoItemHTMLAdmin(titulo, texto, idx, cfg.tipo)).join("");
+    wrap.innerHTML = itemsHTML + `<div class="lineamiento-item" style="border-bottom:none;">
+      <button type="button" class="btn btn-outline btn-sm" onclick="mjhtAgregarLineamientoAdmin('${cfg.tipo}')">+ Agregar punto</button>
+    </div>`;
+  }
+  function lineamientoCfgAdmin(tipo){
+    return LINEAMIENTOS_BLOCKS_ADMIN.find(c=>c.tipo===tipo);
+  }
+  window.mjhtAgregarLineamientoAdmin = async function(tipo){
+    const cfg = lineamientoCfgAdmin(tipo);
+    if(!cfg) return;
+    const titulo = prompt("Título del nuevo punto:");
+    if(titulo === null || !titulo.trim()) return;
+    const texto = prompt("Descripción:", "") || "";
+    const items = lineamientosItemsPorTipoAdmin[tipo] || [];
+    items.push([titulo.trim(), texto.trim()]);
+    lineamientosItemsPorTipoAdmin[tipo] = items;
+    renderLineamientoBlockAdmin(cfg);
+    try { await guardarLineamientos(tipo, items); }
+    catch(e){ alert("No se pudo guardar: " + (e.message||e)); }
+  };
+  window.mjhtEditarLineamientoAdmin = async function(tipo, idx){
+    const cfg = lineamientoCfgAdmin(tipo);
+    if(!cfg) return;
+    const items = lineamientosItemsPorTipoAdmin[tipo] || [];
+    const item = items[idx];
+    if(!item) return;
+    const titulo = prompt("Título:", item[0]);
+    if(titulo === null) return;
+    const texto = prompt("Descripción:", item[1]);
+    if(texto === null) return;
+    items[idx] = [titulo.trim(), texto.trim()];
+    renderLineamientoBlockAdmin(cfg);
+    try { await guardarLineamientos(tipo, items); }
+    catch(e){ alert("No se pudo guardar: " + (e.message||e)); }
+  };
+  window.mjhtEliminarLineamientoAdmin = async function(tipo, idx){
+    const cfg = lineamientoCfgAdmin(tipo);
+    if(!cfg) return;
+    if(!confirm("¿Eliminar este punto? Se quita para todas (también se ve así en Facilitador y Asistentes).")) return;
+    const items = lineamientosItemsPorTipoAdmin[tipo] || [];
+    items.splice(idx, 1);
+    renderLineamientoBlockAdmin(cfg);
+    try { await guardarLineamientos(tipo, items); }
+    catch(e){ alert("No se pudo guardar: " + (e.message||e)); }
+  };
   (async ()=>{
-    document.getElementById("codigo-honor-participantes-acc").innerHTML = await renderLineamientosParticipantesHTML();
+    for(const cfg of LINEAMIENTOS_BLOCKS_ADMIN){
+      lineamientosItemsPorTipoAdmin[cfg.tipo] = await getLineamientos(cfg.tipo);
+      renderLineamientoBlockAdmin(cfg);
+    }
   })();
 
   // Liga a Netlify Forms (un solo botón a la vista general de Forms del

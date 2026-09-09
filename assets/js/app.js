@@ -719,19 +719,36 @@ async function getSemblanzaAsistente(participanteId){
 // localStorage del navegador donde se editaba, por eso Asistentes nunca
 // lo veía completo). Si nunca se ha guardado nada, cae al placeholder de
 // assets/js/data.js (CODIGO_HONOR_PARTICIPANTES).
-async function getLineamientosParticipantes(){
+// Lineamientos genéricos: mismo mecanismo (Netlify Blobs, store
+// "lineamientos") para los 3 bloques que usan los 3 portales —
+// "participantes", "facilitadores" y "operativos". Antes solo
+// "participantes" tenía backend real; los otros dos vivían solo en
+// localStorage del navegador donde se editaban, por eso Administradora y
+// Participante nunca veían lo que Facilitador editaba. Con esto los 3
+// bloques se editan en cualquier portal con acceso y se ven igual, para
+// todas, en los 3 portales.
+const LINEAMIENTOS_TIPOS = {
+  participantes: { endpointGet: "lineamientos-participantes-get", endpointSet: "lineamientos-participantes-set", fallback: () => (typeof CODIGO_HONOR_PARTICIPANTES !== "undefined") ? CODIGO_HONOR_PARTICIPANTES : [] },
+  facilitadores: { endpointGet: "lineamientos-facilitadores-get", endpointSet: "lineamientos-facilitadores-set", fallback: () => (typeof CODIGO_HONOR !== "undefined") ? CODIGO_HONOR : [] },
+  operativos:    { endpointGet: "lineamientos-operativos-get",    endpointSet: "lineamientos-operativos-set",    fallback: () => (typeof LINEAMIENTOS_OP !== "undefined") ? LINEAMIENTOS_OP : [] },
+};
+async function getLineamientos(tipo){
+  const cfg = LINEAMIENTOS_TIPOS[tipo];
+  if(!cfg) return [];
   try {
-    const resp = await fetch("/.netlify/functions/lineamientos-participantes-get");
+    const resp = await fetch("/.netlify/functions/" + cfg.endpointGet);
     const data = await resp.json();
     if(!resp.ok || !data.ok) throw new Error(data.error || "Error al leer lineamientos");
     if(data.items && data.items.length) return data.items;
   } catch(e){
-    console.error("getLineamientosParticipantes:", e);
+    console.error("getLineamientos(" + tipo + "):", e);
   }
-  return (typeof CODIGO_HONOR_PARTICIPANTES !== "undefined") ? CODIGO_HONOR_PARTICIPANTES : [];
+  return cfg.fallback();
 }
-async function guardarLineamientosParticipantes(items){
-  const resp = await fetch("/.netlify/functions/lineamientos-participantes-set", {
+async function guardarLineamientos(tipo, items){
+  const cfg = LINEAMIENTOS_TIPOS[tipo];
+  if(!cfg) throw new Error("Tipo de lineamiento desconocido: " + tipo);
+  const resp = await fetch("/.netlify/functions/" + cfg.endpointSet, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ items }),
@@ -743,11 +760,16 @@ async function guardarLineamientosParticipantes(items){
 function lineamientosParticipantesItemHTML(titulo, texto){
   return `<div class="lineamiento-item"><h4>${titulo}</h4><p>${texto}</p></div>`;
 }
-async function renderLineamientosParticipantesHTML(){
-  const items = await getLineamientosParticipantes();
+async function renderLineamientosHTML(tipo){
+  const items = await getLineamientos(tipo);
   if(!items.length) return `<p class="file-hint">Todavía no hay lineamientos cargados.</p>`;
   return items.map(([titulo, texto])=>lineamientosParticipantesItemHTML(titulo, texto)).join("");
 }
+// Wrappers con el nombre original, para no romper lo que ya llama a estas
+// funciones directamente (equivalen a getLineamientos("participantes"), etc).
+async function getLineamientosParticipantes(){ return getLineamientos("participantes"); }
+async function guardarLineamientosParticipantes(items){ return guardarLineamientos("participantes", items); }
+async function renderLineamientosParticipantesHTML(){ return renderLineamientosHTML("participantes"); }
 async function guardarSemblanzaAsistente(id, nombre, texto){
   const resp = await fetch("/.netlify/functions/semblanza-submit", {
     method: "POST",

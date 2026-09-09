@@ -264,3 +264,33 @@ const CODIGO_HONOR_PARTICIPANTES = [
   ["Apertura y respeto", "Participar con apertura, respeto y sin juicio hacia una misma y hacia el grupo. [PENDIENTE: confirmar con Rubí]"],
   ["Confianza en el proceso", "Confiar en la metodología y en el acompañamiento de los facilitadores. [PENDIENTE: confirmar con Rubí]"]
 ];
+
+// Código de Honor para facilitadores y Lineamientos operativos — placeholders
+// editables desde el backend (ver netlify/functions/lineamientos-facilitadores-*
+// y lineamientos-operativos-*), compartidos por los 3 portales: Facilitador y
+// Administradora los editan, Participante y Administradora los ven completos.
+const CODIGO_HONOR = [
+  ["Coherencia", "Facilitar la congruencia entre lo que se dice, se hace y se es."],
+  ["Respeto y confidencialidad", "Cuidar el espacio como un entorno seguro, respetando la historia, el proceso y la confidencialidad de cada participante."],
+  ["Acompañamiento consciente", "Guiar procesos sin imponer visiones personales ni asumir protagonismo."],
+  ["Lenguaje empático", "Utilizar un lenguaje verbal y no verbal claro, respetuoso y consciente en todo momento."],
+  ["Enfoque práctico", "Asegurar que cada intervención genere valor aplicable a la vida personal y profesional de las participantes."],
+  ["Respeto a la estructura", "Apegarse a los objetivos, tiempos y lineamientos del programa, manteniendo coherencia con sus ejes."],
+  ["Colaboración entre facilitadores", "Compartir información relevante que contribuya a la continuidad y calidad del proceso formativo."],
+  ["Puntualidad y presencia", "Llegar con al menos 30 minutos de anticipación, con presencia atenta y disponibilidad para el grupo."],
+  ["Imagen y código de vestimenta", "Mantener una imagen casual ejecutiva, profesional, sobria y cuidada, acorde al rol de facilitación, evitando extremos de informalidad o rigidez."],
+  ["Cierre con intención", "Cerrar cada sesión con claridad, reflexión o acción concreta que honre el proceso vivido."],
+  ["Confidencialidad de los resultados del Test Trimetrix", "Como facilitador(a) tienes acceso para ver o descargar los resultados del Test Trimetrix de las participantes de tu módulo. Este acceso es de uso exclusivo para fines del Diplomado \"Mujer, Haz lo Tuyo\": queda prohibido compartir, distribuir o utilizar esta información para cualquier fin ajeno al programa. Es una cuestión de calidad y de respeto a la confidencialidad de cada participante."]
+];
+const LINEAMIENTOS_OP = [
+  ["Llegada y preparación", "Llegar 30 minutos antes del inicio de la sesión para preparación, revisión del espacio y coordinación con el equipo."],
+  ["Respeto a horarios", "Iniciar y concluir en los horarios establecidos; cualquier ajuste debe acordarse previamente con la coordinación del programa."],
+  ["Conocimiento del módulo", "Conocer los objetivos, alcance y enfoque del módulo asignado, con coherencia con los ejes y la estructura del programa."],
+  ["Preparación del contenido", "Contenido, dinámicas y ejercicios preparados con anticipación y alineados al formato, duración y perfil de las participantes."],
+  ["Solicitud de materiales", "Solicitar todo material o requerimiento especial con al menos dos semanas de anticipación al módulo correspondiente."],
+  ["Entrega de presentaciones y materiales", "Subir la presentación del módulo al Drive con al menos dos semanas de anticipación; cualquier recurso adicional sigue el mismo plazo."],
+  ["Uso de recursos y espacios", "El facilitador es responsable del uso adecuado del espacio, materiales y equipo asignado durante su sesión."],
+  ["Coordinación con el equipo", "Mantener comunicación con la coordinación del programa y otros facilitadores para asegurar continuidad y evitar duplicidad de contenidos."],
+  ["Cierre operativo de sesión", "Cada sesión debe contemplar un cierre estructurado que facilite la integración del contenido y una transición clara al siguiente módulo."],
+  ["Disponibilidad para retroalimentación", "Estar disponible para recibir retroalimentación breve de la coordinación cuando sea necesario."]
+];
