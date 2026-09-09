@@ -34,6 +34,7 @@
     <button class="tab-btn active" data-tab="t-resumen">Resumen</button>
     <button class="tab-btn" data-tab="t-test-trimetrix">Test Trimetrix</button>
     <button class="tab-btn" data-tab="t-formularios">Formularios recibidos</button>
+    <button class="tab-btn" data-tab="t-retroalimentacion-admin">Retroalimentación</button>
     <button class="tab-btn" data-tab="t-asistencia">Reporte de asistencia</button>
     <button class="tab-btn" data-tab="t-directorio">Directorio de facilitadores</button>
     <button class="tab-btn" data-tab="t-calendario">Calendario maestro</button>
@@ -229,6 +230,39 @@
         <input type="file" name="archivo" accept=".pdf" required>
         <button class="btn btn-primary" type="submit">Subir cuestionario</button>
       </form>
+    </div>
+  </section>
+
+  <!-- RETROALIMENTACIÓN (captura manual de las respuestas de Microsoft Forms) -->
+  <section class="tab-panel" id="t-retroalimentacion-admin">
+    <div class="section-head">
+      <span class="eyebrow">Cada semana</span>
+      <h2>Retroalimentación</h2>
+      <p>Las participantes contestan de forma anónima en Microsoft Forms. Aquí capturas cada respuesta completa (una por una, tal como venga en el reporte de Microsoft Forms) para que se refleje en el portal del Facilitador, con el resumen y el detalle por evaluadora.</p>
+    </div>
+    <div class="card">
+      <div class="field-row">
+        <div><label>Módulo *</label>
+          <select id="sel-modulo-retro-admin" required></select>
+        </div>
+        <div><label>Facilitador(a)</label><input type="text" id="retro-admin-facilitador" readonly></div>
+      </div>
+      <label>Nombre de quien contestó (opcional — el formulario es anónimo, déjalo en blanco si no lo sabes)</label>
+      <input type="text" id="retro-admin-nombre" placeholder="Déjalo en blanco si no lo sabes">
+      <form id="form-retro-admin">
+        <div class="form-msg"></div>
+        <p style="font-size:.85rem;color:var(--gris-claro);margin:10px 0 6px;">Captura las 16 respuestas (escala 1-5) tal como vienen en el reporte de Microsoft Forms:</p>
+        <div id="retro-admin-preguntas-wrap"></div>
+        <label>¿Qué fue lo más valioso? (si lo escribió)</label>
+        <textarea id="retro-admin-valioso"></textarea>
+        <label>¿Qué cambiaría? (si lo escribió)</label>
+        <textarea id="retro-admin-cambiar"></textarea>
+        <button class="btn btn-primary" type="submit">Guardar esta respuesta</button>
+        <p class="file-hint">Después de guardar, el módulo se queda seleccionado para que captures a la siguiente participante sin tener que volver a elegirlo.</p>
+      </form>
+    </div>
+    <div class="card">
+      <h4 style="margin-top:0;">Respuestas capturadas para este módulo: <span id="retro-admin-contador">0</span></h4>
     </div>
   </section>
 
@@ -1089,6 +1123,109 @@
     }
     selRetroFiltroAdmin.addEventListener("change", cargarRetroAdmin);
     cargarRetroAdmin();
+  }
+
+  // ---------- Retroalimentación: captura manual de encuestas de Microsoft Forms ----------
+  // Reusa el mismo backend (feedback-modulo-submit, store "retroalimentacion")
+  // que antes llenaba la Participante directo en el sitio — así el resumen y
+  // el detalle en el portal del Facilitador siguen funcionando igual, solo
+  // que ahora Rubí es quien captura cada respuesta desde el reporte externo.
+  const selModuloRetroAdmin = document.getElementById("sel-modulo-retro-admin");
+  const retroAdminFacilitador = document.getElementById("retro-admin-facilitador");
+  const retroAdminNombre = document.getElementById("retro-admin-nombre");
+  const retroAdminValioso = document.getElementById("retro-admin-valioso");
+  const retroAdminCambiar = document.getElementById("retro-admin-cambiar");
+  const retroAdminContador = document.getElementById("retro-admin-contador");
+  const formRetroAdmin = document.getElementById("form-retro-admin");
+
+  if(selModuloRetroAdmin){
+    selModuloRetroAdmin.innerHTML = '<option value="">Selecciona el módulo…</option>' + MODULOS.map(m=>
+      `<option value="${m.id}" data-tema="${m.tema}" data-fecha="${m.fechaLabel}" data-facilitador="${m.ponente}">${typeof m.id==="number"?"Módulo "+m.id:"Cierre"} · ${m.tema}</option>`
+    ).join("");
+  }
+
+  const preguntasWrapAdmin = document.getElementById("retro-admin-preguntas-wrap");
+  if(preguntasWrapAdmin){
+    preguntasWrapAdmin.innerHTML = RETRO_CATEGORIAS.map(cat=>`
+      <div class="retro-cat-titulo">${cat.nombre}</div>
+      ${cat.preguntas.map(p=>`
+        <div class="retro-pregunta">
+          <p>${p.id}. ${p.texto}</p>
+          <div class="rating compact">
+            ${[1,2,3,4,5].map(v=>`<input type="radio" name="q${p.id}" value="${v}" id="qa${p.id}-${v}" required><label for="qa${p.id}-${v}">${v}</label>`).join("")}
+          </div>
+        </div>`).join("")}
+    `).join("");
+  }
+
+  async function actualizarContadorRetroAdmin(){
+    if(!retroAdminContador || !selModuloRetroAdmin.value) return;
+    try {
+      const items = await mjhtCargarRetroalimentacion(selModuloRetroAdmin.value);
+      retroAdminContador.textContent = items.length;
+    } catch(e){ /* sin bloquear la captura si esto falla */ }
+  }
+
+  if(selModuloRetroAdmin){
+    selModuloRetroAdmin.addEventListener("change", ()=>{
+      const opt = selModuloRetroAdmin.selectedOptions[0];
+      if(retroAdminFacilitador) retroAdminFacilitador.value = opt && opt.dataset.facilitador ? opt.dataset.facilitador : "";
+      actualizarContadorRetroAdmin();
+    });
+  }
+
+  if(formRetroAdmin){
+    formRetroAdmin.addEventListener("submit", (e)=>{
+      e.preventDefault();
+      const msg = formRetroAdmin.querySelector(".form-msg");
+      const opt = selModuloRetroAdmin.selectedOptions[0];
+      if(!opt || !opt.value){
+        if(msg){ msg.textContent = "Selecciona el módulo antes de guardar."; msg.className="form-msg show err"; }
+        return;
+      }
+      const respuestas = {};
+      RETRO_PREGUNTAS.forEach(p=>{
+        const checked = formRetroAdmin.querySelector(`input[name="q${p.id}"]:checked`);
+        if(checked) respuestas[p.id] = parseInt(checked.value,10);
+      });
+      if(Object.keys(respuestas).length < RETRO_PREGUNTAS.length){
+        if(msg){ msg.textContent = "Faltan preguntas por capturar (deben ser las 16)."; msg.className="form-msg show err"; }
+        return;
+      }
+      const btn = formRetroAdmin.querySelector("button[type=submit]");
+      btn.disabled = true;
+      fetch("/.netlify/functions/feedback-modulo-submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          moduloId: opt.value,
+          moduloTema: opt.dataset.tema,
+          fecha: opt.dataset.fecha,
+          facilitador: opt.dataset.facilitador,
+          nombre: retroAdminNombre.value.trim(),
+          respuestas,
+          valioso: retroAdminValioso.value.trim(),
+          cambiar: retroAdminCambiar.value.trim(),
+        }),
+      })
+        .then(async (resp)=>{
+          const data = await resp.json().catch(()=>({}));
+          if(!resp.ok || !data.ok) throw new Error((data && data.error) || "Error al guardar");
+          if(msg){ msg.textContent = "¡Guardada! Ya se ve en el portal del Facilitador."; msg.className="form-msg show ok"; }
+          // El módulo se queda seleccionado a propósito, para capturar a la
+          // siguiente participante sin tener que volver a elegirlo — solo
+          // se limpian las respuestas y comentarios de esta captura.
+          formRetroAdmin.querySelectorAll('input[type="radio"]:checked').forEach(r=>r.checked=false);
+          retroAdminNombre.value = "";
+          retroAdminValioso.value = "";
+          retroAdminCambiar.value = "";
+          actualizarContadorRetroAdmin();
+        })
+        .catch((err)=>{
+          if(msg){ msg.textContent = "No se pudo guardar (" + (err.message||err) + ")."; msg.className="form-msg show err"; }
+        })
+        .finally(()=>{ btn.disabled = false; });
+    });
   }
 </script>
 </body>

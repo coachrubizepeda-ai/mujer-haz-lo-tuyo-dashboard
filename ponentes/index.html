@@ -35,6 +35,7 @@
     <button class="tab-btn" data-tab="t-modulo">Mi módulo</button>
     <button class="tab-btn" data-tab="t-asistencia">Pasar lista</button>
     <button class="tab-btn" data-tab="t-perfiles">Perfiles de asistentes</button>
+    <button class="tab-btn" data-tab="t-expectativas">Expectativas</button>
     <button class="tab-btn" data-tab="t-retro">Retroalimentación</button>
     <button class="tab-btn" data-tab="t-materiales">Compartir materiales</button>
     <button class="tab-btn" data-tab="t-tarea">Subir tarea</button>
@@ -164,21 +165,30 @@
     </div>
   </section>
 
+  <!-- EXPECTATIVAS DE PARTICIPANTES -->
+  <section class="tab-panel" id="t-expectativas">
+    <div class="section-head">
+      <span class="eyebrow">Antes de tu sesión</span>
+      <h2>Expectativas de las participantes</h2>
+      <p>Lo que cada participante escribió antes de tu módulo en "Expectativas previas al módulo" — qué espera, en qué le gustaría que te enfoques y sus dudas puntuales.</p>
+    </div>
+    <div class="card">
+      <label>Nombre *</label>
+      <select id="sel-nombre-expectativas"><option value="">Selecciona tu nombre…</option></select>
+      <label style="margin-top:10px;">Módulo</label>
+      <select id="sel-modulo-expectativas"></select>
+    </div>
+    <div id="expectativas-wrap"><p class="file-hint">Selecciona tu nombre arriba para ver las expectativas de tu módulo.</p></div>
+  </section>
+
   <!-- RETROALIMENTACIÓN DEL MÓDULO (resultados) -->
   <section class="tab-panel" id="t-retro">
     <div class="section-head">
       <span class="eyebrow">Lo que dicen las asistentes</span>
       <h2>Retroalimentación del módulo</h2>
-      <p>Desde el portal de Participante, la retroalimentación ahora se contesta en una liga externa (Microsoft Forms). Aquí puedes ver quién ya avisó que la contestó.</p>
+      <p>La retroalimentación se contesta en una liga externa (Microsoft Forms), de forma anónima. Rubí sube las respuestas completas de cada módulo desde su portal cada semana, y aquí ves el resumen.</p>
     </div>
     <div class="card">
-      <h3 style="margin-top:0;">Seguimiento de quién ya la contestó</h3>
-      <label>Módulo:</label>
-      <select id="sel-retro-seguimiento-modulo"></select>
-      <div id="retro-seguimiento-wrap" style="margin-top:14px;"><p class="file-hint">Selecciona un módulo arriba.</p></div>
-    </div>
-    <div class="card">
-      <h3 style="margin-top:0;">Resultados anteriores (formulario de 16 preguntas, histórico)</h3>
       <label>Filtrar por módulo:</label>
       <select id="sel-retro-filtro-ponente"><option value="">Todos los módulos</option></select>
     </div>
@@ -746,6 +756,57 @@
         })
         .finally(()=>{ btn.disabled = false; });
     });
+  }
+
+  // ---------- Expectativas de participantes (lo que llenaron en "Expectativas previas al módulo") ----------
+  const selNombreExpectativas = document.getElementById("sel-nombre-expectativas");
+  const selModuloExpectativas = document.getElementById("sel-modulo-expectativas");
+  const expectativasWrap = document.getElementById("expectativas-wrap");
+  if(selNombreExpectativas){
+    selNombreExpectativas.innerHTML = '<option value="">Selecciona tu nombre…</option>' +
+      ponentesUnicos.map(p=>`<option value="${p}">${p}</option>`).join("");
+  }
+  if(selModuloExpectativas){
+    selModuloExpectativas.innerHTML = MODULOS.map(m=>
+      `<option value="${m.id} - ${m.tema}">${typeof m.id==="number"?"Módulo "+m.id:"Cierre"} · ${m.tema} (${m.ponente})</option>`
+    ).join("");
+  }
+  async function refrescarExpectativas(){
+    if(!expectativasWrap) return;
+    const modulo = selModuloExpectativas ? selModuloExpectativas.value : "";
+    if(!modulo){
+      expectativasWrap.innerHTML = `<p class="file-hint">Selecciona un módulo arriba.</p>`;
+      return;
+    }
+    expectativasWrap.innerHTML = `<p class="file-hint">Cargando…</p>`;
+    try {
+      const resp = await fetch("/.netlify/functions/expectativas-list?modulo=" + encodeURIComponent(modulo));
+      const data = await resp.json().catch(()=>({}));
+      if(!resp.ok || !data.ok) throw new Error((data && data.error) || ("Error " + resp.status));
+      const items = data.items || [];
+      if(!items.length){
+        expectativasWrap.innerHTML = `<div class="callout">Todavía no hay expectativas registradas para este módulo.</div>`;
+        return;
+      }
+      expectativasWrap.innerHTML = items.map(x=>`
+        <div class="card">
+          <h4 style="margin:0 0 4px;">${x.participanteNombre || "(sin nombre)"}</h4>
+          <small style="color:var(--gris-claro);">${new Date(x.creado).toLocaleString("es-MX")}</small>
+          ${x.expectativas ? `<p style="margin-top:10px;"><b>Espera de la sesión:</b> ${x.expectativas}</p>` : ""}
+          ${x.enfoque ? `<p><b>Le gustaría que te enfoques en:</b> ${x.enfoque}</p>` : ""}
+          ${x.dudas ? `<p style="margin-bottom:0;"><b>Duda puntual:</b> ${x.dudas}</p>` : ""}
+        </div>`).join("");
+    } catch(err){
+      expectativasWrap.innerHTML = `<p class="file-hint">No se pudo cargar (${err.message||err}).</p>`;
+    }
+  }
+  if(selNombreExpectativas && selModuloExpectativas){
+    selNombreExpectativas.addEventListener("change", ()=>{
+      const propio = MODULOS.find(m=>m.ponente === selNombreExpectativas.value);
+      if(propio) selModuloExpectativas.value = `${propio.id} - ${propio.tema}`;
+      refrescarExpectativas();
+    });
+    selModuloExpectativas.addEventListener("change", refrescarExpectativas);
   }
 
   // ---------- Nombres editables (corrección de errores de escritura) ----------
@@ -1355,50 +1416,6 @@
   }
   selRetroFiltro.addEventListener("change", cargarRetroPonente);
   cargarRetroPonente();
-
-  // ---------- Seguimiento: quién ya avisó que contestó la liga externa ----------
-  const selRetroSeguimientoModulo = document.getElementById("sel-retro-seguimiento-modulo");
-  const retroSeguimientoWrap = document.getElementById("retro-seguimiento-wrap");
-  if(selRetroSeguimientoModulo){
-    selRetroSeguimientoModulo.innerHTML = MODULOS.map(m=>
-      `<option value="${m.id} - ${m.tema}">${typeof m.id==="number"?"Módulo "+m.id:"Cierre"} · ${m.tema}</option>`
-    ).join("");
-  }
-  async function cargarRetroSeguimiento(){
-    if(!retroSeguimientoWrap) return;
-    const modulo = selRetroSeguimientoModulo.value;
-    retroSeguimientoWrap.innerHTML = `<p class="file-hint">Cargando…</p>`;
-    try {
-      const resp = await fetch("/.netlify/functions/retro-completado-list?modulo=" + encodeURIComponent(modulo));
-      const data = await resp.json().catch(()=>({}));
-      if(!resp.ok || !data.ok) throw new Error((data && data.error) || ("Error " + resp.status));
-      const marcados = data.items || [];
-      const nombresMarcados = new Set(marcados.map(r=>r.participanteId || r.participanteNombre));
-      let filas = "";
-      if(typeof ASISTENTES !== "undefined" && ASISTENTES.length){
-        filas = ASISTENTES.map(a=>{
-          const yaLaHizo = nombresMarcados.has(a.id) || marcados.some(r=>r.participanteNombre===a.nombre);
-          const registro = marcados.find(r=>(r.participanteId===a.id)||(r.participanteNombre===a.nombre));
-          return `<tr>
-            <td>${asistenteEtiqueta(a, typeof nombreMostrado==="function" ? nombreMostrado(a.nombre) : a.nombre)}</td>
-            <td>${yaLaHizo ? "✅ Sí" : "⏳ Pendiente"}</td>
-            <td>${registro ? new Date(registro.creado).toLocaleString("es-MX") : "—"}</td>
-          </tr>`;
-        }).join("");
-      } else {
-        filas = marcados.map(r=>`<tr><td>${r.participanteNombre||"(sin nombre)"}</td><td>✅ Sí</td><td>${new Date(r.creado).toLocaleString("es-MX")}</td></tr>`).join("");
-      }
-      const total = typeof ASISTENTES !== "undefined" && ASISTENTES.length ? ASISTENTES.length : marcados.length;
-      retroSeguimientoWrap.innerHTML = `<p class="file-hint" style="margin-top:0;">${marcados.length} de ${total} ya avisaron que la contestaron.</p>
-        <div class="table-wrap"><table><thead><tr><th>Participante</th><th>Estado</th><th>Fecha</th></tr></thead><tbody>${filas || '<tr><td colspan="3">Sin datos todavía.</td></tr>'}</tbody></table></div>`;
-    } catch(err){
-      retroSeguimientoWrap.innerHTML = `<p class="file-hint">No se pudo cargar (${err.message||err}).</p>`;
-    }
-  }
-  if(selRetroSeguimientoModulo){
-    selRetroSeguimientoModulo.addEventListener("change", cargarRetroSeguimiento);
-    cargarRetroSeguimiento();
-  }
 </script>
 </body>
 </html>

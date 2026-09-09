@@ -62,6 +62,42 @@ function renderRetroResultadosHTML(items) {
           </div>`;
       }).join("");
 
+      // Promedio por pregunta (las 16, una por una) — para ver de un
+      // vistazo cuál pregunta específica salió más baja, no solo la
+      // categoría completa.
+      const promedioPorPreguntaHTML = `
+        <div class="table-wrap" style="margin-top:6px;">
+          <table>
+            <thead><tr><th>#</th><th>Pregunta</th><th>Promedio</th></tr></thead>
+            <tbody>
+              ${RETRO_PREGUNTAS.map((p) => {
+                const prom = mjhtPromedioPreguntas(grupo, [p.id]);
+                return `<tr><td>${p.id}</td><td>${p.texto}</td><td>${prom ? prom.toFixed(1) : "—"}</td></tr>`;
+              }).join("")}
+            </tbody>
+          </table>
+        </div>`;
+
+      // Resultados de cada evaluadora — una fila por respuesta, una
+      // columna por pregunta, para revisar respuestas individuales sin
+      // tener que abrir Microsoft Forms.
+      const porEvaluadoraHTML = `
+        <div class="table-wrap" style="margin-top:6px;">
+          <table>
+            <thead><tr><th>Evaluadora</th><th>Fecha</th>${todasIds.map((id) => `<th>Q${id}</th>`).join("")}</tr></thead>
+            <tbody>
+              ${grupo
+                .map((r, i) => {
+                  const fecha = r.creado ? new Date(r.creado).toLocaleDateString("es-MX") : "";
+                  return `<tr><td>${r.nombre ? r.nombre : "Anónima " + (i + 1)}</td><td>${fecha}</td>${todasIds
+                    .map((id) => `<td>${(r.respuestas && r.respuestas[String(id)]) || "—"}</td>`)
+                    .join("")}</tr>`;
+                })
+                .join("")}
+            </tbody>
+          </table>
+        </div>`;
+
       const comentarios =
         grupo
           .filter((r) => (r.valioso || "").trim() || (r.cambiar || "").trim())
@@ -86,6 +122,10 @@ function renderRetroResultadosHTML(items) {
           </div>
           <div class="retro-modulo-body">
             ${categoriasHTML}
+            <h5 style="margin:18px 0 6px;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--gris-claro);">Promedio por pregunta</h5>
+            ${promedioPorPreguntaHTML}
+            <h5 style="margin:18px 0 6px;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--gris-claro);">Resultados de cada evaluadora</h5>
+            ${porEvaluadoraHTML}
             <h5 style="margin:18px 0 6px;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--gris-claro);">En sus palabras</h5>
             ${comentarios}
           </div>

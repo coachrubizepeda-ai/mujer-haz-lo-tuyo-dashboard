@@ -42,7 +42,7 @@
     <button class="tab-btn" data-tab="t-tareas">Tareas</button>
     <button class="tab-btn" data-tab="t-ponentes">Facilitadores</button>
     <div class="side-sep"><span>Antes de cada sesión</span></div>
-    <button class="tab-btn" data-tab="t-cuestionario">Cuestionario previo</button>
+    <button class="tab-btn" data-tab="t-cuestionario">Expectativas previas al módulo</button>
     <button class="tab-btn" data-tab="t-retro">Retroalimentación</button>
     <div class="side-sep"><span>Información práctica</span></div>
     <button class="tab-btn" data-tab="t-acceso">Acceso a instalaciones</button>
@@ -233,31 +233,29 @@
     <div id="ponentes-list" class="grid grid-2"></div>
   </section>
 
-  <!-- CUESTIONARIO -->
+  <!-- EXPECTATIVAS PREVIAS AL MÓDULO -->
   <section class="tab-panel" id="t-cuestionario">
     <div class="section-head">
       <span class="eyebrow">Antes de cada módulo</span>
-      <h2>Cuestionario previo</h2>
-      <p>Ayuda al facilitador de cada sesión a enfocar su tema en lo que más te sirve. Tómate 3 minutos antes de cada viernes.</p>
+      <h2>Expectativas previas al módulo</h2>
+      <p>Ayuda al facilitador de cada sesión a enfocar su tema en lo que más te sirve. Tómate 3 minutos antes de cada viernes — el facilitador ve directamente lo que escribas aquí.</p>
     </div>
     <div class="card">
-      <form name="cuestionario-previo" method="POST" data-netlify="true" netlify-honeypot="bot-field">
-        <input type="hidden" name="form-name" value="cuestionario-previo">
-        <p class="hp-field"><label>No llenar: <input name="bot-field"></label></p>
+      <form id="form-expectativas">
         <div class="form-msg"></div>
         <div class="field-row">
-          <div><label>Nombre *</label><input type="text" name="nombre" required></div>
+          <div><label>Nombre *</label><input type="text" id="expectativas-nombre" required></div>
           <div><label>Módulo *</label>
-            <select name="modulo" id="sel-modulo-cuestionario" required></select>
+            <select id="sel-modulo-cuestionario" required></select>
           </div>
         </div>
         <label>¿Qué esperas de esta sesión?</label>
-        <textarea name="expectativas"></textarea>
+        <textarea id="expectativas-expectativas"></textarea>
         <label>¿En qué te gustaría que se enfocara el facilitador?</label>
-        <textarea name="enfoque"></textarea>
+        <textarea id="expectativas-enfoque"></textarea>
         <label>¿Alguna duda puntual que quieras que se resuelva?</label>
-        <textarea name="dudas"></textarea>
-        <button class="btn btn-primary" type="submit">Enviar cuestionario</button>
+        <textarea id="expectativas-dudas"></textarea>
+        <button class="btn btn-primary" type="submit">Enviar</button>
       </form>
     </div>
   </section>
@@ -273,9 +271,7 @@
       <label>Módulo *</label>
       <select id="sel-modulo-retro" required></select>
       <a id="retro-liga-externa" class="btn btn-primary" href="https://forms.cloud.microsoft/r/snHRYvGD8h?origin=lprLink" target="_blank" rel="noopener" style="margin-top:14px;display:inline-block;">Abrir formulario de retroalimentación</a>
-      <p class="file-hint">Se abre en una pestaña nueva. Cuando termines, regresa aquí y avisa que ya la contestaste.</p>
-      <button type="button" id="btn-retro-ya-contestada" class="btn btn-outline" style="margin-top:6px;">Ya contesté la retroalimentación</button>
-      <p id="retro-ya-msg" class="form-msg"></p>
+      <p style="font-size:.85rem;color:var(--gris-claro);margin:14px 0 0;">Al abrir el formulario, tu respuesta queda registrada de forma anónima — el formulario no pide ni guarda tu nombre.</p>
     </div>
   </section>
 
@@ -483,53 +479,64 @@
     });
   });
 
-  // ---------- Retroalimentación del módulo (módulo + liga externa + "ya la contesté") ----------
-  // El formulario de 16 preguntas se reemplazó por una liga externa
-  // (Microsoft Forms) que Rubí revisa directo; aquí solo se deja
-  // constancia de qué participante avisó que ya la llenó, para que el
-  // facilitador pueda ver el avance sin perseguir a nadie.
-  const selModuloRetro = document.getElementById("sel-modulo-retro");
-  selModuloRetro.innerHTML = '<option value="">Selecciona el módulo…</option>' + MODULOS.map(m=>
-    `<option value="${m.id} - ${m.tema}" data-tema="${m.tema}">${typeof m.id==="number"?"Módulo "+m.id:"Cierre"} · ${m.tema}</option>`
-  ).join("");
+  // ---------- Expectativas previas al módulo (antes "Cuestionario previo") ----------
+  // Ahora se guarda en backend real (expectativas-submit/-list) para que el
+  // Facilitador la pueda ver en su propio portal, en vez de quedarse solo en
+  // el panel de formularios de Netlify.
+  (function(){
+    const nombreInput = document.getElementById("expectativas-nombre");
+    const sesion = (typeof mjhtAsistenteActivo === "function") ? mjhtAsistenteActivo() : null;
+    const asistenteSesion = (sesion && sesion.participanteId && typeof ASISTENTES !== "undefined")
+      ? ASISTENTES.find(a=>a.id===sesion.participanteId) : null;
+    if(nombreInput && asistenteSesion) nombreInput.value = asistenteSesion.nombre;
 
-  const btnRetroYaContestada = document.getElementById("btn-retro-ya-contestada");
-  const retroYaMsg = document.getElementById("retro-ya-msg");
-  if(btnRetroYaContestada){
-    btnRetroYaContestada.addEventListener("click", ()=>{
-      if(!selModuloRetro.value){
-        retroYaMsg.textContent = "Primero selecciona el módulo.";
-        retroYaMsg.className = "form-msg show err";
+    const formExpectativas = document.getElementById("form-expectativas");
+    if(!formExpectativas) return;
+    formExpectativas.addEventListener("submit", (e)=>{
+      e.preventDefault();
+      const msg = formExpectativas.querySelector(".form-msg");
+      const selModulo = document.getElementById("sel-modulo-cuestionario");
+      if(!selModulo.value){
+        if(msg){ msg.textContent = "Selecciona el módulo."; msg.className = "form-msg show err"; }
         return;
       }
-      const sesion = (typeof mjhtAsistenteActivo === "function") ? mjhtAsistenteActivo() : null;
-      const asistente = (sesion && sesion.participanteId && typeof ASISTENTES !== "undefined")
-        ? ASISTENTES.find(a=>a.id===sesion.participanteId) : null;
-      const opt = selModuloRetro.selectedOptions[0];
-      btnRetroYaContestada.disabled = true;
-      fetch("/.netlify/functions/retro-completado-marcar", {
+      const btn = formExpectativas.querySelector("button[type=submit]");
+      btn.disabled = true;
+      fetch("/.netlify/functions/expectativas-submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          modulo: selModuloRetro.value,
-          moduloTema: opt ? opt.dataset.tema : "",
-          participanteId: asistente ? asistente.id : (sesion ? sesion.participanteId : ""),
-          participanteNombre: asistente ? asistente.nombre : "",
+          modulo: selModulo.value,
+          participanteId: asistenteSesion ? asistenteSesion.id : (sesion ? sesion.participanteId : ""),
+          participanteNombre: nombreInput.value.trim(),
+          expectativas: document.getElementById("expectativas-expectativas").value.trim(),
+          enfoque: document.getElementById("expectativas-enfoque").value.trim(),
+          dudas: document.getElementById("expectativas-dudas").value.trim(),
         }),
       })
         .then(async (resp)=>{
           const data = await resp.json().catch(()=>({}));
-          if(!resp.ok || !data.ok) throw new Error((data && data.error) || "Error al guardar");
-          retroYaMsg.textContent = "¡Gracias! Quedó marcado como contestado.";
-          retroYaMsg.className = "form-msg show ok";
+          if(!resp.ok || !data.ok) throw new Error((data && data.error) || "Error al enviar");
+          if(msg){ msg.textContent = "¡Gracias! Ya lo puede ver el facilitador."; msg.className = "form-msg show ok"; }
+          document.getElementById("expectativas-expectativas").value = "";
+          document.getElementById("expectativas-enfoque").value = "";
+          document.getElementById("expectativas-dudas").value = "";
         })
         .catch((err)=>{
-          retroYaMsg.textContent = "No se pudo guardar (" + (err.message||err) + ").";
-          retroYaMsg.className = "form-msg show err";
+          if(msg){ msg.textContent = "No se pudo enviar (" + (err.message||err) + ")."; msg.className = "form-msg show err"; }
         })
-        .finally(()=>{ btnRetroYaContestada.disabled = false; });
+        .finally(()=>{ btn.disabled = false; });
     });
-  }
+  })();
+
+  // ---------- Retroalimentación del módulo (módulo + liga externa) ----------
+  // El formulario de 16 preguntas se reemplazó por una liga externa
+  // (Microsoft Forms); Rubí sube las respuestas completas cada semana
+  // desde su portal de Administradora y el Facilitador las ve ahí.
+  const selModuloRetro = document.getElementById("sel-modulo-retro");
+  selModuloRetro.innerHTML = '<option value="">Selecciona el módulo…</option>' + MODULOS.map(m=>
+    `<option value="${m.id} - ${m.tema}" data-tema="${m.tema}">${typeof m.id==="number"?"Módulo "+m.id:"Cierre"} · ${m.tema}</option>`
+  ).join("");
 
   // Selects de "Sube tu cuestionario previo contestado" + espejo local
   const selParticipanteCR = document.getElementById("sel-participante-cuestionario-respuesta");
@@ -537,6 +544,15 @@
     selParticipanteCR.innerHTML = '<option value="">Selecciona tu nombre…</option>' +
       ASISTENTES.map(a=>`<option value="${a.id}">${asistenteEtiqueta(a)}</option>`).join("");
   }
+  // Por default, se preselecciona el nombre de la dueña de la cuenta activa
+  // (no hace falta que lo busque en la lista cada vez); lo puede cambiar si
+  // está subiendo el cuestionario de alguien más.
+  (function(){
+    const sesion = (typeof mjhtAsistenteActivo === "function") ? mjhtAsistenteActivo() : null;
+    if(sesion && sesion.participanteId && selParticipanteCR){
+      selParticipanteCR.value = sesion.participanteId;
+    }
+  })();
   const formCuestionarioRespuesta = document.getElementById("form-cuestionario-respuesta");
   formCuestionarioRespuesta.addEventListener("submit", ()=>{
     const idSel = selParticipanteCR.value;
