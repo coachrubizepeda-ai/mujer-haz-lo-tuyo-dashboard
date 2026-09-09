@@ -256,6 +256,11 @@
         <button class="btn btn-primary" type="submit" style="margin-top:14px;">Enviar material</button>
       </form>
     </div>
+    <div class="card">
+      <h3 style="margin-top:0;">Lo que ya has compartido para este módulo</h3>
+      <p class="file-hint" style="margin-top:-6px;">Así confirmas que llegó y que ya lo pueden ver las asistentes, sin tener que preguntarle a Rubí. Cambia el módulo de arriba para ver lo de otro módulo.</p>
+      <div id="materiales-bitacora-wrap"><p class="file-hint">Selecciona un módulo arriba para ver lo que ya compartiste.</p></div>
+    </div>
   </section>
 
   <!-- CALENDARIO -->
@@ -598,11 +603,34 @@
   // necesitas compartir algo para otro módulo, lo sigues pudiendo cambiar.
   const selNombreMateriales = document.getElementById("sel-nombre-materiales");
   const selModuloMateriales = document.getElementById("sel-modulo-materiales");
+  // Bitácora: en la misma pestaña "Compartir materiales" (no solo en "Mi
+  // módulo"), muestra lo que ya se compartió para el módulo seleccionado —
+  // así el facilitador ve de inmediato que su envío sí llegó y ya es visible
+  // para las asistentes, sin tener que preguntarle a Rubí ni buscar en otra
+  // pestaña. Reusa exactamente el mismo render (con eliminar/mover) que
+  // "Mi módulo".
+  const bitacoraMaterialesWrap = document.getElementById("materiales-bitacora-wrap");
+  async function refrescarBitacoraMateriales(){
+    if(!bitacoraMaterialesWrap) return;
+    const modulo = selModuloMateriales ? selModuloMateriales.value : "";
+    if(!modulo){
+      bitacoraMaterialesWrap.innerHTML = `<p class="file-hint">Selecciona un módulo arriba para ver lo que ya compartiste.</p>`;
+      return;
+    }
+    bitacoraMaterialesWrap.innerHTML = `<p class="file-hint">Cargando…</p>`;
+    try {
+      bitacoraMaterialesWrap.innerHTML = await renderMisMaterialesModuloHTML(modulo);
+    } catch(err){
+      bitacoraMaterialesWrap.innerHTML = `<p class="file-hint">No se pudo cargar (${err.message||err}).</p>`;
+    }
+  }
   if(selNombreMateriales && selModuloMateriales){
     selNombreMateriales.addEventListener("change", ()=>{
       const propio = MODULOS.find(m=>m.ponente === selNombreMateriales.value);
       if(propio) selModuloMateriales.value = `${propio.id} - ${propio.tema}`;
+      refrescarBitacoraMateriales();
     });
+    selModuloMateriales.addEventListener("change", refrescarBitacoraMateriales);
   }
 
   // ---------- Nombres editables (corrección de errores de escritura) ----------
@@ -923,6 +951,12 @@
           const extra = document.getElementById(name+"-extra");
           if(extra) extra.innerHTML = "";
         });
+        // El reset() del form borra la selección de nombre/módulo — se
+        // restauran para que la bitácora de abajo siga mostrando justo lo
+        // que se acaba de enviar, en vez de quedar en blanco.
+        if(selNombreMateriales) selNombreMateriales.value = ponente;
+        if(selModuloMateriales) selModuloMateriales.value = modulo;
+        refrescarBitacoraMateriales();
         if(selPonente) selPonente.dispatchEvent(new Event("change"));
       })
       .catch(err=>{
