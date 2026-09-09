@@ -198,29 +198,6 @@
       </table>
     </div>
 
-    <div class="section-head" style="margin-top:34px;">
-      <span class="eyebrow">Antes de cada módulo</span>
-      <h2>Sube tu cuestionario previo contestado</h2>
-      <p>Cuando Rubí te comparta (por correo o WhatsApp) el cuestionario previo de tu módulo, contéstalo y sube aquí tu archivo.</p>
-    </div>
-    <div class="card">
-      <form name="cuestionario-previo-respuesta" method="POST" data-netlify="true" netlify-honeypot="bot-field" enctype="multipart/form-data" id="form-cuestionario-respuesta">
-        <input type="hidden" name="form-name" value="cuestionario-previo-respuesta">
-        <p class="hp-field"><label>No llenar: <input name="bot-field"></label></p>
-        <div class="form-msg"></div>
-        <div class="field-row">
-          <div><label>Tu nombre *</label>
-            <select name="participante" id="sel-participante-cuestionario-respuesta" required><option value="">Selecciona tu nombre…</option></select>
-          </div>
-          <div><label>Módulo *</label>
-            <select name="modulo" id="sel-modulo-cuestionario-respuesta" required></select>
-          </div>
-        </div>
-        <label>Tu cuestionario contestado (PDF) *</label>
-        <input type="file" name="archivo" accept=".pdf" required>
-        <button class="btn btn-primary" type="submit">Enviar cuestionario contestado</button>
-      </form>
-    </div>
   </section>
 
   <!-- PONENTES -->
@@ -469,7 +446,7 @@
   });
 
   // Selects de módulo en formularios
-  ["sel-modulo-cuestionario","sel-modulo-cuestionario-respuesta"].forEach(id=>{
+  ["sel-modulo-cuestionario"].forEach(id=>{
     const sel = document.getElementById(id);
     MODULOS.forEach(m=>{
       const opt = document.createElement("option");
@@ -538,32 +515,6 @@
     `<option value="${m.id} - ${m.tema}" data-tema="${m.tema}">${typeof m.id==="number"?"Módulo "+m.id:"Cierre"} · ${m.tema}</option>`
   ).join("");
 
-  // Selects de "Sube tu cuestionario previo contestado" + espejo local
-  const selParticipanteCR = document.getElementById("sel-participante-cuestionario-respuesta");
-  if(typeof ASISTENTES !== "undefined" && ASISTENTES.length){
-    selParticipanteCR.innerHTML = '<option value="">Selecciona tu nombre…</option>' +
-      ASISTENTES.map(a=>`<option value="${a.id}">${asistenteEtiqueta(a)}</option>`).join("");
-  }
-  // Por default, se preselecciona el nombre de la dueña de la cuenta activa
-  // (no hace falta que lo busque en la lista cada vez); lo puede cambiar si
-  // está subiendo el cuestionario de alguien más.
-  (function(){
-    const sesion = (typeof mjhtAsistenteActivo === "function") ? mjhtAsistenteActivo() : null;
-    if(sesion && sesion.participanteId && selParticipanteCR){
-      selParticipanteCR.value = sesion.participanteId;
-    }
-  })();
-  const formCuestionarioRespuesta = document.getElementById("form-cuestionario-respuesta");
-  formCuestionarioRespuesta.addEventListener("submit", ()=>{
-    const idSel = selParticipanteCR.value;
-    const asistente = (typeof ASISTENTES !== "undefined") ? ASISTENTES.find(a=>a.id===idSel) : null;
-    guardarCuestionarioRespuesta({
-      participante_id: idSel || "",
-      participante_nombre: asistente ? asistente.nombre : "",
-      modulo: document.getElementById("sel-modulo-cuestionario-respuesta").value,
-      fecha: new Date().toISOString()
-    });
-  });
 
   // "Mi semblanza": documento vivo con backend real (ver assets/js/app.js
   // → semblanza-submit.js / semblanza-list.js). Se precarga con lo que la

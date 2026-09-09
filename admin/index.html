@@ -121,24 +121,6 @@
     <div id="semblanzas-facilitadores-admin"></div>
     <div class="callout">Esta vista se arma con lo que se ha guardado en ESTE navegador. Para ver los envíos hechos por otras personas desde SUS propios navegadores, revisa Netlify Forms → semblanzas-ponentes.</div>
 
-    <!-- 4. CUESTIONARIOS PREVIOS (subidos por módulo) -->
-    <div class="section-head" style="margin-top:34px;">
-      <span class="eyebrow">Antes de cada sesión</span>
-      <h2>Cuestionarios previos — estado por módulo</h2>
-      <p>Qué módulos ya tienen su cuestionario previo cargado (pestaña "Formularios recibidos" de este mismo panel) y cuáles siguen pendientes.</p>
-    </div>
-    <div id="cuestionarios-previos-estado"></div>
-    <div class="callout">Esta vista se arma con lo que se ha subido desde ESTE navegador. Para confirmar todos los envíos, revisa Netlify Forms → cuestionario-previo-modulo.</div>
-
-    <!-- 5. CUESTIONARIO PREVIO — RESPUESTAS DE PARTICIPANTES -->
-    <div class="section-head" style="margin-top:34px;">
-      <span class="eyebrow">Entregado por las participantes</span>
-      <h2>Cuestionarios previos contestados</h2>
-      <p>Quién ya subió su cuestionario previo contestado ("Sube tu cuestionario previo contestado" en el portal de asistentes), por módulo.</p>
-    </div>
-    <div id="cuestionario-respuestas-admin"></div>
-    <div class="callout">Esta vista se arma con lo que se ha guardado en ESTE navegador. Para ver los envíos hechos por otras personas desde SUS propios navegadores, revisa Netlify Forms → cuestionario-previo-respuesta.</div>
-
     <!-- 6. RETROALIMENTACIÓN DEL MÓDULO -->
     <div class="section-head" style="margin-top:34px;">
       <span class="eyebrow">Después de cada módulo</span>
@@ -214,23 +196,6 @@
       <p>Nada se "sube" directamente en esta pestaña — aquí solo hay ligas de acceso. Lo que SÍ puedes usar ahora mismo, sin depender de Netlify, son las secciones de "Resumen ejecutivo" (Registro de asistentes, Semblanzas, Feedback, Materiales, Resultados del test, Asistencia, Comentarios): esas se llenan automáticamente con lo que se guarda en <b>este mismo navegador</b> — es decir, si tú misma llenas un formulario de prueba desde esta computadora, lo vas a ver reflejado ahí al instante, sin pasar por Netlify. Para ver los envíos que hacen las demás personas desde SUS propios navegadores (participantes y facilitadores), esos solo llegan a Netlify Forms — por eso el botón de arriba.</p>
     </div>
 
-    <div class="section-head" style="margin-top:34px;">
-      <span class="eyebrow">Antes de cada sesión</span>
-      <h2>Cuestionario previo al módulo</h2>
-      <p>Sube aquí el archivo del cuestionario previo de cada módulo. Las participantes deberán contestarlo antes de esa sesión — se los compartes por el medio que uses (correo, WhatsApp, etc.) una vez que lo tengas cargado.</p>
-    </div>
-    <div class="card">
-      <form name="cuestionario-previo-modulo" method="POST" data-netlify="true" netlify-honeypot="bot-field" enctype="multipart/form-data" id="form-cuestionario-modulo">
-        <input type="hidden" name="form-name" value="cuestionario-previo-modulo">
-        <p class="hp-field"><label>No llenar: <input name="bot-field"></label></p>
-        <div class="form-msg"></div>
-        <label>Módulo *</label>
-        <select name="modulo" id="sel-modulo-cuestionario-admin" required></select>
-        <label>Cuestionario previo al módulo (PDF) *</label>
-        <input type="file" name="archivo" accept=".pdf" required>
-        <button class="btn btn-primary" type="submit">Subir cuestionario</button>
-      </form>
-    </div>
   </section>
 
   <!-- RETROALIMENTACIÓN (captura manual de las respuestas de Microsoft Forms) -->
@@ -477,8 +442,6 @@
     .then(html=>{ document.getElementById("semblanzas-asistentes-admin").innerHTML = html; })
     .catch(err=>{ document.getElementById("semblanzas-asistentes-admin").innerHTML = `<div class="callout">No se pudieron cargar las semblanzas (${err.message||err}).</div>`; });
   document.getElementById("semblanzas-facilitadores-admin").innerHTML = renderSemblanzasFacilitadoresHTML();
-  document.getElementById("cuestionarios-previos-estado").innerHTML = renderCuestionariosPreviosEstadoHTML();
-  document.getElementById("cuestionario-respuestas-admin").innerHTML = renderCuestionarioRespuestasHTML();
   document.getElementById("materiales-facilitadores-admin").innerHTML = `<p class="file-hint">Cargando…</p>`;
   renderMaterialesFacilitadoresHTML(true)
     .then(html=>{ document.getElementById("materiales-facilitadores-admin").innerHTML = html; })
@@ -844,19 +807,6 @@
   };
   refrescarTestTrimetrixAdmin();
 
-  // Cuestionario previo al módulo: al subirlo, además de Netlify Forms,
-  // guarda el estado en este navegador para la sección "Cuestionarios
-  // previos — estado por módulo" de arriba.
-  document.getElementById("form-cuestionario-modulo").addEventListener("submit", ()=>{
-    const sel = document.getElementById("sel-modulo-cuestionario-admin");
-    const fileInput = document.querySelector('#form-cuestionario-modulo input[type=file]');
-    const moduloId = sel.value ? sel.value.split(" - ")[0] : "";
-    const archivoNombre = fileInput && fileInput.files && fileInput.files[0] ? fileInput.files[0].name : "";
-    if(!moduloId) return;
-    guardarCuestionarioPrevioSubido(moduloId, archivoNombre);
-    document.getElementById("cuestionarios-previos-estado").innerHTML = renderCuestionariosPreviosEstadoHTML();
-  });
-
   // Directorio de ponentes
   const dirWrap = document.getElementById("directorio-list");
   const ponentesUnicos = [...new Set(MODULOS.map(m=>m.ponente))];
@@ -899,15 +849,6 @@
   (async ()=>{
     document.getElementById("codigo-honor-participantes-acc").innerHTML = await renderLineamientosParticipantesHTML();
   })();
-
-  // Select de módulo para "Cuestionario previo al módulo"
-  const selModuloCuestionarioAdmin = document.getElementById("sel-modulo-cuestionario-admin");
-  MODULOS.forEach(m=>{
-    const opt = document.createElement("option");
-    opt.value = `${m.id} - ${m.tema}`;
-    opt.textContent = `${typeof m.id==="number"?"Módulo "+m.id:"Cierre"} · ${m.tema}`;
-    selModuloCuestionarioAdmin.appendChild(opt);
-  });
 
   // Liga a Netlify Forms (un solo botón a la vista general de Forms del
   // sitio — dentro de Netlify, Rubí elige el formulario específico en la
