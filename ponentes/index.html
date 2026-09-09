@@ -37,6 +37,7 @@
     <button class="tab-btn" data-tab="t-perfiles">Perfiles de asistentes</button>
     <button class="tab-btn" data-tab="t-retro">Retroalimentación</button>
     <button class="tab-btn" data-tab="t-materiales">Compartir materiales</button>
+    <button class="tab-btn" data-tab="t-tarea">Subir tarea</button>
     <button class="tab-btn" data-tab="t-calendario">Calendario general</button>
     <button class="tab-btn" data-tab="t-lineamientos">Lineamientos</button>
     <button class="tab-btn" data-tab="t-comentarios">Comentarios</button>
@@ -168,9 +169,16 @@
     <div class="section-head">
       <span class="eyebrow">Lo que dicen las asistentes</span>
       <h2>Retroalimentación del módulo</h2>
-      <p>Los resultados del formulario de retroalimentación (instalaciones, tiempos, instructor(a), material, contenido e impacto personal) que las asistentes llenan después de cada sesión.</p>
+      <p>Desde el portal de Participante, la retroalimentación ahora se contesta en una liga externa (Microsoft Forms). Aquí puedes ver quién ya avisó que la contestó.</p>
     </div>
     <div class="card">
+      <h3 style="margin-top:0;">Seguimiento de quién ya la contestó</h3>
+      <label>Módulo:</label>
+      <select id="sel-retro-seguimiento-modulo"></select>
+      <div id="retro-seguimiento-wrap" style="margin-top:14px;"><p class="file-hint">Selecciona un módulo arriba.</p></div>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0;">Resultados anteriores (formulario de 16 preguntas, histórico)</h3>
       <label>Filtrar por módulo:</label>
       <select id="sel-retro-filtro-ponente"><option value="">Todos los módulos</option></select>
     </div>
@@ -260,6 +268,36 @@
       <h3 style="margin-top:0;">Lo que ya has compartido para este módulo</h3>
       <p class="file-hint" style="margin-top:-6px;">Así confirmas que llegó y que ya lo pueden ver las asistentes, sin tener que preguntarle a Rubí. Cambia el módulo de arriba para ver lo de otro módulo.</p>
       <div id="materiales-bitacora-wrap"><p class="file-hint">Selecciona un módulo arriba para ver lo que ya compartiste.</p></div>
+    </div>
+  </section>
+
+  <!-- SUBIR TAREA -->
+  <section class="tab-panel" id="t-tarea">
+    <div class="section-head">
+      <span class="eyebrow">Después de tu sesión</span>
+      <h2>Subir tarea</h2>
+      <p>Escribe la descripción de lo que las participantes deben hacer antes del siguiente módulo. En cuanto la guardes aparece de inmediato en la pestaña "Tareas" del portal de Participante.</p>
+    </div>
+    <div class="card">
+      <form id="form-tarea">
+        <div class="form-msg"></div>
+        <div class="field-row">
+          <div><label>Nombre *</label>
+            <select id="sel-nombre-tarea" required><option value="">Selecciona tu nombre…</option></select>
+          </div>
+          <div><label>Módulo *</label>
+            <select id="sel-modulo-tarea" required></select>
+          </div>
+        </div>
+        <label>Descripción de la tarea *</label>
+        <textarea id="tarea-descripcion" required placeholder="Ej. Lee el capítulo 3 del manual y trae dos ejemplos de tu empresa para compartir en la siguiente sesión."></textarea>
+        <button class="btn btn-primary" type="submit" style="margin-top:6px;">Guardar tarea</button>
+        <p class="file-hint">Si ya habías subido una tarea para este módulo, esta la reemplaza — no se acumulan varias.</p>
+      </form>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0;">Tarea vigente para este módulo</h3>
+      <div id="tarea-vigente-wrap"><p class="file-hint">Selecciona un módulo arriba para ver la tarea vigente.</p></div>
     </div>
   </section>
 
@@ -631,6 +669,83 @@
       refrescarBitacoraMateriales();
     });
     selModuloMateriales.addEventListener("change", refrescarBitacoraMateriales);
+  }
+
+  // ---------- Subir tarea (descripción por módulo, la ve la Participante en "Tareas") ----------
+  const selNombreTarea = document.getElementById("sel-nombre-tarea");
+  const selModuloTarea = document.getElementById("sel-modulo-tarea");
+  const formTarea = document.getElementById("form-tarea");
+  const tareaDescripcion = document.getElementById("tarea-descripcion");
+  const tareaVigenteWrap = document.getElementById("tarea-vigente-wrap");
+
+  if(selNombreTarea){
+    selNombreTarea.innerHTML = '<option value="">Selecciona tu nombre…</option>' +
+      ponentesUnicos.map(p=>`<option value="${p}">${p}</option>`).join("");
+  }
+  if(selModuloTarea){
+    selModuloTarea.innerHTML = MODULOS.map(m=>
+      `<option value="${m.id} - ${m.tema}">${typeof m.id==="number"?"Módulo "+m.id:"Cierre"} · ${m.tema} (${m.ponente})</option>`
+    ).join("");
+  }
+
+  async function refrescarTareaVigente(){
+    if(!tareaVigenteWrap) return;
+    const modulo = selModuloTarea ? selModuloTarea.value : "";
+    if(!modulo){
+      tareaVigenteWrap.innerHTML = `<p class="file-hint">Selecciona un módulo arriba para ver la tarea vigente.</p>`;
+      return;
+    }
+    tareaVigenteWrap.innerHTML = `<p class="file-hint">Cargando…</p>`;
+    try {
+      const resp = await fetch("/.netlify/functions/tareas-list?modulo=" + encodeURIComponent(modulo));
+      const data = await resp.json().catch(()=>({}));
+      if(!resp.ok || !data.ok) throw new Error((data && data.error) || ("Error " + resp.status));
+      const item = (data.items || [])[0];
+      if(!item){
+        tareaVigenteWrap.innerHTML = `<p class="file-hint">Todavía no hay tarea guardada para este módulo.</p>`;
+      } else {
+        tareaVigenteWrap.innerHTML = `<p style="white-space:pre-wrap;margin-bottom:6px;">${item.descripcion}</p><p class="file-hint" style="margin-bottom:0;">Actualizada: ${new Date(item.actualizado||item.creado).toLocaleString("es-MX")}</p>`;
+        if(tareaDescripcion && !tareaDescripcion.value) tareaDescripcion.value = item.descripcion;
+      }
+    } catch(err){
+      tareaVigenteWrap.innerHTML = `<p class="file-hint">No se pudo cargar (${err.message||err}).</p>`;
+    }
+  }
+  if(selNombreTarea && selModuloTarea){
+    selNombreTarea.addEventListener("change", ()=>{
+      const propio = MODULOS.find(m=>m.ponente === selNombreTarea.value);
+      if(propio) selModuloTarea.value = `${propio.id} - ${propio.tema}`;
+      refrescarTareaVigente();
+    });
+    selModuloTarea.addEventListener("change", refrescarTareaVigente);
+    refrescarTareaVigente();
+  }
+  if(formTarea){
+    formTarea.addEventListener("submit", (e)=>{
+      e.preventDefault();
+      const msg = formTarea.querySelector(".form-msg");
+      const btn = formTarea.querySelector("button[type=submit]");
+      btn.disabled = true;
+      fetch("/.netlify/functions/tareas-submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          modulo: selModuloTarea.value,
+          ponente: selNombreTarea.value,
+          descripcion: tareaDescripcion.value.trim(),
+        }),
+      })
+        .then(async (resp)=>{
+          const data = await resp.json().catch(()=>({}));
+          if(!resp.ok || !data.ok) throw new Error((data && data.error) || "Error al guardar");
+          if(msg){ msg.textContent = "¡Listo! Ya se ve en el portal de Participante."; msg.className="form-msg show ok"; }
+          refrescarTareaVigente();
+        })
+        .catch((err)=>{
+          if(msg){ msg.textContent = "No se pudo guardar (" + (err.message||err) + ")."; msg.className="form-msg show err"; }
+        })
+        .finally(()=>{ btn.disabled = false; });
+    });
   }
 
   // ---------- Nombres editables (corrección de errores de escritura) ----------
@@ -1240,6 +1355,50 @@
   }
   selRetroFiltro.addEventListener("change", cargarRetroPonente);
   cargarRetroPonente();
+
+  // ---------- Seguimiento: quién ya avisó que contestó la liga externa ----------
+  const selRetroSeguimientoModulo = document.getElementById("sel-retro-seguimiento-modulo");
+  const retroSeguimientoWrap = document.getElementById("retro-seguimiento-wrap");
+  if(selRetroSeguimientoModulo){
+    selRetroSeguimientoModulo.innerHTML = MODULOS.map(m=>
+      `<option value="${m.id} - ${m.tema}">${typeof m.id==="number"?"Módulo "+m.id:"Cierre"} · ${m.tema}</option>`
+    ).join("");
+  }
+  async function cargarRetroSeguimiento(){
+    if(!retroSeguimientoWrap) return;
+    const modulo = selRetroSeguimientoModulo.value;
+    retroSeguimientoWrap.innerHTML = `<p class="file-hint">Cargando…</p>`;
+    try {
+      const resp = await fetch("/.netlify/functions/retro-completado-list?modulo=" + encodeURIComponent(modulo));
+      const data = await resp.json().catch(()=>({}));
+      if(!resp.ok || !data.ok) throw new Error((data && data.error) || ("Error " + resp.status));
+      const marcados = data.items || [];
+      const nombresMarcados = new Set(marcados.map(r=>r.participanteId || r.participanteNombre));
+      let filas = "";
+      if(typeof ASISTENTES !== "undefined" && ASISTENTES.length){
+        filas = ASISTENTES.map(a=>{
+          const yaLaHizo = nombresMarcados.has(a.id) || marcados.some(r=>r.participanteNombre===a.nombre);
+          const registro = marcados.find(r=>(r.participanteId===a.id)||(r.participanteNombre===a.nombre));
+          return `<tr>
+            <td>${asistenteEtiqueta(a, typeof nombreMostrado==="function" ? nombreMostrado(a.nombre) : a.nombre)}</td>
+            <td>${yaLaHizo ? "✅ Sí" : "⏳ Pendiente"}</td>
+            <td>${registro ? new Date(registro.creado).toLocaleString("es-MX") : "—"}</td>
+          </tr>`;
+        }).join("");
+      } else {
+        filas = marcados.map(r=>`<tr><td>${r.participanteNombre||"(sin nombre)"}</td><td>✅ Sí</td><td>${new Date(r.creado).toLocaleString("es-MX")}</td></tr>`).join("");
+      }
+      const total = typeof ASISTENTES !== "undefined" && ASISTENTES.length ? ASISTENTES.length : marcados.length;
+      retroSeguimientoWrap.innerHTML = `<p class="file-hint" style="margin-top:0;">${marcados.length} de ${total} ya avisaron que la contestaron.</p>
+        <div class="table-wrap"><table><thead><tr><th>Participante</th><th>Estado</th><th>Fecha</th></tr></thead><tbody>${filas || '<tr><td colspan="3">Sin datos todavía.</td></tr>'}</tbody></table></div>`;
+    } catch(err){
+      retroSeguimientoWrap.innerHTML = `<p class="file-hint">No se pudo cargar (${err.message||err}).</p>`;
+    }
+  }
+  if(selRetroSeguimientoModulo){
+    selRetroSeguimientoModulo.addEventListener("change", cargarRetroSeguimiento);
+    cargarRetroSeguimiento();
+  }
 </script>
 </body>
 </html>

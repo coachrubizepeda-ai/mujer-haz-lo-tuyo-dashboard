@@ -267,29 +267,15 @@
     <div class="section-head">
       <span class="eyebrow">Después de cada módulo</span>
       <h2>Retroalimentación del módulo</h2>
-      <p>Tu opinión ayuda a mejorar cada edición del diplomado y es el termómetro que usa Rubí con cada facilitador(a). El módulo, la fecha y el/la facilitador(a) se completan solos al elegir la sesión — tu nombre es opcional.</p>
+      <p>Tu opinión ayuda a mejorar cada edición del diplomado y es el termómetro que usa Rubí con cada facilitador(a). Elige el módulo que vas a calificar y abre el formulario.</p>
     </div>
     <div class="card">
-      <form id="form-retro">
-        <div class="form-msg"></div>
-        <div class="field-row">
-          <div><label>Módulo *</label>
-            <select id="sel-modulo-retro" required></select>
-          </div>
-          <div><label>Tu nombre (opcional)</label><select id="sel-nombre-retro"><option value="">Prefiero no decir mi nombre</option></select></div>
-        </div>
-        <div class="field-row">
-          <div><label>Fecha</label><input type="text" id="retro-fecha-auto" readonly></div>
-          <div><label>Facilitador(a)</label><input type="text" id="retro-facilitador-auto" readonly></div>
-        </div>
-        <p style="font-size:.85rem;color:var(--gris-claro);margin:-6px 0 6px;">Marca lo que mejor refleje tu experiencia de hoy: 1 = Totalmente en desacuerdo · 3 = Neutral · 5 = Totalmente de acuerdo</p>
-        <div id="retro-preguntas-wrap"></div>
-        <label>¿Qué fue lo más valioso de hoy y por qué?</label>
-        <textarea id="retro-valioso"></textarea>
-        <label>Si pudieras cambiar una sola cosa de este módulo, ¿cuál sería?</label>
-        <textarea id="retro-cambiar"></textarea>
-        <button class="btn btn-primary" type="submit">Enviar retroalimentación</button>
-      </form>
+      <label>Módulo *</label>
+      <select id="sel-modulo-retro" required></select>
+      <a id="retro-liga-externa" class="btn btn-primary" href="https://forms.cloud.microsoft/r/snHRYvGD8h?origin=lprLink" target="_blank" rel="noopener" style="margin-top:14px;display:inline-block;">Abrir formulario de retroalimentación</a>
+      <p class="file-hint">Se abre en una pestaña nueva. Cuando termines, regresa aquí y avisa que ya la contestaste.</p>
+      <button type="button" id="btn-retro-ya-contestada" class="btn btn-outline" style="margin-top:6px;">Ya contesté la retroalimentación</button>
+      <p id="retro-ya-msg" class="form-msg"></p>
     </div>
   </section>
 
@@ -443,15 +429,29 @@
       });
     });
 
-  // Tareas por módulo
+  // Tareas por módulo — se muestra primero el texto estático de data.js
+  // (para no dejar la tabla vacía mientras carga) y luego se sobreescribe
+  // con lo que el facilitador haya guardado desde su portal ("Subir tarea"),
+  // que es lo que manda si existe.
   const tareasBody = document.getElementById("tareas-body");
   MODULOS.forEach(m=>{
     const tr = document.createElement("tr");
+    tr.dataset.modulo = `${m.id} - ${m.tema}`;
     tr.innerHTML = `<td>${typeof m.id==="number" ? "Módulo "+m.id : "Cierre"}</td>
       <td>${m.tema}</td>
-      <td>${m.tarea || "Por confirmar"}</td>`;
+      <td class="tarea-celda" style="white-space:pre-wrap;">${m.tarea || "Por confirmar"}</td>`;
     tareasBody.appendChild(tr);
   });
+  fetch("/.netlify/functions/tareas-list")
+    .then(r=>r.json())
+    .then(data=>{
+      if(!data || !data.ok) return;
+      (data.items||[]).forEach(t=>{
+        const tr = tareasBody.querySelector(`tr[data-modulo="${CSS.escape(t.modulo)}"]`);
+        if(tr) tr.querySelector(".tarea-celda").textContent = t.descripcion;
+      });
+    })
+    .catch(()=>{ /* si falla, se queda el texto estático de data.js */ });
 
   // Directorio de ponentes
   const ponentesWrap = document.getElementById("ponentes-list");
@@ -483,84 +483,53 @@
     });
   });
 
-  // ---------- Retroalimentación del módulo (16 preguntas 1-5 + abiertas) ----------
+  // ---------- Retroalimentación del módulo (módulo + liga externa + "ya la contesté") ----------
+  // El formulario de 16 preguntas se reemplazó por una liga externa
+  // (Microsoft Forms) que Rubí revisa directo; aquí solo se deja
+  // constancia de qué participante avisó que ya la llenó, para que el
+  // facilitador pueda ver el avance sin perseguir a nadie.
   const selModuloRetro = document.getElementById("sel-modulo-retro");
   selModuloRetro.innerHTML = '<option value="">Selecciona el módulo…</option>' + MODULOS.map(m=>
-    `<option value="${m.id}" data-tema="${m.tema}" data-fecha="${m.fechaLabel}" data-facilitador="${m.ponente}">${typeof m.id==="number"?"Módulo "+m.id:"Cierre"} · ${m.tema}</option>`
+    `<option value="${m.id} - ${m.tema}" data-tema="${m.tema}">${typeof m.id==="number"?"Módulo "+m.id:"Cierre"} · ${m.tema}</option>`
   ).join("");
 
-  const selNombreRetro = document.getElementById("sel-nombre-retro");
-  if(typeof ASISTENTES !== "undefined" && ASISTENTES.length){
-    selNombreRetro.innerHTML = '<option value="">Prefiero no decir mi nombre</option>' +
-      ASISTENTES.map(a=>`<option value="${a.nombre}">${asistenteEtiqueta(a)}</option>`).join("");
-  }
-
-  selModuloRetro.addEventListener("change", ()=>{
-    const opt = selModuloRetro.selectedOptions[0];
-    document.getElementById("retro-fecha-auto").value = opt && opt.dataset.fecha ? opt.dataset.fecha : "";
-    document.getElementById("retro-facilitador-auto").value = opt && opt.dataset.facilitador ? opt.dataset.facilitador : "";
-  });
-
-  // Preguntas: 6 categorías, 16 filas con escala 1-5 (misma escala visual que .rating)
-  const preguntasWrap = document.getElementById("retro-preguntas-wrap");
-  preguntasWrap.innerHTML = RETRO_CATEGORIAS.map(cat=>`
-    <div class="retro-cat-titulo">${cat.nombre}</div>
-    ${cat.preguntas.map(p=>`
-      <div class="retro-pregunta">
-        <p>${p.id}. ${p.texto}</p>
-        <div class="rating compact">
-          ${[1,2,3,4,5].map(v=>`<input type="radio" name="q${p.id}" value="${v}" id="q${p.id}-${v}" required><label for="q${p.id}-${v}">${v}</label>`).join("")}
-        </div>
-      </div>`).join("")}
-  `).join("");
-
-  const formRetro = document.getElementById("form-retro");
-  formRetro.addEventListener("submit", (e)=>{
-    e.preventDefault();
-    const msg = formRetro.querySelector(".form-msg");
-    const opt = selModuloRetro.selectedOptions[0];
-    if(!opt || !opt.value){
-      if(msg){ msg.textContent = "Selecciona el módulo antes de enviar."; msg.className="form-msg show err"; }
-      return;
-    }
-    const respuestas = {};
-    RETRO_PREGUNTAS.forEach(p=>{
-      const checked = formRetro.querySelector(`input[name="q${p.id}"]:checked`);
-      if(checked) respuestas[p.id] = parseInt(checked.value,10);
+  const btnRetroYaContestada = document.getElementById("btn-retro-ya-contestada");
+  const retroYaMsg = document.getElementById("retro-ya-msg");
+  if(btnRetroYaContestada){
+    btnRetroYaContestada.addEventListener("click", ()=>{
+      if(!selModuloRetro.value){
+        retroYaMsg.textContent = "Primero selecciona el módulo.";
+        retroYaMsg.className = "form-msg show err";
+        return;
+      }
+      const sesion = (typeof mjhtAsistenteActivo === "function") ? mjhtAsistenteActivo() : null;
+      const asistente = (sesion && sesion.participanteId && typeof ASISTENTES !== "undefined")
+        ? ASISTENTES.find(a=>a.id===sesion.participanteId) : null;
+      const opt = selModuloRetro.selectedOptions[0];
+      btnRetroYaContestada.disabled = true;
+      fetch("/.netlify/functions/retro-completado-marcar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          modulo: selModuloRetro.value,
+          moduloTema: opt ? opt.dataset.tema : "",
+          participanteId: asistente ? asistente.id : (sesion ? sesion.participanteId : ""),
+          participanteNombre: asistente ? asistente.nombre : "",
+        }),
+      })
+        .then(async (resp)=>{
+          const data = await resp.json().catch(()=>({}));
+          if(!resp.ok || !data.ok) throw new Error((data && data.error) || "Error al guardar");
+          retroYaMsg.textContent = "¡Gracias! Quedó marcado como contestado.";
+          retroYaMsg.className = "form-msg show ok";
+        })
+        .catch((err)=>{
+          retroYaMsg.textContent = "No se pudo guardar (" + (err.message||err) + ").";
+          retroYaMsg.className = "form-msg show err";
+        })
+        .finally(()=>{ btnRetroYaContestada.disabled = false; });
     });
-    if(Object.keys(respuestas).length < RETRO_PREGUNTAS.length){
-      if(msg){ msg.textContent = "Marca las 16 preguntas antes de enviar."; msg.className="form-msg show err"; }
-      return;
-    }
-    const btn = formRetro.querySelector("button[type=submit]");
-    btn.disabled = true;
-    fetch("/.netlify/functions/feedback-modulo-submit", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        moduloId: opt.value,
-        moduloTema: opt.dataset.tema,
-        fecha: opt.dataset.fecha,
-        facilitador: opt.dataset.facilitador,
-        nombre: selNombreRetro.value,
-        respuestas,
-        valioso: document.getElementById("retro-valioso").value.trim(),
-        cambiar: document.getElementById("retro-cambiar").value.trim(),
-      }),
-    })
-      .then(async (resp)=>{
-        const data = await resp.json().catch(()=>({}));
-        if(!resp.ok || !data.ok) throw new Error((data && data.error) || "Error al enviar");
-        if(msg){ msg.textContent = "¡Gracias! Tu retroalimentación quedó registrada."; msg.className="form-msg show ok"; }
-        formRetro.reset();
-        document.getElementById("retro-fecha-auto").value = "";
-        document.getElementById("retro-facilitador-auto").value = "";
-      })
-      .catch((err)=>{
-        if(msg){ msg.textContent = "No se pudo enviar (" + (err.message||err) + "). Intenta de nuevo o escribe a hazlotuyo@theokpeople.com."; msg.className="form-msg show err"; }
-      })
-      .finally(()=>{ btn.disabled = false; });
-  });
+  }
 
   // Selects de "Sube tu cuestionario previo contestado" + espejo local
   const selParticipanteCR = document.getElementById("sel-participante-cuestionario-respuesta");
