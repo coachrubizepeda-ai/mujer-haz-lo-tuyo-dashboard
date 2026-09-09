@@ -39,7 +39,7 @@
     <button class="tab-btn" data-tab="t-perfiles">Perfiles de asistentes</button>
     <button class="tab-btn" data-tab="t-expectativas">Expectativas</button>
     <button class="tab-btn" data-tab="t-retro">Retroalimentación</button>
-    <button class="tab-btn" data-tab="t-materiales">Compartir materiales</button>
+    <button class="tab-btn" data-tab="t-materiales">Compartir contenido</button>
     <button class="tab-btn" data-tab="t-tarea">Subir tarea</button>
     <button class="tab-btn" data-tab="t-calendario">Calendario general</button>
     <button class="tab-btn" data-tab="t-lineamientos">Lineamientos</button>
@@ -96,7 +96,7 @@
           <div><label>Tu nombre (facilitador) *</label>
             <select name="ponente_nombre" id="sel-ponente-nombre-asistencia" required><option value="">Selecciona tu nombre…</option></select>
           </div>
-          <div><label>Módulo *</label>
+          <div><label>Contenido *</label>
             <select name="modulo" id="sel-modulo-asistencia" required></select>
           </div>
         </div>
@@ -177,7 +177,7 @@
     <div class="card">
       <label>Nombre *</label>
       <select id="sel-nombre-expectativas"><option value="">Selecciona tu nombre…</option></select>
-      <label style="margin-top:10px;">Módulo</label>
+      <label style="margin-top:10px;">Contenido</label>
       <select id="sel-modulo-expectativas"></select>
     </div>
     <div id="expectativas-wrap"><p class="file-hint">Selecciona tu nombre arriba para ver las expectativas de tu módulo.</p></div>
@@ -215,7 +215,7 @@
   <section class="tab-panel" id="t-materiales">
     <div class="section-head">
       <span class="eyebrow">Tu presentación</span>
-      <h2>Compartir materiales</h2>
+      <h2>Compartir contenido</h2>
       <p>Sube tu presentación en PDF, un .zip (por ejemplo, con las skills que las participantes deban instalar), o comparte cualquier liga que le sirva al grupo: página web, podcast, video, red social. Rubí lo publica en tu módulo para las asistentes.</p>
     </div>
     <div class="card">
@@ -227,7 +227,7 @@
           <div><label>Nombre *</label>
             <select name="nombre" id="sel-nombre-materiales" required><option value="">Selecciona tu nombre…</option></select>
           </div>
-          <div><label>Módulo *</label>
+          <div><label>Contenido *</label>
             <select name="modulo" id="sel-modulo-materiales" required></select>
           </div>
         </div>
@@ -297,7 +297,7 @@
           <div><label>Nombre *</label>
             <select id="sel-nombre-tarea" required><option value="">Selecciona tu nombre…</option></select>
           </div>
-          <div><label>Módulo *</label>
+          <div><label>Contenido *</label>
             <select id="sel-modulo-tarea" required></select>
           </div>
         </div>
@@ -323,7 +323,7 @@
     <div id="cal-legend"></div>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>No.</th><th>Fecha</th><th>Módulo</th><th>Grupo</th><th>Facilitador</th></tr></thead>
+        <thead><tr><th>No.</th><th>Fecha</th><th>Contenido</th><th>Grupo</th><th>Facilitador</th></tr></thead>
         <tbody id="cal-body"></tbody>
       </table>
     </div>
@@ -405,7 +405,7 @@
           <div><label>Nombre *</label>
             <select name="nombre" id="sel-nombre-semblanza-ponente" required><option value="">Selecciona tu nombre…</option></select>
           </div>
-          <div><label>Módulo que impartes *</label>
+          <div><label>Contenido que impartes *</label>
             <select name="modulo" id="sel-modulo-semblanza" required></select>
           </div>
         </div>
@@ -515,11 +515,11 @@
           <a class="btn btn-outline btn-sm" href="https://waze.com/ul?q=Club%20de%20Empresarios%20Torre%20Inxignia" target="_blank" rel="noopener">Waze</a>
         </div>
         <div style="margin-top:18px;">
-          <h4 style="margin-bottom:8px;">Materiales que has compartido para este módulo</h4>
+          <h4 style="margin-bottom:8px;">Contenido que has compartido para este módulo</h4>
           <p class="file-hint" style="margin-top:-4px;">Así puedes confirmar que cayeron donde deben. Si algo cayó en el módulo equivocado, cámbialo aquí mismo con el selector; si ya no aplica, elimínalo.</p>
           <div class="mis-materiales-wrap" data-modulo="${m.id} - ${m.tema}"><p class="file-hint">Cargando…</p></div>
           <div class="subida-rapida-modulo" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--gris-claro);" data-modulo="${m.id} - ${m.tema}">
-            <p class="file-hint" style="margin-top:0;"><b>Subir directo a este módulo</b> — lo que subas aquí es exactamente lo que la asistente ve y puede bajar en su portal, en "Módulos y materiales".</p>
+            <p class="file-hint" style="margin-top:0;"><b>Subir directo a este módulo</b> — lo que subas aquí es exactamente lo que la asistente ve y puede bajar en su portal, en "Contenido".</p>
             <input type="file" class="subida-rapida-archivo">
             <input type="url" class="subida-rapida-liga" placeholder="O pega una liga (podcast, Instagram, sitio, etc.)" style="margin-top:8px;">
             <button type="button" class="btn btn-outline btn-sm subida-rapida-btn" style="margin-top:8px;">Subir a este módulo</button>

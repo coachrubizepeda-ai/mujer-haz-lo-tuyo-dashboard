@@ -645,4 +645,16 @@ footer.site a:hover{color:var(--azul-oscuro);}
   .hero h1{font-size:1.15rem;}
   .section-head h2{font-size:1.25rem;}
   .btn{padding:13px 20px;}
+
+  /* Tabla de Tareas: en vez de columnas separadas de "Módulo" y "Tema"
+     (que obligaban a recorrer la tabla hacia la derecha), se junta todo
+     en una sola columna angosta: el número (01, 02, 03...) en grande y
+     el tema abajo en chico. Así la columna de Contenido queda angosta
+     y el resto del ancho lo aprovecha la columna de Tarea. */
+  .table-tareas{min-width:0;}
+  .table-tareas th:first-child,.table-tareas td:first-child{
+    width:74px;max-width:74px;padding-right:8px;
+  }
+  .tarea-modulo-num{font-weight:700;font-size:1rem;color:var(--azul-oscuro);}
+  .tarea-modulo-tema{font-size:.74rem;color:var(--gris-claro);margin-top:2px;line-height:1.25;}
 }

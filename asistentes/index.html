@@ -40,7 +40,7 @@
     <button class="tab-btn" data-tab="t-test">Test Trimetrix</button>
     <div class="side-sep"><span>El programa</span></div>
     <button class="tab-btn" data-tab="t-calendario">Calendario</button>
-    <button class="tab-btn" data-tab="t-modulos">Módulos y materiales</button>
+    <button class="tab-btn" data-tab="t-modulos">Contenido</button>
     <button class="tab-btn" data-tab="t-tareas">Tareas</button>
     <button class="tab-btn" data-tab="t-ponentes">Facilitadores</button>
     <div class="side-sep"><span>Antes de cada sesión</span></div>
@@ -170,7 +170,7 @@
     <div id="cal-legend"></div>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>No.</th><th>Fecha</th><th>Módulo</th><th>Grupo</th><th>Facilitador</th></tr></thead>
+        <thead><tr><th>No.</th><th>Fecha</th><th>Contenido</th><th>Grupo</th><th>Facilitador</th></tr></thead>
         <tbody id="cal-body"></tbody>
       </table>
     </div>
@@ -180,7 +180,7 @@
   <section class="tab-panel" id="t-modulos">
     <div class="section-head">
       <span class="eyebrow">Contenido</span>
-      <h2>Módulos y materiales</h2>
+      <h2>Contenido</h2>
       <p>Lecturas previas, tareas y presentación de cada sesión. Rubí actualiza este espacio antes de cada módulo.</p>
     </div>
     <div id="modulos-acc"></div>
@@ -191,11 +191,11 @@
     <div class="section-head">
       <span class="eyebrow">Seguimiento</span>
       <h2>Tareas por módulo</h2>
-      <p>Lista rápida de la tarea asociada a cada módulo. Consulta la pestaña "Módulos y materiales" para el detalle completo de cada sesión.</p>
+      <p>Lista rápida de la tarea asociada a cada módulo. Consulta la pestaña "Contenido" para el detalle completo de cada sesión.</p>
     </div>
     <div class="table-wrap">
-      <table>
-        <thead><tr><th>Módulo</th><th>Tema</th><th>Tarea</th></tr></thead>
+      <table class="table-tareas">
+        <thead><tr><th>Contenido</th><th>Tarea</th></tr></thead>
         <tbody id="tareas-body"></tbody>
       </table>
     </div>
@@ -224,7 +224,7 @@
         <div class="form-msg"></div>
         <div class="field-row">
           <div><label>Nombre *</label><input type="text" id="expectativas-nombre" required></div>
-          <div><label>Módulo *</label>
+          <div><label>Contenido *</label>
             <select id="sel-modulo-cuestionario" required></select>
           </div>
         </div>
@@ -247,7 +247,7 @@
       <p>Tu opinión ayuda a mejorar cada edición del diplomado y es el termómetro que usa Rubí con cada facilitador(a). Elige el módulo que vas a calificar y abre el formulario.</p>
     </div>
     <div class="card">
-      <label>Módulo *</label>
+      <label>Contenido *</label>
       <select id="sel-modulo-retro" required></select>
       <a id="retro-liga-externa" class="btn btn-primary" href="https://forms.cloud.microsoft/r/snHRYvGD8h?origin=lprLink" target="_blank" rel="noopener" style="margin-top:14px;display:inline-block;">Abrir formulario de retroalimentación</a>
       <p style="font-size:.85rem;color:var(--gris-claro);margin:14px 0 0;">Al abrir el formulario, tu respuesta queda registrada de forma anónima — el formulario no pide ni guarda tu nombre.</p>
@@ -393,7 +393,7 @@
         <h5>Tarea</h5><p>${m.tarea}</p>
         ${m.presentacion ? `<a class="btn btn-outline btn-sm" href="${m.presentacion}" target="_blank">Descargar presentación ↓</a>` : ""}
         ${socialChipsHTML(m.redes)}
-        <h5 style="margin-top:14px;">Materiales compartidos por tu facilitador(a)</h5>
+        <h5 style="margin-top:14px;">Contenido compartido por tu facilitador(a)</h5>
         <div class="materiales-modulo-asistente" data-modulo="${claveModulo}"><p class="file-hint">Cargando…</p></div>
       </div></div>`;
     accWrap.appendChild(el);
@@ -423,8 +423,8 @@
   MODULOS.forEach(m=>{
     const tr = document.createElement("tr");
     tr.dataset.modulo = `${m.id} - ${m.tema}`;
-    tr.innerHTML = `<td>${typeof m.id==="number" ? "Módulo "+m.id : "Cierre"}</td>
-      <td>${m.tema}</td>
+    const numModulo = typeof m.id==="number" ? String(m.id).padStart(2,"0") : "—";
+    tr.innerHTML = `<td><div class="tarea-modulo-num">${numModulo}</div><div class="tarea-modulo-tema">${m.tema}</div></td>
       <td class="tarea-celda" style="white-space:pre-wrap;">${m.tarea || "Por confirmar"}</td>`;
     tareasBody.appendChild(tr);
   });
