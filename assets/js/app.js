@@ -1027,6 +1027,14 @@ function mjhtTituloLigaHTML(url){
   if(u.includes("x.com") || u.includes("twitter.com")) return "Ver publicación ↗";
   return "Abrir liga ↗";
 }
+// Botón destacado para el/la asistente cuando el facilitador marcó un
+// material como la presentación oficial del módulo (es_presentacion=true).
+function mjhtBotonPresentacionOficialHTML(item){
+  const url = item.tipo === "archivo"
+    ? `/.netlify/functions/materiales-download?key=${encodeURIComponent(item.fileKey)}`
+    : item.nombre_o_url;
+  return `<a class="btn btn-sm pres-oficial" href="${url}" target="_blank" rel="noopener">📌 Presentación oficial · ${item.tipo === "archivo" ? "Descargar" : "Ver"}</a>`;
+}
 function mjhtLigaMaterialHTML(x){
   const verUrl = x.tipo === "archivo" ? `/.netlify/functions/materiales-download?key=${encodeURIComponent(x.fileKey)}` : x.nombre_o_url;
   return x.tipo === "archivo"
