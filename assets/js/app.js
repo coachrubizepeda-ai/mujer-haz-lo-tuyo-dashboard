@@ -1056,7 +1056,7 @@ async function renderMisMaterialesModuloHTML(claveModulo){
       <td style="white-space:nowrap;">
         <select style="display:inline-block;width:auto;margin:0 6px 0 0;font-size:.8rem;" onchange="mjhtCambiarModuloMaterial('${x.id}', this.value)">${opcionesModulo}</select>
         <button type="button" class="btn-edit-nombre" title="${x.es_presentacion ? "Quitar la marca de presentación oficial" : "Marcar como la presentación oficial de este módulo"}" onclick="mjhtMarcarPresentacion('${x.id}', '${claveModulo}', ${x.es_presentacion ? "false" : "true"})">${x.es_presentacion ? "📌 Quitar" : "📌 Marcar"}</button>
-        <button type="button" class="btn-edit-nombre" title="Eliminar" onclick="mjhtEliminarMaterial('${x.id}')">🗑️</button>
+        <button type="button" class="btn-edit-nombre" title="Eliminar (pide confirmar con un segundo clic)" onclick="mjhtEliminarMaterial(this, '${x.id}')">🗑️</button>
       </td>
     </tr>`).join("");
   return `<div class="table-wrap"><table>

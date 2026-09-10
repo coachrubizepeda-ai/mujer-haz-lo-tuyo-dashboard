@@ -577,11 +577,38 @@
   });
   // Eliminar / mover de módulo un material ya compartido — afecta el
   // backend real (Netlify Blobs), visible para todos de inmediato.
-  window.mjhtEliminarMaterial = function(id){
-    if(!confirm("¿Eliminar este material de tu lista? Esta acción no se puede deshacer.")) return;
+  // Antes usaba confirm() del navegador — pero tras varios usos seguidos,
+  // Chrome/Safari a veces empieza a ignorarlo silenciosamente ("Prevent this
+  // page from creating additional dialogs"), y entonces el clic no hacía
+  // nada, sin avisar por qué. Ahora es un confirmar de dos clics sobre el
+  // propio botón: el primer clic solo arma el borrado (se pone en rojo y
+  // dice "¿Seguro?"), el segundo clic (dentro de 4 segundos) sí elimina.
+  window.mjhtEliminarMaterial = function(btn, id){
+    if(btn.dataset.confirmando !== "1"){
+      btn.dataset.confirmando = "1";
+      btn.dataset.original = btn.textContent;
+      btn.textContent = "¿Seguro? 🗑️";
+      btn.style.color = "var(--warn)";
+      clearTimeout(btn._mjhtTimeout);
+      btn._mjhtTimeout = setTimeout(()=>{
+        btn.dataset.confirmando = "0";
+        btn.textContent = btn.dataset.original || "🗑️";
+        btn.style.color = "";
+      }, 4000);
+      return;
+    }
+    clearTimeout(btn._mjhtTimeout);
+    btn.disabled = true;
+    btn.textContent = "Eliminando…";
     eliminarMaterialCompartido(id)
       .then(()=> selPonente.dispatchEvent(new Event("change")))
-      .catch(err=> alert("No se pudo eliminar: " + (err.message||err)));
+      .catch(err=>{
+        alert("No se pudo eliminar: " + (err.message||err));
+        btn.disabled = false;
+        btn.dataset.confirmando = "0";
+        btn.textContent = btn.dataset.original || "🗑️";
+        btn.style.color = "";
+      });
   };
   window.mjhtCambiarModuloMaterial = function(id, nuevoModulo){
     actualizarModuloMaterialCompartido(id, nuevoModulo)
