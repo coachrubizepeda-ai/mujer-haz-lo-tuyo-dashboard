@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maratón Sesión 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=League+Gothic&family=Montserrat:wght@400;500;600;700&display=swap">
+<style>
+  :root{
+    --ground:#F4F3F0;
+    --surface:#FFFFFF;
+    --surface-2:#EBE9E4;
+    --ink:#2C3331;
+    --ink-soft:#6F7271;
+    --line:#DCD9D3;
+    --teal:#00ADBB;
+    --yellow:#FFDD00;
+    --blue:#007DA5;
+    --char:#3D4543;
+    --gray:#6F7271;
+    --on-teal:#04302F;
+    --on-yellow:#3D3300;
+    --on-blue:#FFFFFF;
+    --on-char:#FFFFFF;
+    --shadow:0 1px 2px rgba(44,51,49,.08), 0 8px 24px rgba(44,51,49,.10);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ground:#15191A; --surface:#1E2425; --surface-2:#262D2E;
+      --ink:#EDEEEC; --ink-soft:#9AA3A1; --line:#333B3C;
+      --teal:#25C6D3; --yellow:#FFE23D; --blue:#2FA0C6;
+      --char:#C3CAC8; --gray:#8C9491;
+      --on-teal:#04302F; --on-yellow:#3D3300; --on-blue:#04242F; --on-char:#15191A;
+      --shadow:0 1px 2px rgba(0,0,0,.35), 0 10px 28px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#15191A; --surface:#1E2425; --surface-2:#262D2E;
+    --ink:#EDEEEC; --ink-soft:#9AA3A1; --line:#333B3C;
+    --teal:#25C6D3; --yellow:#FFE23D; --blue:#2FA0C6;
+    --char:#C3CAC8; --gray:#8C9491;
+    --on-teal:#04302F; --on-yellow:#3D3300; --on-blue:#04242F; --on-char:#15191A;
+    --shadow:0 1px 2px rgba(0,0,0,.35), 0 10px 28px rgba(0,0,0,.35);
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--ground);
+    color:var(--ink);
+    font-family:"Montserrat", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size:15px; line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1120px;margin:0 auto;padding-inline:16px;padding-block:28px 56px}
+
+  .top{display:flex;flex-wrap:wrap;align-items:flex-end;gap:16px 24px;margin-bottom:24px}
+  .brandmark{display:flex;align-items:center;gap:10px}
+  .dots{display:flex;gap:5px}
+  .dots i{width:9px;height:9px;border-radius:50%;display:block}
+  .eyebrow{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-soft);font-weight:600}
+  h1{
+    font-family:"League Gothic","Oswald",Impact,sans-serif;font-weight:400;
+    font-size:clamp(42px,8vw,68px);line-height:.92;margin:2px 0 0;text-wrap:balance;
+  }
+  h1 span{color:var(--teal)}
+  .lede{color:var(--ink-soft);max-width:52ch;margin:10px 0 0;font-size:14px}
+  .top-actions{margin-left:auto;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+
+  button{font-family:inherit;font-size:inherit;cursor:pointer}
+  .btn{
+    border:1px solid var(--line);background:var(--surface);color:var(--ink);
+    border-radius:999px;padding:8px 16px;font-weight:600;font-size:13px;
+    transition:border-color .15s ease, transform .1s ease;
+  }
+  .btn:hover{border-color:var(--teal)}
+  .btn:active{transform:translateY(1px)}
+  .btn-solid{background:var(--char);border-color:var(--char);color:var(--on-char)}
+  .btn-lg{padding:12px 20px;font-size:14px}
+  :focus-visible{outline:3px solid var(--teal);outline-offset:2px;border-radius:6px}
+
+  .statusbar{
+    display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;
+    padding:12px 16px;margin-bottom:20px;
+    background:var(--surface);border:1px solid var(--line);border-radius:14px;
+    box-shadow:var(--shadow);
+  }
+  .statusbar .eyebrow{margin-right:auto}
+
+  .legend{display:flex;flex-wrap:wrap;gap:8px 16px;margin:0 0 16px;padding:0;list-style:none}
+  .legend li{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--ink-soft);font-weight:600}
+  .legend i{width:12px;height:12px;border-radius:3px;display:block}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:12px}
+  .tile{position:relative;aspect-ratio:3/4;border:0;padding:0;background:none;perspective:900px}
+  .tile-inner{position:absolute;inset:0;transition:transform .5s cubic-bezier(.4,.1,.2,1);transform-style:preserve-3d}
+  .tile.done .tile-inner{transform:rotateY(180deg)}
+  .face{
+    position:absolute;inset:0;border-radius:14px;backface-visibility:hidden;
+    display:flex;flex-direction:column;justify-content:space-between;
+    padding:12px 12px 10px;text-align:left;box-shadow:var(--shadow);
+  }
+  .face-back{
+    background:var(--surface);border:1px dashed var(--line);transform:rotateY(180deg);
+    align-items:center;justify-content:center;color:var(--ink-soft);
+    font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  }
+  .face-front{transition:transform .18s ease}
+  .face-front .num{font-family:"League Gothic",Impact,sans-serif;font-size:44px;line-height:.85;font-variant-numeric:tabular-nums}
+  .face-front .blk{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;opacity:.85;line-height:1.25}
+  .tile:not(.done):hover .face-front{transform:translateY(-3px)}
+  .tile:disabled{cursor:default}
+
+  .c-disc{background:var(--blue);color:var(--on-blue)}
+  .c-com{background:var(--teal);color:var(--on-teal)}
+  .c-fi{background:var(--yellow);color:var(--on-yellow)}
+  .c-eq{background:var(--char);color:var(--on-char)}
+  .c-int{background:var(--gray);color:#fff}
+  .b-disc{background:var(--blue)} .b-com{background:var(--teal)}
+  .b-fi{background:var(--yellow)} .b-eq{background:var(--char)} .b-int{background:var(--gray)}
+
+  .overlay{
+    position:fixed;inset:0;z-index:50;background:rgba(20,25,24,.72);
+    backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;
+    padding:16px;
+    padding-top:calc(16px + env(safe-area-inset-top,0px));
+    padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));
+  }
+  .card{
+    width:min(660px,100%);max-height:100%;overflow-y:auto;
+    background:var(--surface);border-radius:22px;
+    box-shadow:0 24px 60px rgba(0,0,0,.35);
+    animation:pop .34s cubic-bezier(.22,1,.36,1);
+  }
+  @keyframes pop{from{opacity:0;transform:translateY(12px) scale(.97)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){
+    .card{animation:none} .tile-inner,.face-front{transition:none}
+  }
+  .card-head{display:flex;align-items:center;gap:12px;padding:16px 22px;border-radius:22px 22px 0 0}
+  .card-head .num{font-family:"League Gothic",Impact,sans-serif;font-size:34px;line-height:1;font-variant-numeric:tabular-nums}
+  .card-head .blk{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
+  .card-body{padding:22px}
+  .q{font-size:clamp(18px,3.4vw,23px);font-weight:600;line-height:1.35;margin:0;text-wrap:balance}
+  .answer{margin-top:18px;padding:16px 18px;background:var(--surface-2);border-left:4px solid var(--teal);border-radius:0 12px 12px 0}
+  .answer .eyebrow{margin-bottom:6px}
+  .answer p{margin:0;font-size:14.5px;line-height:1.55}
+  .nota{
+    margin-top:14px;padding:12px 14px;border-radius:12px;
+    background:var(--surface-2);font-size:13px;line-height:1.5;color:var(--ink);
+  }
+  .nota strong{color:var(--teal)}
+  .card-actions{display:flex;flex-wrap:wrap;gap:10px;padding:0 22px 22px}
+  .card-actions .grow{flex:1 1 180px}
+
+  .foot{
+    margin-top:30px;padding-top:18px;border-top:1px solid var(--line);
+    color:var(--ink-soft);font-size:12.5px;display:flex;flex-wrap:wrap;gap:6px 18px;align-items:center;
+  }
+  @media (max-width:520px){
+    .grid{grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:9px}
+    .face-front .num{font-size:34px}
+  }
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="brandmark">
+        <span class="dots"><i style="background:var(--teal)"></i><i style="background:var(--yellow)"></i><i style="background:var(--blue)"></i></span>
+        <span class="eyebrow">Mujer, haz lo tuyo · Sesión 1</span>
+      </div>
+      <h1>Maratón <span>de repaso</span></h1>
+      <p class="lede">30 tarjetas volteadas sobre DISC, estilos de comunicación, fuerzas impulsoras e inteligencia emocional. Se destapa una, se conversa en voz alta y se compara con la respuesta. Sin puntos, sin ganadoras: el objetivo es que los conceptos se asienten.</p>
+    </div>
+    <div class="top-actions">
+      <button class="btn" id="btnShuffle" type="button">Barajar</button>
+      <button class="btn" id="btnReset" type="button">Voltear todas</button>
+    </div>
+  </header>
+
+  <div class="statusbar">
+    <span class="eyebrow" id="left">30 tarjetas por destapar</span>
+    <button class="btn" id="btnRandom" type="button">Sacar una al azar</button>
+  </div>
+
+  <ul class="legend">
+    <li><i class="b-disc"></i>DISC · el cómo</li>
+    <li><i class="b-com"></i>Estilos de comunicación</li>
+    <li><i class="b-fi"></i>Fuerzas impulsoras · el porqué</li>
+    <li><i class="b-eq"></i>Inteligencia emocional</li>
+    <li><i class="b-int"></i>Integración</li>
+  </ul>
+
+  <div class="grid" id="grid"></div>
+
+  <p class="foot">
+    <span><strong>Idea de dinámica:</strong> que conteste quien quiera, no por turnos forzados.</span>
+    <span>Si nadie sabe, se abre la respuesta y se comenta.</span>
+    <span>Vale más la conversación que la respuesta exacta.</span>
+  </p>
+</div>
+
+<script>
+const PREGUNTAS = [
+  {b:"disc", q:"¿Qué mide cada una de las cuatro letras del DISC?",
+   a:"D: cómo respondes a los <strong>problemas y retos</strong>. I: cómo <strong>influyes</strong> en otras personas. S: cómo respondes al <strong>ritmo y al cambio</strong>. C: cómo respondes a las <strong>reglas y procedimientos</strong>."},
+  {b:"disc", q:"El DISC mide el «cómo» te comportas. ¿Qué NO mide?",
+   a:"No mide inteligencia, ni experiencia, ni tus motivadores (eso son las fuerzas impulsoras), ni si eres buena en tu trabajo. Y no hay perfiles buenos ni malos: hay estilos distintos."},
+  {b:"disc", q:"¿Cuál es la diferencia entre la Gráfica I y la Gráfica II de tu reporte?",
+   a:"Gráfica I = <strong>estilo adaptado</strong>: cómo crees que debes comportarte en tu entorno actual. Gráfica II = <strong>estilo natural</strong>: cómo respondes bajo presión o cuando ya no estás cuidando la forma. El natural es el que menos cambia con los años."},
+  {b:"disc", q:"Si tu gráfica adaptada es muy distinta a la natural, ¿qué te está diciendo?",
+   a:"Que estás invirtiendo mucha energía en comportarte distinto a como eres: suele traducirse en cansancio, irritabilidad o sensación de estar actuando un papel. Poca diferencia entre las dos = congruencia entre lo que eres y lo que muestras."},
+  {b:"disc", q:"Describe a una persona con D alta y C baja.",
+   a:"Directa, rápida, orientada a resultados, cómoda con el riesgo y con decidir sin toda la información. Poca paciencia para el detalle, los procedimientos y las reglas que no ve útiles."},
+  {b:"disc", q:"¿Cómo responde al cambio una persona con S alta? ¿Y una con S baja?",
+   a:"<strong>S alta:</strong> prefiere estabilidad y ritmo constante; necesita que le avisen, le expliquen y le den tiempo. Leal, paciente, gran escucha. <strong>S baja:</strong> ritmo rápido, multitarea, se energiza con lo nuevo y se aburre con la rutina."},
+  {b:"disc", q:"¿Qué es la Rueda de Success Insights y para qué sirve?",
+   a:"Coloca tu estilo en 8 segmentos (conductor, persuasor, promotor, relacionador, apoyador, coordinador, analista, implementador) y te deja ver de un vistazo la <strong>distancia entre tu punto natural y tu punto adaptado</strong>: cuánto te estás moviendo de tu centro.",
+   n:"Ojo con los nombres: <strong>estos ocho sí son estilos de comportamiento</strong> (salen del DISC). No confundirlos con los nombres de las fuerzas impulsoras."},
+
+  {b:"com", q:"Estás por hablar con una persona de D alta. ¿Qué haces y qué evitas?",
+   a:"<strong>Haz:</strong> ve al grano, sé breve, habla de resultados y de opciones, deja que decida. <strong>Evita:</strong> rodeos, contexto largo, detalle innecesario, hablarle del proceso antes que del resultado."},
+  {b:"com", q:"¿Cómo le comunicas algo a una persona de I alta?",
+   a:"<strong>Haz:</strong> cordialidad primero, permite que hable, usa ejemplos e historias, reconoce en público, deja el acuerdo por escrito al final. <strong>Evita:</strong> frialdad, abrumarla con datos y letras chiquitas, ir directo a la tarea sin saludar."},
+  {b:"com", q:"¿Cómo le comunicas un cambio a una persona de S alta?",
+   a:"<strong>Haz:</strong> anticípale, explica el porqué y cómo la afecta, baja el ritmo, pregunta y escucha, dale tiempo para procesar. <strong>Evita:</strong> presionarla por una decisión inmediata o cambiar las reglas sobre la marcha."},
+  {b:"com", q:"¿Cómo le comunicas algo a una persona de C alta?",
+   a:"<strong>Haz:</strong> lleva datos, hechos y evidencia; sé precisa y ordenada; anticipa sus preguntas; dale tiempo de analizar. <strong>Evita:</strong> improvisar, exagerar, presionar por una respuesta rápida o tomarte su cuestionamiento como algo personal."},
+  {b:"com", q:"Adaptar tu estilo, ¿qué es y qué no es?",
+   a:"<strong>Es</strong> ajustar la forma —ritmo, tono, nivel de detalle, orden de lo que dices— para que el mensaje llegue a quien tienes enfrente. <strong>No es</strong> fingir, cambiar de personalidad, dejar de decir lo que piensas ni renunciar a tus prioridades."},
+  {b:"com", q:"Dos mujeres competentes y con buena intención chocan una y otra vez. ¿Qué está pasando?",
+   a:"Casi siempre el conflicto es <strong>de estilo, no de contenido</strong>: distinto ritmo, distinta prioridad (tarea o persona) y distinta necesidad de detalle. Nombrar el estilo —«tú necesitas el dato completo, yo necesito decidir hoy»— desactiva el malentendido."},
+
+  {b:"fi", q:"¿Cuál es la diferencia entre el comportamiento (DISC) y las fuerzas impulsoras?",
+   a:"El DISC explica el <strong>CÓMO</strong> te comportas; las fuerzas impulsoras explican el <strong>PORQUÉ</strong>: qué te da energía y por qué haces lo que haces. Dos personas con el mismo DISC pueden moverse por razones opuestas.",
+   n:"Son <strong>dos lenguajes distintos</strong>. El DISC usa letras (D, I, S, C). Las fuerzas impulsoras usan nombres —Intelectual, Comandante, Armonioso…— y ninguno de esos nombres es una letra del DISC."},
+  {b:"fi", q:"Los 12 impulsores se agrupan en 6 pares. Nombra los 6 temas.",
+   a:"Conocimiento, Utilidad, Entorno, Otros, Poder y Metodologías. Cada tema tiene dos extremos y tú estás en algún punto de ese continuo."},
+  {b:"fi", q:"Par <em>Conocimiento</em>: nombra y explica sus dos extremos.",
+   a:"<strong>Instintivo:</strong> decide con experiencia e intuición, no necesita investigar de más. <strong>Intelectual:</strong> necesita aprender, investigar y dominar el tema antes de moverse; disfruta el conocimiento por sí mismo."},
+  {b:"fi", q:"Par <em>Utilidad</em>: nombra y explica sus dos extremos.",
+   a:"<strong>Orientado a los recursos:</strong> busca retorno, eficiencia y no desperdiciar tiempo, dinero ni talento. <strong>Desinteresado:</strong> hace las cosas por el valor de la experiencia, sin medir lo que obtiene a cambio."},
+  {b:"fi", q:"Par <em>Entorno</em>: nombra y explica sus dos extremos.",
+   a:"<strong>Objetivo:</strong> le importa que funcione, la forma es secundaria. <strong>Armonioso:</strong> necesita equilibrio, orden y belleza en su espacio y sus experiencias; el entorno le afecta el rendimiento."},
+  {b:"fi", q:"Par <em>Otros</em>: ¿en qué se diferencian el altruista y el intencional?",
+   a:"<strong>Altruista:</strong> ayuda por el gusto de ayudar, a quien se le ponga enfrente. <strong>Intencional:</strong> también ayuda, pero con propósito: elige a quién y para qué, alineado a una causa o resultado."},
+  {b:"fi", q:"Par <em>Poder</em>: ¿qué significan Comandante y Colaborativo?",
+   a:"<strong>Comandante:</strong> le mueve tener posición, control y ser reconocida como la autoridad; quiere estar donde se decide. <strong>Colaborativo:</strong> aporta desde el equipo y le tiene sin cuidado el reflector; le importa que salga, no quién lo firme.",
+   n:"<strong>Comandante no es una letra del DISC.</strong> Es el nombre de una fuerza impulsora (el par Poder), o sea una <em>motivación</em>, no un comportamiento. Se parece a la D pero no es lo mismo: puedes ser D baja y aun así Comandante, o D muy alta y Colaborativa."},
+  {b:"fi", q:"Par <em>Metodologías</em>: ¿qué significan Estructurado y Receptivo?",
+   a:"<strong>Estructurado:</strong> le da energía trabajar con sistemas, principios y marcos definidos; la tradición y el método le dan certeza. <strong>Receptivo:</strong> abierto a nuevas formas, flexible ante lo establecido, cómodo cambiando la manera de hacer las cosas."},
+  {b:"fi", q:"En tu reporte, ¿qué significan fuerzas primarias, situacionales e indiferentes?",
+   a:"<strong>Primarias</strong> (las primeras): te dan energía todos los días y explican tus decisiones. <strong>Situacionales:</strong> aparecen según el contexto. <strong>Indiferentes</strong> (las últimas): casi no te mueven… y ahí suele estar la fricción con quien las tiene como primarias."},
+
+  {b:"eq", q:"Nombra las cinco dimensiones de la inteligencia emocional.",
+   a:"Autoconciencia, Autorregulación, Motivación, Conciencia social (empatía) y Regulación social (habilidades sociales)."},
+  {b:"eq", q:"De esas cinco, ¿cuáles son intrapersonales y cuáles interpersonales?",
+   a:"<strong>Intrapersonales</strong> (hacia dentro): autoconciencia, autorregulación y motivación. <strong>Interpersonales</strong> (hacia fuera): conciencia social y regulación social."},
+  {b:"eq", q:"¿Qué es autorregulación y qué NO es?",
+   a:"<strong>Es</strong> la capacidad de hacer una pausa entre el estímulo y tu respuesta, y redirigir un impulso o una emoción disruptiva. <strong>No es</strong> reprimir, tragarse las cosas ni fingir que no pasó nada."},
+  {b:"eq", q:"¿Por qué la inteligencia emocional sí se desarrolla y tu estilo DISC casi no cambia?",
+   a:"El DISC describe un <strong>estilo</strong> estable, la forma natural en que te comportas. La inteligencia emocional es un conjunto de <strong>competencias entrenables</strong>: se desarrollan con práctica deliberada, retroalimentación y repetición."},
+  {b:"eq", q:"En los resultados del grupo, ¿cuál fue la dimensión más baja y cuáles las más altas?",
+   a:"La más baja fue <strong>autorregulación</strong> (media del grupo ≈53 contra 71 de la norma). Las más altas: <strong>regulación social y conciencia social</strong>, casi todas en la norma o arriba. Traducción: el grupo lee y maneja muy bien a las demás, y se maneja a sí mismo con menos herramientas."},
+  {b:"eq", q:"¿Qué riesgo corre alguien con conciencia social muy alta y autoconciencia baja?",
+   a:"Lee perfectísimo a las demás y a sí misma no. Se ajusta al otro, anticipa necesidades ajenas, se sobrecarga y pierde de vista sus propios límites, su cansancio y lo que ella quiere. Es uno de los contrastes que aparecieron en el grupo."},
+  {b:"eq", q:"¿Qué es la empatía (conciencia social) y con qué se confunde?",
+   a:"Es <strong>reconocer y entender</strong> lo que la otra persona está sintiendo, sin adoptarlo como propio. Se confunde con dar la razón, con la simpatía y con cargar el problema del otro. Entender no obliga a estar de acuerdo."},
+
+  {b:"int", q:"Dos mujeres con D alta lideran igual de fuerte. ¿Qué las hace distintas y por qué importa?",
+   a:"Las distingue el porqué: una puede ser <strong>Comandante</strong> (le mueve la autoridad y el control) y la otra <strong>Altruista</strong> (le mueve resolverle la vida a la gente). Mismo cómo, distinto motor: se les motiva, se les reconoce y se negocia con ellas de forma diferente.",
+   n:"Aquí se ve la diferencia: <strong>D alta</strong> viene del DISC (comportamiento) y <strong>Comandante / Altruista</strong> vienen de las fuerzas impulsoras (motivación)."},
+  {b:"int", q:"Si tu perfil no cambia, ¿para qué sirve conocerlo?",
+   a:"Para dejar de leer como defecto lo que es estilo, para decidir con conciencia <strong>cuándo adaptarte y cuándo sostenerte</strong>, para pedir lo que necesitas con lenguaje y para construir presencia desde lo que ya eres, en vez de copiar el estilo de alguien más."},
+  {b:"int", q:"Explica en una frase la relación entre DISC, fuerzas impulsoras e inteligencia emocional.",
+   a:"El <strong>DISC</strong> dice cómo te comportas, las <strong>fuerzas impulsoras</strong> dicen por qué lo haces, y la <strong>inteligencia emocional</strong> determina qué tan bien lo administras: los dos primeros describen, el tercero se entrena."}
+];
+
+const BLOQUES = {
+  disc:{nombre:"DISC", clase:"c-disc"},
+  com:{nombre:"Comunicación", clase:"c-com"},
+  fi:{nombre:"Fuerzas impulsoras", clase:"c-fi"},
+  eq:{nombre:"Inteligencia emocional", clase:"c-eq"},
+  int:{nombre:"Integración", clase:"c-int"}
+};
+
+let orden = PREGUNTAS.map((_,i)=>i);
+let vistas = [];
+
+const grid = document.getElementById("grid");
+const leftEl = document.getElementById("left");
+
+function renderGrid(){
+  grid.innerHTML = "";
+  orden.forEach((idx, pos)=>{
+    const p = PREGUNTAS[idx];
+    const t = document.createElement("button");
+    t.className = "tile" + (vistas.includes(idx) ? " done" : "");
+    t.type = "button";
+    t.setAttribute("aria-label", "Tarjeta " + (pos+1) + " · " + BLOQUES[p.b].nombre);
+    t.innerHTML =
+      '<span class="tile-inner">' +
+        '<span class="face face-front ' + BLOQUES[p.b].clase + '">' +
+          '<span class="blk">' + BLOQUES[p.b].nombre + '</span>' +
+          '<span class="num">' + String(pos+1).padStart(2,"0") + '</span>' +
+        '</span>' +
+        '<span class="face face-back">Ya la vimos</span>' +
+      '</span>';
+    t.addEventListener("click", ()=>abrir(idx, pos));
+    grid.appendChild(t);
+  });
+  const faltan = PREGUNTAS.length - vistas.length;
+  leftEl.textContent = faltan === 0
+    ? "Ya pasaron las 30 tarjetas"
+    : faltan + (faltan===1 ? " tarjeta por destapar" : " tarjetas por destapar");
+}
+
+function abrir(idx, pos){
+  const p = PREGUNTAS[idx];
+  const bl = BLOQUES[p.b];
+  const ov = document.createElement("div");
+  ov.className = "overlay";
+  ov.innerHTML =
+    '<div class="card" role="dialog" aria-modal="true" aria-label="Tarjeta ' + (pos+1) + '">' +
+      '<div class="card-head ' + bl.clase + '">' +
+        '<span class="num">' + String(pos+1).padStart(2,"0") + '</span>' +
+        '<span class="blk">' + bl.nombre + '</span>' +
+      '</div>' +
+      '<div class="card-body">' +
+        '<p class="q">' + p.q + '</p>' +
+        '<div id="ans" hidden>' +
+          '<div class="answer"><div class="eyebrow">Respuesta</div><p>' + p.a + '</p></div>' +
+          (p.n ? '<div class="nota"><span class="eyebrow">Para no confundir</span><br>' + p.n + '</div>' : '') +
+        '</div>' +
+      '</div>' +
+      '<div class="card-actions">' +
+        '<button class="btn btn-solid btn-lg grow" id="verBtn" type="button">Ver respuesta</button>' +
+        '<button class="btn btn-lg grow" id="sigBtn" type="button">Siguiente tarjeta</button>' +
+        '<button class="btn btn-lg" id="cerrarBtn" type="button">Cerrar</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(ov);
+
+  if(!vistas.includes(idx)) vistas.push(idx);
+
+  ov.querySelector("#verBtn").addEventListener("click", e=>{
+    ov.querySelector("#ans").hidden = false;
+    e.target.hidden = true;
+  });
+  ov.querySelector("#sigBtn").addEventListener("click", ()=>{
+    cerrar();
+    const pendientes = orden.map((v,i)=>i).filter(i=>!vistas.includes(orden[i]));
+    if(pendientes.length){
+      const nextPos = pendientes[Math.floor(Math.random()*pendientes.length)];
+      abrir(orden[nextPos], nextPos);
+    }
+  });
+  ov.querySelector("#cerrarBtn").addEventListener("click", cerrar);
+  ov.addEventListener("click", e=>{ if(e.target===ov) cerrar(); });
+  function onKey(e){ if(e.key==="Escape") cerrar(); }
+  document.addEventListener("keydown", onKey);
+  ov.querySelector("#verBtn").focus();
+
+  function cerrar(){
+    document.removeEventListener("keydown", onKey);
+    ov.remove();
+    renderGrid();
+  }
+}
+
+document.getElementById("btnShuffle").addEventListener("click", ()=>{
+  for(let i=orden.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [orden[i],orden[j]] = [orden[j],orden[i]];
+  }
+  vistas = [];
+  renderGrid();
+});
+document.getElementById("btnReset").addEventListener("click", ()=>{
+  vistas = [];
+  renderGrid();
+});
+document.getElementById("btnRandom").addEventListener("click", ()=>{
+  const pendientes = orden.map((v,i)=>i).filter(i=>!vistas.includes(orden[i]));
+  if(!pendientes.length) return;
+  const pos = pendientes[Math.floor(Math.random()*pendientes.length)];
+  abrir(orden[pos], pos);
+});
+
+renderGrid();
+</script>
+
+</body>
+</html>
