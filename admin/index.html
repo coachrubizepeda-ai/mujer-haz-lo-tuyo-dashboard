@@ -39,6 +39,7 @@
     <button class="tab-btn" data-tab="t-retroalimentacion-admin">Retroalimentación</button>
     <button class="tab-btn" data-tab="t-asistencia">Reporte de asistencia</button>
     <button class="tab-btn" data-tab="t-directorio">Directorio de facilitadores</button>
+    <button class="tab-btn" data-tab="t-biblioteca">Biblioteca</button>
     <button class="tab-btn" data-tab="t-calendario">Calendario maestro</button>
     <button class="tab-btn" data-tab="t-financiero">Modelo financiero</button>
     <button class="tab-btn" data-tab="t-checklist">Checklist de lanzamiento</button>
@@ -286,6 +287,50 @@
     </div>
   </section>
 
+  <!-- BIBLIOTECA -->
+  <section class="tab-panel" id="t-biblioteca">
+    <div class="section-head">
+      <span class="eyebrow">Lecturas del programa</span>
+      <h2>Biblioteca</h2>
+      <p>Agrega los libros y artículos recomendados por módulo — aparecen al instante en la pestaña "Biblioteca" del portal de Participante, y también dentro de "Contenido" bajo "Lectura previa".</p>
+    </div>
+    <form id="form-biblioteca" class="grid grid-2" style="align-items:end;">
+      <div>
+        <label>Módulo</label>
+        <select id="bib-modulo" required></select>
+      </div>
+      <div>
+        <label>Tipo</label>
+        <select id="bib-tipo">
+          <option value="Libro">Libro</option>
+          <option value="Artículo">Artículo</option>
+          <option value="Otro">Otro</option>
+        </select>
+      </div>
+      <div>
+        <label>Título del libro/artículo</label>
+        <input type="text" id="bib-titulo" required placeholder="Ej. Daring Greatly">
+      </div>
+      <div>
+        <label>Autor</label>
+        <input type="text" id="bib-autor" required placeholder="Ej. Brené Brown">
+      </div>
+      <div>
+        <label>Liga (opcional)</label>
+        <input type="url" id="bib-liga" placeholder="https://...">
+      </div>
+      <div>
+        <label>Notas (opcional)</label>
+        <input type="text" id="bib-notas" placeholder="Ej. Capítulo 3 solamente">
+      </div>
+      <div style="grid-column:1/-1;">
+        <button type="submit" class="btn btn-primary">Agregar a la biblioteca</button>
+        <span class="file-hint" id="bib-status" style="margin-left:10px;"></span>
+      </div>
+    </form>
+    <div id="biblioteca-admin-acc" style="margin-top:24px;"></div>
+  </section>
+
   <!-- CALENDARIO -->
   <section class="tab-panel" id="t-calendario">
     <div class="section-head">
@@ -410,6 +455,88 @@
 <script src="../assets/js/agent-widget.js"></script>
 <script>
   renderCourseProgress("course-progress");
+
+  // ---------- Biblioteca (lecturas/libros/artículos por módulo) ----------
+  const selBibModulo = document.getElementById("bib-modulo");
+  if(selBibModulo){
+    selBibModulo.innerHTML = MODULOS.map(m=>`<option value="${m.id} - ${m.tema}">${typeof m.id==="number" ? "Módulo "+m.id+" — " : ""}${m.tema}</option>`).join("");
+  }
+  const bibAdminWrap = document.getElementById("biblioteca-admin-acc");
+  function mjhtRenderBibliotecaAdmin(){
+    if(!bibAdminWrap) return;
+    getBibliografia().then(todos=>{
+      bibAdminWrap.innerHTML = MODULOS.map(m=>{
+        const claveModulo = `${m.id} - ${m.tema}`;
+        const propios = todos.filter(x=>x.modulo === claveModulo);
+        const cuerpo = propios.length
+          ? `<ul class="checklist">${propios.map(x=>mjhtBibliografiaItemHTML(x, {conBorrar:true})).join("")}</ul>`
+          : `<p class="file-hint">Sin lecturas registradas todavía.</p>`;
+        return `<div class="acc-item">
+          <button class="acc-head" type="button">
+            <span class="num">${typeof m.id==="number" ? String(m.id).padStart(2,"0") : "—"}</span>
+            <span class="meta"><h4>${m.tema}</h4><small>${propios.length} lectura(s)</small></span>
+            <span class="chev">▾</span>
+          </button>
+          <div class="acc-body"><div class="acc-body-inner">${cuerpo}</div></div>
+        </div>`;
+      }).join("");
+      initAccordion();
+    });
+  }
+  mjhtRenderBibliotecaAdmin();
+  const formBiblioteca = document.getElementById("form-biblioteca");
+  if(formBiblioteca){
+    formBiblioteca.addEventListener("submit", (e)=>{
+      e.preventDefault();
+      const status = document.getElementById("bib-status");
+      const modulo = selBibModulo.value;
+      const titulo = document.getElementById("bib-titulo").value.trim();
+      const autor = document.getElementById("bib-autor").value.trim();
+      const tipo = document.getElementById("bib-tipo").value;
+      const liga = document.getElementById("bib-liga").value.trim();
+      const notas = document.getElementById("bib-notas").value.trim();
+      if(!titulo || !autor){ status.textContent = "Falta título o autor."; return; }
+      status.textContent = "Guardando…";
+      guardarBibliografia(modulo, titulo, autor, tipo, liga, notas)
+        .then(()=>{
+          status.textContent = "¡Agregado!";
+          formBiblioteca.reset();
+          selBibModulo.value = modulo; // deja seleccionado el mismo módulo por si sigue capturando
+          mjhtRenderBibliotecaAdmin();
+          setTimeout(()=>{ status.textContent = ""; }, 2500);
+        })
+        .catch(err=>{ status.textContent = "No se pudo guardar: " + (err.message||err); });
+    });
+  }
+  // Mismo patrón de confirmación de 2 clics que "Mi módulo" (ver
+  // mjhtEliminarMaterial): evita que Chrome/Safari ignore un
+  // window.confirm() repetido y se pierda el borrado en silencio.
+  window.mjhtEliminarBibliografia = function(btn, id){
+    if(btn.dataset.confirmando !== "1"){
+      btn.dataset.confirmando = "1";
+      btn.dataset.original = btn.textContent;
+      btn.textContent = "¿Seguro?";
+      btn.style.color = "var(--warn)";
+      clearTimeout(btn._mjhtTimeout);
+      btn._mjhtTimeout = setTimeout(()=>{
+        btn.dataset.confirmando = "0";
+        btn.textContent = btn.dataset.original || "🗑️";
+        btn.style.color = "";
+      }, 4000);
+      return;
+    }
+    clearTimeout(btn._mjhtTimeout);
+    btn.disabled = true;
+    eliminarBibliografia(id)
+      .then(()=> mjhtRenderBibliotecaAdmin())
+      .catch(err=>{
+        alert("No se pudo eliminar: " + (err.message||err));
+        btn.disabled = false;
+        btn.dataset.confirmando = "0";
+        btn.textContent = btn.dataset.original || "🗑️";
+        btn.style.color = "";
+      });
+  };
 
   // Próxima sesión
   const hoy = new Date();

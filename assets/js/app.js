@@ -1139,6 +1139,87 @@ function mjhtMaterialesAsistenteHTML(items){
   return `<ul class="checklist">${filas}</ul>`;
 }
 
+/* ---------- 7b. Biblioteca (lecturas/libros/artículos por módulo) ----------
+   Netlify Functions + Blobs (mismo patrón que "materiales"): cualquier
+   lectura, libro o artículo recomendado se guarda por módulo y aparece
+   al instante en la pestaña "Biblioteca" del portal de Participante y
+   dentro de "Contenido" (bajo "Lectura previa"), además de en el panel
+   de administradora, sin depender de tocar assets/js/data.js. */
+function mjhtEscapeHTML(str){
+  return String(str == null ? "" : str).replace(/[&<>"']/g, (c)=>({
+    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+  }[c]));
+}
+async function guardarBibliografia(modulo, titulo, autor, tipo, liga, notas){
+  const resp = await fetch("/.netlify/functions/biblioteca-submit", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ modulo, titulo, autor, tipo, liga, notas }),
+  });
+  const data = await resp.json().catch(()=>({}));
+  if(!resp.ok || !data.ok) throw new Error((data && data.error) || ("Error " + resp.status));
+  return data;
+}
+async function getBibliografia(modulo){
+  const qs = modulo ? "?modulo=" + encodeURIComponent(modulo) : "";
+  const resp = await fetch("/.netlify/functions/biblioteca-list" + qs);
+  const data = await resp.json().catch(()=>({}));
+  if(!resp.ok || !data.ok) return [];
+  return data.items || [];
+}
+async function eliminarBibliografia(id){
+  const resp = await fetch("/.netlify/functions/biblioteca-eliminar", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id }),
+  });
+  const data = await resp.json().catch(()=>({}));
+  if(!resp.ok || !data.ok) throw new Error((data && data.error) || ("Error " + resp.status));
+  return data;
+}
+// Una fila de una lectura — usada tanto en la pestaña Biblioteca como
+// dentro de "Contenido" y en el panel de administradora.
+function mjhtBibliografiaItemHTML(x, opts){
+  opts = opts || {};
+  const titulo = mjhtEscapeHTML(x.titulo);
+  const autor = mjhtEscapeHTML(x.autor);
+  const tipo = mjhtEscapeHTML(x.tipo || "Libro");
+  const tituloHTML = x.liga
+    ? `<a href="${mjhtEscapeHTML(x.liga)}" target="_blank" rel="noopener"><b>${titulo}</b></a>`
+    : `<b>${titulo}</b>`;
+  const notas = x.notas ? `<br><small style="color:var(--gris-claro);">${mjhtEscapeHTML(x.notas)}</small>` : "";
+  const borrar = opts.conBorrar
+    ? ` <button type="button" class="btn btn-outline btn-sm" style="margin-left:8px;padding:2px 8px;" onclick="mjhtEliminarBibliografia(this,'${x.id}')">🗑️</button>`
+    : "";
+  return `<li><span class="txt"><span class="tag" style="margin-right:6px;">${tipo}</span>${tituloHTML} — ${autor}${notas}</span>${borrar}</li>`;
+}
+// Lista de lecturas de UN módulo, para meter dentro del acordeón de
+// "Contenido" bajo "Lectura previa" (además del texto fijo que ya
+// hubiera en data.js — no lo reemplaza, lo complementa).
+function mjhtBibliografiaModuloHTML(items){
+  if(!items || !items.length) return "";
+  return `<h5 style="margin-top:10px;">📚 Bibliografía recomendada</h5><ul class="checklist">${items.map(x=>mjhtBibliografiaItemHTML(x)).join("")}</ul>`;
+}
+// Bibliografía completa del programa, agrupada por módulo — usada en la
+// pestaña "Biblioteca" del portal de Participante.
+function renderBibliotecaPorModuloHTML(todos){
+  if(typeof MODULOS === "undefined") return "";
+  return MODULOS.map(m=>{
+    const claveModulo = `${m.id} - ${m.tema}`;
+    const num = typeof m.id==="number" ? String(m.id).padStart(2,"0") : "—";
+    const propios = (todos || []).filter(x=>x.modulo === claveModulo);
+    const cuerpo = propios.length
+      ? `<ul class="checklist">${propios.map(x=>mjhtBibliografiaItemHTML(x)).join("")}</ul>`
+      : `<p class="file-hint">Todavía no hay lecturas registradas para este módulo.</p>`;
+    return `<div class="acc-item">
+      <button class="acc-head">
+        <span class="num ${m.eje==='cierre'?'cierre':''}">${num}</span>
+        <span class="meta"><h4>${m.tema}</h4><small>${m.subtitulo} · ${m.fechaLabel}</small></span>
+        <span class="chev">▾</span>
+      </button>
+      <div class="acc-body"><div class="acc-body-inner">${cuerpo}</div></div>
+    </div>`;
+  }).join("");
+}
+
 /* ---------- 8. Resultados del test ---------- */
 const LS_KEY_RESULTADOS_TEST = "mjht_resultados_test";
 function getResultadosTestLocal(){
