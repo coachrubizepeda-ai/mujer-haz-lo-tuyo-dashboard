@@ -959,10 +959,10 @@ function renderFeedbackSesionesHTML(){
    en cuanto un facilitador comparte un archivo o una liga, cualquier
    persona — asistentes, otros facilitadores, administradora — lo ve de
    inmediato, en cualquier dispositivo. */
-async function mjhtCompartirMaterialLiga(modulo, ponente, nombre_o_url, esPresentacion){
+async function mjhtCompartirMaterialLiga(modulo, ponente, nombre_o_url, esPresentacion, titulo){
   const resp = await fetch("/.netlify/functions/materiales-submit", {
     method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ modulo, ponente, tipo: "liga", nombre_o_url, es_presentacion: !!esPresentacion }),
+    body: JSON.stringify({ modulo, ponente, tipo: "liga", nombre_o_url, es_presentacion: !!esPresentacion, titulo: (titulo||"").trim() }),
   });
   const data = await resp.json().catch(()=>({}));
   if(!resp.ok || !data.ok) throw new Error((data && data.error) || ("Error " + resp.status));
@@ -1022,6 +1022,7 @@ function mjhtTituloLigaHTML(url){
   const u = (url || "").toLowerCase();
   if(u.includes("canva.com") || u.includes("drive.google") || u.includes("docs.google")) return "Accede a la presentación ↗";
   if(u.includes("spotify.com")) return "Escuchar podcast ↗";
+  if(u.includes("youtube.com") || u.includes("youtu.be")) return "Ver video ↗";
   if(u.includes("instagram.com")) return "Ver en Instagram ↗";
   if(u.includes("linkedin.com")) return "Ver en LinkedIn ↗";
   if(u.includes("x.com") || u.includes("twitter.com")) return "Ver publicación ↗";
@@ -1037,9 +1038,10 @@ function mjhtBotonPresentacionOficialHTML(item){
 }
 function mjhtLigaMaterialHTML(x){
   const verUrl = x.tipo === "archivo" ? `/.netlify/functions/materiales-download?key=${encodeURIComponent(x.fileKey)}` : x.nombre_o_url;
+  const etiquetaLiga = x.titulo ? `${mjhtEscapeHTML(x.titulo)} ↗` : mjhtTituloLigaHTML(x.nombre_o_url);
   return x.tipo === "archivo"
     ? `<a href="${verUrl}" target="_blank" rel="noopener">${x.nombre_o_url} ↓</a>`
-    : `<a href="${x.nombre_o_url}" target="_blank" rel="noopener">${mjhtTituloLigaHTML(x.nombre_o_url)}</a>`;
+    : `<a href="${x.nombre_o_url}" target="_blank" rel="noopener">${etiquetaLiga}</a>`;
 }
 // Vista propia del facilitador (en "Mi módulo"): todo lo que ha compartido
 // para ESE módulo, con controles para eliminarlo o moverlo a otro módulo —

@@ -248,9 +248,18 @@
 
         <div class="link-group">
           <label class="field-icon-label"><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 14v-2a9 9 0 0 1 18 0v2"/><rect x="15" y="14" width="5" height="7" rx="1.5"/><rect x="4" y="14" width="5" height="7" rx="1.5"/></svg>Podcast (Spotify)</label>
+          <input type="text" name="link_spotify_titulo" placeholder="Título del podcast (opcional, pero se ve mejor)" style="margin-bottom:6px;">
           <input type="text" name="link_spotify" placeholder="https://open.spotify.com/...">
           <div id="link_spotify-extra"></div>
           <button type="button" class="btn btn-outline btn-sm" style="margin:6px 0 14px;" onclick="mjhtAgregarLigaTipo('link_spotify','link_spotify-extra','https://open.spotify.com/...')">+ Agregar otro podcast</button>
+        </div>
+
+        <div class="link-group">
+          <label class="field-icon-label"><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22.5 8.5s-.2-1.6-.8-2.3c-.8-.8-1.7-.9-2.1-.9C16.9 5 12 5 12 5h0s-4.9 0-7.6.3c-.4 0-1.3.1-2.1.9-.6.7-.8 2.3-.8 2.3S1.2 10.3 1.2 12.1v1.7c0 1.8.3 3.6.3 3.6s.2 1.6.8 2.3c.8.8 1.8.8 2.3.9 1.7.2 7.4.3 7.4.3s4.9 0 7.6-.3c.4 0 1.3-.1 2.1-.9.6-.7.8-2.3.8-2.3s.3-1.8.3-3.6v-1.7c0-1.8-.3-3.6-.3-3.6z"/><path fill="currentColor" stroke="none" d="M9.8 15.5V8.7l6 3.4-6 3.4z"/></svg>Video (YouTube)</label>
+          <input type="text" name="link_youtube_titulo" placeholder="Título del video (opcional, pero se ve mejor)" style="margin-bottom:6px;">
+          <input type="text" name="link_youtube" placeholder="https://youtube.com/watch?v=... o https://youtu.be/...">
+          <div id="link_youtube-extra"></div>
+          <button type="button" class="btn btn-outline btn-sm" style="margin:6px 0 14px;" onclick="mjhtAgregarLigaTipo('link_youtube','link_youtube-extra','https://youtube.com/watch?v=...')">+ Agregar otro video</button>
         </div>
 
         <div class="link-group">
@@ -1257,10 +1266,26 @@
         tareas.push(mjhtCompartirMaterialArchivo(modulo, ponente, extraInput.files[0]));
       }
     });
-    ["link_web","link_spotify","link_instagram","link_x","link_linkedin"].forEach(name=>{
+    // Los tipos "podcast" y "video" pueden llevar título (para que no se
+    // vea genérico "Escuchar podcast"/"Abrir liga") — si el facilitador lo
+    // pone, además de compartirse en "Contenido" se agrega automáticamente
+    // a la Biblioteca de ese módulo (con el mismo título y liga), para no
+    // tener que capturarlo dos veces.
+    const bibliografiaAuto = [];
+    ["link_web","link_spotify","link_youtube","link_instagram","link_x","link_linkedin"].forEach(name=>{
       const campo = formMateriales.querySelector(`[name="${name}"]`);
       const val = campo ? campo.value.trim() : "";
-      if(val) tareas.push(mjhtCompartirMaterialLiga(modulo, ponente, val));
+      const campoTitulo = formMateriales.querySelector(`[name="${name}_titulo"]`);
+      const titulo = campoTitulo ? campoTitulo.value.trim() : "";
+      if(val){
+        tareas.push(mjhtCompartirMaterialLiga(modulo, ponente, val, false, titulo));
+        if(titulo && (name === "link_spotify" || name === "link_youtube")){
+          bibliografiaAuto.push({
+            titulo, liga: val,
+            tipo: name === "link_spotify" ? "Podcast" : "Video",
+          });
+        }
+      }
       formMateriales.querySelectorAll(`input[name="${name}_extra[]"]`).forEach(extraLink=>{
         const valExtra = extraLink.value.trim();
         if(valExtra) tareas.push(mjhtCompartirMaterialLiga(modulo, ponente, valExtra));
@@ -1273,12 +1298,15 @@
     btn.disabled = true;
     msg.textContent = "Subiendo…"; msg.style.color = "";
     Promise.all(tareas)
+      .then(()=> Promise.all(bibliografiaAuto.map(b=>
+        guardarBibliografia(modulo, b.titulo, ponente ? `Compartido por ${ponente}` : "Compartido por el facilitador", b.tipo, b.liga, "").catch(()=>{})
+      )))
       .then(()=>{
         msg.textContent = "¡Listo! Tu material ya es visible para las asistentes.";
         msg.style.color = "var(--ok)";
         formMateriales.reset();
         document.getElementById("pdfs-extra").innerHTML = "";
-        ["link_web","link_spotify","link_instagram","link_x","link_linkedin"].forEach(name=>{
+        ["link_web","link_spotify","link_youtube","link_instagram","link_x","link_linkedin"].forEach(name=>{
           const extra = document.getElementById(name+"-extra");
           if(extra) extra.innerHTML = "";
         });
@@ -1288,6 +1316,7 @@
         if(selNombreMateriales) selNombreMateriales.value = ponente;
         if(selModuloMateriales) selModuloMateriales.value = modulo;
         refrescarBitacoraMateriales();
+        if(typeof refrescarBibliografiaPonente === "function") refrescarBibliografiaPonente();
         if(selPonente) selPonente.dispatchEvent(new Event("change"));
       })
       .catch(err=>{

@@ -80,11 +80,12 @@ exports.handler = async (event) => {
       registro.nombre_o_url = safeName;
       registro.fileKey = fileKey;
     } else {
-      const { nombre_o_url } = payload;
+      const { nombre_o_url, titulo } = payload;
       if (!nombre_o_url) {
         return { statusCode: 400, headers, body: JSON.stringify({ error: "Falta nombre_o_url" }) };
       }
       registro.nombre_o_url = nombre_o_url;
+      if (titulo && String(titulo).trim()) registro.titulo = String(titulo).trim();
     }
 
     const actuales = (await storeIndice.get("todas", { type: "json" })) || [];
