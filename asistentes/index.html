@@ -42,8 +42,8 @@
     <div class="side-sep"><span>El programa</span></div>
     <button class="tab-btn" data-tab="t-calendario">Calendario</button>
     <button class="tab-btn" data-tab="t-modulos">Contenido</button>
-    <button class="tab-btn" data-tab="t-biblioteca">Biblioteca</button>
     <button class="tab-btn" data-tab="t-tareas">Tareas</button>
+    <button class="tab-btn" data-tab="t-biblioteca">Biblioteca</button>
     <button class="tab-btn" data-tab="t-ponentes">Facilitadores</button>
     <div class="side-sep"><span>Antes de cada sesión</span></div>
     <button class="tab-btn" data-tab="t-cuestionario">Expectativas previas al módulo</button>
@@ -201,16 +201,6 @@
     <div id="modulos-acc"></div>
   </section>
 
-  <!-- BIBLIOTECA -->
-  <section class="tab-panel" id="t-biblioteca">
-    <div class="section-head">
-      <span class="eyebrow">Lecturas recomendadas</span>
-      <h2>Biblioteca</h2>
-      <p>Libros y artículos recomendados durante el diplomado, organizados por módulo.</p>
-    </div>
-    <div id="biblioteca-acc"></div>
-  </section>
-
   <!-- TAREAS -->
   <section class="tab-panel" id="t-tareas">
     <div class="section-head">
@@ -225,6 +215,16 @@
       </table>
     </div>
 
+  </section>
+
+  <!-- BIBLIOTECA -->
+  <section class="tab-panel" id="t-biblioteca">
+    <div class="section-head">
+      <span class="eyebrow">Lecturas recomendadas</span>
+      <h2>Biblioteca</h2>
+      <p>Libros y artículos recomendados durante el diplomado, organizados por módulo.</p>
+    </div>
+    <div id="biblioteca-acc"></div>
   </section>
 
   <!-- PONENTES -->
@@ -406,7 +406,7 @@
         <p>${m.descripcion}</p>
         <h5>Lectura previa</h5><p>${m.lectura}</p>
         <div class="biblio-modulo-wrap" data-modulo="${claveModulo}"></div>
-        <h5>Tarea</h5><p class="tarea-texto" data-modulo="${claveModulo}">${m.tarea}</p>
+        <h5>Tarea</h5><p class="tarea-texto" data-modulo="${claveModulo}" style="white-space:pre-wrap;">${m.tarea}</p>
         <div class="pres-oficial-wrap" data-modulo="${claveModulo}"><a class="btn btn-outline btn-sm pres-pendiente" title="Tu facilitador(a) aún no ha subido la presentación.">Presentación pendiente</a></div>
         ${socialChipsHTML(m.redes)}
         <h5 style="margin-top:14px;">Contenido compartido por tu facilitador(a)</h5>

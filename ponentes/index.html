@@ -282,6 +282,41 @@
       <p class="file-hint" style="margin-top:-6px;">Así confirmas que llegó y que ya lo pueden ver las asistentes, sin tener que preguntarle a Rubí. Cambia el módulo de arriba para ver lo de otro módulo.</p>
       <div id="materiales-bitacora-wrap"><p class="file-hint">Selecciona un módulo arriba para ver lo que ya compartiste.</p></div>
     </div>
+    <div class="card">
+      <h3 style="margin-top:0;">📚 Bibliografía recomendada de tu módulo</h3>
+      <p class="file-hint" style="margin-top:-6px;">Libros o artículos que quieras recomendar para tu módulo. Aparecen al instante en "Biblioteca" y en "Contenido" para las asistentes — usa el módulo que elegiste arriba.</p>
+      <form id="form-bib-ponente" class="grid grid-2" style="align-items:end;">
+        <div>
+          <label>Tipo</label>
+          <select id="bib-p-tipo">
+            <option value="Libro">Libro</option>
+            <option value="Artículo">Artículo</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>
+        <div>
+          <label>Título del libro/artículo *</label>
+          <input type="text" id="bib-p-titulo" required placeholder="Ej. Daring Greatly">
+        </div>
+        <div>
+          <label>Autor *</label>
+          <input type="text" id="bib-p-autor" required placeholder="Ej. Brené Brown">
+        </div>
+        <div>
+          <label>Liga (opcional)</label>
+          <input type="url" id="bib-p-liga" placeholder="https://...">
+        </div>
+        <div style="grid-column:1/-1;">
+          <label>Notas (opcional)</label>
+          <input type="text" id="bib-p-notas" placeholder="Ej. Capítulo 3 solamente">
+        </div>
+        <div style="grid-column:1/-1;">
+          <button type="submit" class="btn btn-primary">Agregar a la biblioteca</button>
+          <span class="file-hint" id="bib-p-status" style="margin-left:10px;"></span>
+        </div>
+      </form>
+      <div id="bib-ponente-lista" style="margin-top:16px;"></div>
+    </div>
   </section>
 
   <!-- SUBIR TAREA -->
@@ -716,9 +751,88 @@
       const propio = MODULOS.find(m=>m.ponente === selNombreMateriales.value);
       if(propio) selModuloMateriales.value = `${propio.id} - ${propio.tema}`;
       refrescarBitacoraMateriales();
+      if(typeof refrescarBibliografiaPonente === "function") refrescarBibliografiaPonente();
     });
     selModuloMateriales.addEventListener("change", refrescarBitacoraMateriales);
   }
+
+  // ---------- Bibliografía del facilitador (misma pestaña "Compartir contenido") ----------
+  // Reusa guardarBibliografia()/getBibliografia()/eliminarBibliografia() de
+  // app.js (ya usadas en el panel de Administradora) — mismo backend
+  // (biblioteca-submit/list/eliminar + Blobs "biblioteca-modulos"), así que
+  // lo que agrega aquí el facilitador aparece igual en el panel de Rubí y
+  // en el portal de las asistentes, sin cambios de backend.
+  const bibPonenteWrap = document.getElementById("bib-ponente-lista");
+  async function refrescarBibliografiaPonente(){
+    if(!bibPonenteWrap) return;
+    const modulo = selModuloMateriales ? selModuloMateriales.value : "";
+    if(!modulo){
+      bibPonenteWrap.innerHTML = `<p class="file-hint">Selecciona un módulo arriba para ver tus lecturas.</p>`;
+      return;
+    }
+    bibPonenteWrap.innerHTML = `<p class="file-hint">Cargando…</p>`;
+    try {
+      const items = await getBibliografia(modulo);
+      bibPonenteWrap.innerHTML = items.length
+        ? `<ul class="checklist">${items.map(x=>mjhtBibliografiaItemHTML(x, {conBorrar:true})).join("")}</ul>`
+        : `<p class="file-hint">Todavía no hay lecturas registradas para este módulo.</p>`;
+    } catch(err){
+      bibPonenteWrap.innerHTML = `<p class="file-hint">No se pudo cargar (${err.message||err}).</p>`;
+    }
+  }
+  if(selModuloMateriales) selModuloMateriales.addEventListener("change", refrescarBibliografiaPonente);
+  const formBibPonente = document.getElementById("form-bib-ponente");
+  if(formBibPonente){
+    formBibPonente.addEventListener("submit", (e)=>{
+      e.preventDefault();
+      const status = document.getElementById("bib-p-status");
+      const modulo = selModuloMateriales ? selModuloMateriales.value : "";
+      const titulo = document.getElementById("bib-p-titulo").value.trim();
+      const autor = document.getElementById("bib-p-autor").value.trim();
+      const tipo = document.getElementById("bib-p-tipo").value;
+      const liga = document.getElementById("bib-p-liga").value.trim();
+      const notas = document.getElementById("bib-p-notas").value.trim();
+      if(!modulo){ status.textContent = "Primero elige tu módulo arriba."; return; }
+      if(!titulo || !autor){ status.textContent = "Falta título o autor."; return; }
+      status.textContent = "Guardando…";
+      guardarBibliografia(modulo, titulo, autor, tipo, liga, notas)
+        .then(()=>{
+          status.textContent = "¡Agregado!";
+          formBibPonente.reset();
+          refrescarBibliografiaPonente();
+          setTimeout(()=>{ status.textContent = ""; }, 2500);
+        })
+        .catch(err=>{ status.textContent = "No se pudo guardar: " + (err.message||err); });
+    });
+  }
+  // Mismo patrón de confirmación de 2 clics que en el resto del proyecto
+  // (evita que el navegador ignore un window.confirm() repetido).
+  window.mjhtEliminarBibliografia = function(btn, id){
+    if(btn.dataset.confirmando !== "1"){
+      btn.dataset.confirmando = "1";
+      btn.dataset.original = btn.textContent;
+      btn.textContent = "¿Seguro?";
+      btn.style.color = "var(--warn)";
+      clearTimeout(btn._mjhtTimeout);
+      btn._mjhtTimeout = setTimeout(()=>{
+        btn.dataset.confirmando = "0";
+        btn.textContent = btn.dataset.original || "🗑️";
+        btn.style.color = "";
+      }, 4000);
+      return;
+    }
+    clearTimeout(btn._mjhtTimeout);
+    btn.disabled = true;
+    eliminarBibliografia(id)
+      .then(()=> refrescarBibliografiaPonente())
+      .catch(err=>{
+        alert("No se pudo eliminar: " + (err.message||err));
+        btn.disabled = false;
+        btn.dataset.confirmando = "0";
+        btn.textContent = btn.dataset.original || "🗑️";
+        btn.style.color = "";
+      });
+  };
 
   // ---------- Subir tarea (descripción por módulo, la ve la Participante en "Tareas") ----------
   const selNombreTarea = document.getElementById("sel-nombre-tarea");
