@@ -669,9 +669,22 @@
     if(nuevaUrl === null) return;
     if(!nuevaUrl.trim()){ alert("La liga no puede quedar vacía."); return; }
     actualizarLigaMaterialCompartido(id, nuevoTitulo, nuevaUrl)
-      .then(()=>{
+      .then((data)=>{
         selPonente.dispatchEvent(new Event("change"));
         if(typeof refrescarBitacoraMateriales === "function") refrescarBitacoraMateriales();
+        // Si al ponerle título ahora sí califica (Spotify o YouTube con
+        // título), la agregamos a la Biblioteca aquí también — no solo al
+        // subirla la primera vez — para que no se quede huérfana.
+        const reg = data && data.registro;
+        const tit = (nuevoTitulo || "").trim();
+        const url = (nuevaUrl || "").trim();
+        if(reg && tit && (url.includes("spotify.com") || url.includes("youtube.com") || url.includes("youtu.be"))){
+          const tipoBib = url.includes("spotify.com") ? "Podcast" : "Video";
+          const autor = reg.ponente ? `Compartido por ${reg.ponente}` : "Compartido por el facilitador";
+          guardarBibliografia(reg.modulo, tit, autor, tipoBib, url, "")
+            .then(()=>{ if(typeof refrescarBibliografiaPonente === "function") refrescarBibliografiaPonente(); })
+            .catch(()=>{});
+        }
       })
       .catch(err=> alert("No se pudo actualizar: " + (err.message||err)));
   };
