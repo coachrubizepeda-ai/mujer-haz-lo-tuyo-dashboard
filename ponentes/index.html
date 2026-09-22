@@ -659,6 +659,22 @@
       .then(()=> selPonente.dispatchEvent(new Event("change")))
       .catch(err=> alert("No se pudo actualizar: " + (err.message||err)));
   };
+  // Editar título y/o liga de un material tipo "liga" ya compartido (ej. si
+  // se subió sin título, o hay que corregir la URL) — dos prompts simples,
+  // mismo patrón ya usado en "Corregir nombre" (mjhtEditarNombre).
+  window.mjhtEditarLigaMaterial = function(id, tituloActual, urlActual){
+    const nuevoTitulo = prompt("Título para esta liga (déjalo vacío para quitar el título):", tituloActual || "");
+    if(nuevoTitulo === null) return;
+    const nuevaUrl = prompt("Liga (URL):", urlActual || "");
+    if(nuevaUrl === null) return;
+    if(!nuevaUrl.trim()){ alert("La liga no puede quedar vacía."); return; }
+    actualizarLigaMaterialCompartido(id, nuevoTitulo, nuevaUrl)
+      .then(()=>{
+        selPonente.dispatchEvent(new Event("change"));
+        if(typeof refrescarBitacoraMateriales === "function") refrescarBitacoraMateriales();
+      })
+      .catch(err=> alert("No se pudo actualizar: " + (err.message||err)));
+  };
   window.mjhtMarcarPresentacion = function(id, modulo, valor){
     marcarPresentacionMaterial(id, modulo, valor)
       .then(()=> selPonente.dispatchEvent(new Event("change")))

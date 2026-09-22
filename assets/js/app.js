@@ -1015,6 +1015,18 @@ async function actualizarModuloMaterialCompartido(id, nuevoModulo){
   if(!resp.ok || !data.ok) throw new Error((data && data.error) || ("Error " + resp.status));
   return data;
 }
+// Edita el título y/o la liga de un material tipo "liga" ya compartido —
+// para cuando el facilitador quiere ponerle título después, o corrigió la
+// URL. No aplica a archivos (esos se reemplazan compartiendo uno nuevo).
+async function actualizarLigaMaterialCompartido(id, titulo, nombre_o_url){
+  const resp = await fetch("/.netlify/functions/materiales-actualizar", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id, titulo, nombre_o_url }),
+  });
+  const data = await resp.json().catch(()=>({}));
+  if(!resp.ok || !data.ok) throw new Error((data && data.error) || ("Error " + resp.status));
+  return data;
+}
 // Título amigable para una liga compartida — en vez de mostrar la URL
 // pelona, describe qué se va a encontrar del otro lado (Canva/Drive =
 // presentación, Spotify = podcast, redes = publicación, etc.)
@@ -1065,6 +1077,7 @@ async function renderMisMaterialesModuloHTML(claveModulo){
       <td>${x.fecha ? new Date(x.fecha).toLocaleDateString("es-MX") : "—"}</td>
       <td style="white-space:nowrap;">
         <select style="display:inline-block;width:auto;margin:0 6px 0 0;font-size:.8rem;" onchange="mjhtCambiarModuloMaterial('${x.id}', this.value)">${opcionesModulo}</select>
+        ${x.tipo === "liga" ? `<button type="button" class="btn-edit-nombre" title="Editar título o liga" onclick='mjhtEditarLigaMaterial("${x.id}", ${JSON.stringify(x.titulo||"").replace(/'/g,"&#39;")}, ${JSON.stringify(x.nombre_o_url||"").replace(/'/g,"&#39;")})'>✏️</button>` : ""}
         <button type="button" class="btn-edit-nombre" title="${x.es_presentacion ? "Quitar la marca de presentación oficial" : "Marcar como la presentación oficial de este módulo"}" onclick="mjhtMarcarPresentacion('${x.id}', '${claveModulo}', ${x.es_presentacion ? "false" : "true"})">${x.es_presentacion ? "📌 Quitar" : "📌 Marcar"}</button>
         <button type="button" class="btn-edit-nombre" title="Eliminar (pide confirmar con un segundo clic)" onclick="mjhtEliminarMaterial(this, '${x.id}')">🗑️</button>
       </td>
