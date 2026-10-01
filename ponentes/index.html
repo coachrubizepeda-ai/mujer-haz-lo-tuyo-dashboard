@@ -97,7 +97,7 @@
             <select name="ponente_nombre" id="sel-ponente-nombre-asistencia" required><option value="">Selecciona tu nombre…</option></select>
           </div>
           <div><label>Contenido *</label>
-            <select name="modulo" id="sel-modulo-asistencia" required></select>
+            <select name="modulo" id="sel-modulo-asistencia" required><option value="">Selecciona el módulo…</option></select>
           </div>
         </div>
         <div id="asistencia-roster">
@@ -228,7 +228,7 @@
             <select name="nombre" id="sel-nombre-materiales" required><option value="">Selecciona tu nombre…</option></select>
           </div>
           <div><label>Contenido *</label>
-            <select name="modulo" id="sel-modulo-materiales" required></select>
+            <select name="modulo" id="sel-modulo-materiales" required><option value="">Selecciona el módulo…</option></select>
           </div>
         </div>
         <label>Sube tu(s) presentación(es) o archivo(s) (PDF, PPT, ZIP, etc.)</label>
@@ -241,6 +241,7 @@
 
         <div class="link-group">
           <label class="field-icon-label"><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 3.8 5.7 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.7-3.8-9S9.5 5.5 12 3Z"/></svg>Sitio web / Drive / Canva</label>
+          <input type="text" name="link_web_titulo" placeholder="Título del recurso (opcional, pero se ve mejor y se agrega a la Biblioteca)" style="margin-bottom:6px;">
           <input type="text" name="link_web" placeholder="https://">
           <div id="link_web-extra"></div>
           <button type="button" class="btn btn-outline btn-sm" style="margin:6px 0 14px;" onclick="mjhtAgregarLigaTipo('link_web','link_web-extra','https://')">+ Agregar otro sitio web</button>
@@ -290,6 +291,14 @@
       <h3 style="margin-top:0;">Lo que ya has compartido para este módulo</h3>
       <p class="file-hint" style="margin-top:-6px;">Así confirmas que llegó y que ya lo pueden ver las asistentes, sin tener que preguntarle a Rubí. Cambia el módulo de arriba para ver lo de otro módulo.</p>
       <div id="materiales-bitacora-wrap"><p class="file-hint">Selecciona un módulo arriba para ver lo que ya compartiste.</p></div>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0;">📖 Lectura previa de tu módulo</h3>
+      <p class="file-hint" style="margin-top:-6px;">Lo que las participantes deben leer/revisar ANTES de tu sesión — usa el módulo que elegiste arriba. En cuanto la guardes reemplaza el texto genérico "Por confirmar" en el portal de Participante.</p>
+      <textarea id="lectura-previa-texto" placeholder="Ej. Lee el capítulo 1 y 9 del libro Presencia de Amy Cuddy."></textarea>
+      <button type="button" class="btn btn-primary btn-sm" style="margin-top:6px;" onclick="mjhtGuardarLecturaPrevia()">Guardar lectura previa</button>
+      <span class="file-hint" id="lectura-previa-status" style="margin-left:10px;"></span>
+      <div id="lectura-previa-vigente" class="file-hint" style="margin-top:10px;"></div>
     </div>
     <div class="card">
       <h3 style="margin-top:0;">📚 Bibliografía recomendada de tu módulo</h3>
@@ -451,7 +460,7 @@
             <select name="nombre" id="sel-nombre-semblanza-ponente" required><option value="">Selecciona tu nombre…</option></select>
           </div>
           <div><label>Contenido que impartes *</label>
-            <select name="modulo" id="sel-modulo-semblanza" required></select>
+            <select name="modulo" id="sel-modulo-semblanza" required><option value="">Selecciona el módulo…</option></select>
           </div>
         </div>
         <label>Semblanza profesional *</label>
@@ -678,12 +687,14 @@
         const reg = data && data.registro;
         const tit = (nuevoTitulo || "").trim();
         const url = (nuevaUrl || "").trim();
-        if(reg && tit && (url.includes("spotify.com") || url.includes("youtube.com") || url.includes("youtu.be"))){
-          const tipoBib = url.includes("spotify.com") ? "Podcast" : "Video";
+        // Cualquier liga con título se agrega a la Biblioteca (no solo
+        // Spotify/YouTube) — el tipo solo cambia la etiqueta que se ve.
+        if(reg && tit && url){
+          const tipoBib = url.includes("spotify.com") ? "Podcast" : (url.includes("youtube.com") || url.includes("youtu.be")) ? "Video" : "Liga";
           const autor = reg.ponente ? `Compartido por ${reg.ponente}` : "Compartido por el facilitador";
           guardarBibliografia(reg.modulo, tit, autor, tipoBib, url, "")
             .then(()=>{ if(typeof refrescarBibliografiaPonente === "function") refrescarBibliografiaPonente(); })
-            .catch(()=>{});
+            .catch(err=>{ alert("Se actualizó la liga, pero no se pudo agregar a la Biblioteca: " + (err.message||err)); });
         }
       })
       .catch(err=> alert("No se pudo actualizar: " + (err.message||err)));
@@ -812,13 +823,56 @@
     try {
       const items = await getBibliografia(modulo);
       bibPonenteWrap.innerHTML = items.length
-        ? `<ul class="checklist">${items.map(x=>mjhtBibliografiaItemHTML(x, {conBorrar:true})).join("")}</ul>`
+        ? `<ul class="checklist">${items.map(x=>mjhtBibliografiaItemHTML(x, {conBorrar:true, conModulo:true, conEditar:true})).join("")}</ul>`
         : `<p class="file-hint">Todavía no hay lecturas registradas para este módulo.</p>`;
     } catch(err){
       bibPonenteWrap.innerHTML = `<p class="file-hint">No se pudo cargar (${err.message||err}).</p>`;
     }
   }
   if(selModuloMateriales) selModuloMateriales.addEventListener("change", refrescarBibliografiaPonente);
+
+  // ---------- Lectura previa del módulo (texto editable, antes fijo en data.js) ----------
+  const lecturaPreviaTexto = document.getElementById("lectura-previa-texto");
+  const lecturaPreviaVigente = document.getElementById("lectura-previa-vigente");
+  async function refrescarLecturaPrevia(){
+    if(!lecturaPreviaVigente) return;
+    const modulo = selModuloMateriales ? selModuloMateriales.value : "";
+    if(!modulo){
+      lecturaPreviaVigente.textContent = "Selecciona un módulo arriba para ver/editar su lectura previa.";
+      if(lecturaPreviaTexto) lecturaPreviaTexto.value = "";
+      return;
+    }
+    lecturaPreviaVigente.textContent = "Cargando…";
+    try {
+      const item = await getLecturaPrevia(modulo);
+      if(item){
+        lecturaPreviaVigente.textContent = "Última actualización: " + new Date(item.actualizado||item.creado).toLocaleString("es-MX");
+        if(lecturaPreviaTexto) lecturaPreviaTexto.value = item.texto;
+      } else {
+        lecturaPreviaVigente.textContent = "Todavía no has guardado una lectura previa para este módulo (las asistentes ven el texto genérico mientras tanto).";
+        if(lecturaPreviaTexto) lecturaPreviaTexto.value = "";
+      }
+    } catch(err){
+      lecturaPreviaVigente.textContent = "No se pudo cargar (" + (err.message||err) + ").";
+    }
+  }
+  if(selModuloMateriales) selModuloMateriales.addEventListener("change", refrescarLecturaPrevia);
+  window.mjhtGuardarLecturaPrevia = function(){
+    const modulo = selModuloMateriales ? selModuloMateriales.value : "";
+    const statusEl = document.getElementById("lectura-previa-status");
+    if(!modulo){ if(statusEl) statusEl.textContent = "Primero elige tu módulo arriba."; return; }
+    const texto = lecturaPreviaTexto ? lecturaPreviaTexto.value.trim() : "";
+    if(!texto){ if(statusEl) statusEl.textContent = "Escribe el texto de la lectura previa."; return; }
+    if(statusEl) statusEl.textContent = "Guardando…";
+    const ponente = selNombreMateriales ? selNombreMateriales.value : "";
+    guardarLecturaPrevia(modulo, ponente, texto)
+      .then(()=>{
+        if(statusEl) statusEl.textContent = "¡Listo! Ya se ve en el portal de Participante.";
+        refrescarLecturaPrevia();
+        setTimeout(()=>{ if(statusEl) statusEl.textContent = ""; }, 2500);
+      })
+      .catch(err=>{ if(statusEl) statusEl.textContent = "No se pudo guardar: " + (err.message||err); });
+  };
   const formBibPonente = document.getElementById("form-bib-ponente");
   if(formBibPonente){
     formBibPonente.addEventListener("submit", (e)=>{
@@ -843,6 +897,30 @@
         .catch(err=>{ status.textContent = "No se pudo guardar: " + (err.message||err); });
     });
   }
+  // Mover una lectura a otro módulo, por si quedó mal asignada — mismo
+  // patrón que mjhtCambiarModuloMaterial.
+  window.mjhtCambiarModuloBibliografia = function(id, nuevoModulo){
+    actualizarModuloBibliografia(id, nuevoModulo)
+      .then(()=> refrescarBibliografiaPonente())
+      .catch(err=> alert("No se pudo mover: " + (err.message||err)));
+  };
+  // Editar título/autor/tipo/liga/notas de una lectura ya guardada, sin
+  // tener que borrarla y volver a escribirla — mismo patrón de prompts que
+  // mjhtEditarLigaMaterial.
+  window.mjhtEditarBibliografia = function(id, titulo, autor, tipo, liga, notas){
+    const nuevoTitulo = prompt("Título:", titulo || "");
+    if(nuevoTitulo === null) return;
+    const nuevoAutor = prompt("Autor:", autor || "");
+    if(nuevoAutor === null) return;
+    const nuevaLiga = prompt("Liga (opcional, deja vacío si no tiene):", liga || "");
+    if(nuevaLiga === null) return;
+    const nuevasNotas = prompt("Notas (opcional):", notas || "");
+    if(nuevasNotas === null) return;
+    if(!nuevoTitulo.trim() || !nuevoAutor.trim()){ alert("Título y autor no pueden quedar vacíos."); return; }
+    actualizarBibliografia(id, { titulo: nuevoTitulo, autor: nuevoAutor, liga: nuevaLiga, notas: nuevasNotas })
+      .then(()=> refrescarBibliografiaPonente())
+      .catch(err=> alert("No se pudo guardar: " + (err.message||err)));
+  };
   // Mismo patrón de confirmación de 2 clics que en el resto del proyecto
   // (evita que el navegador ignore un window.confirm() repetido).
   window.mjhtEliminarBibliografia = function(btn, id){
@@ -884,7 +962,7 @@
       ponentesUnicos.map(p=>`<option value="${p}">${p}</option>`).join("");
   }
   if(selModuloTarea){
-    selModuloTarea.innerHTML = MODULOS.map(m=>
+    selModuloTarea.innerHTML = '<option value="">Selecciona el módulo…</option>' + MODULOS.map(m=>
       `<option value="${m.id} - ${m.tema}">${typeof m.id==="number"?"Módulo "+m.id:"Cierre"} · ${m.tema} (${m.ponente})</option>`
     ).join("");
   }
@@ -1308,10 +1386,10 @@
       const titulo = campoTitulo ? campoTitulo.value.trim() : "";
       if(val){
         tareas.push(mjhtCompartirMaterialLiga(modulo, ponente, val, false, titulo));
-        if(titulo && (name === "link_spotify" || name === "link_youtube")){
+        if(titulo && (name === "link_spotify" || name === "link_youtube" || name === "link_web")){
           bibliografiaAuto.push({
             titulo, liga: val,
-            tipo: name === "link_spotify" ? "Podcast" : "Video",
+            tipo: name === "link_spotify" ? "Podcast" : name === "link_youtube" ? "Video" : "Liga",
           });
         }
       }
@@ -1326,13 +1404,17 @@
     const btn = formMateriales.querySelector('button[type="submit"]');
     btn.disabled = true;
     msg.textContent = "Subiendo…"; msg.style.color = "";
+    const bibliografiaFallos = [];
     Promise.all(tareas)
       .then(()=> Promise.all(bibliografiaAuto.map(b=>
-        guardarBibliografia(modulo, b.titulo, ponente ? `Compartido por ${ponente}` : "Compartido por el facilitador", b.tipo, b.liga, "").catch(()=>{})
+        guardarBibliografia(modulo, b.titulo, ponente ? `Compartido por ${ponente}` : "Compartido por el facilitador", b.tipo, b.liga, "")
+          .catch(err=>{ bibliografiaFallos.push(b.titulo + ": " + (err.message||err)); })
       )))
       .then(()=>{
-        msg.textContent = "¡Listo! Tu material ya es visible para las asistentes.";
-        msg.style.color = "var(--ok)";
+        msg.textContent = bibliografiaFallos.length
+          ? `¡Listo! Tu material ya es visible — pero no se pudo agregar a Biblioteca: ${bibliografiaFallos.join("; ")}.`
+          : "¡Listo! Tu material ya es visible para las asistentes.";
+        msg.style.color = bibliografiaFallos.length ? "var(--warn)" : "var(--ok)";
         formMateriales.reset();
         document.getElementById("pdfs-extra").innerHTML = "";
         ["link_web","link_spotify","link_youtube","link_instagram","link_x","link_linkedin"].forEach(name=>{

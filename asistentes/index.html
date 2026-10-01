@@ -404,7 +404,7 @@
       </button>
       <div class="acc-body"><div class="acc-body-inner">
         <p>${m.descripcion}</p>
-        <h5>Lectura previa</h5><p>${m.lectura}</p>
+        <h5>Lectura previa</h5><p class="lectura-previa-texto" data-modulo="${claveModulo}" style="white-space:pre-wrap;">${m.lectura}</p>
         <div class="biblio-modulo-wrap" data-modulo="${claveModulo}"></div>
         <h5>Tarea</h5><p class="tarea-texto" data-modulo="${claveModulo}" style="white-space:pre-wrap;">${m.tarea}</p>
         <div class="pres-oficial-wrap" data-modulo="${claveModulo}"><a class="btn btn-outline btn-sm pres-pendiente" title="Tu facilitador(a) aún no ha subido la presentación.">Presentación pendiente</a></div>
@@ -476,6 +476,20 @@
       });
     })
     .catch(()=>{ /* si falla, se queda el texto estático de data.js */ });
+
+  // Lectura previa por módulo — igual que Tareas arriba: se muestra primero
+  // el texto fijo de data.js y, si el facilitador ya guardó una lectura
+  // previa real desde su portal, la reemplaza (gana lo guardado).
+  fetch("/.netlify/functions/lectura-previa-list")
+    .then(r=>r.json())
+    .then(data=>{
+      if(!data || !data.ok) return;
+      (data.items||[]).forEach(l=>{
+        const parrafo = accWrap.querySelector(`.lectura-previa-texto[data-modulo="${CSS.escape(l.modulo)}"]`);
+        if(parrafo) parrafo.textContent = l.texto;
+      });
+    })
+    .catch(()=>{ /* si falla, se queda el texto fijo de data.js */ });
 
   // Directorio de ponentes
   const ponentesWrap = document.getElementById("ponentes-list");

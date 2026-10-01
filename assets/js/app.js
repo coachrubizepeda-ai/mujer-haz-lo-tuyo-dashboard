@@ -824,15 +824,29 @@ async function renderSemblanzasAsistentesHTML(){
   const guardadas = await getSemblanzasAsistentes();
   const filas = ASISTENTES.map(a=>{
     const s = guardadas[a.id];
-    return `<tr><td><b>${a.id}</b></td><td>${a.nombre}</td>
+    const filaPrincipal = `<tr>
+      <td><b>${a.id}</b></td><td>${a.nombre}</td>
       <td>${s ? "✅ Semblanza registrada" : "⏳ Pendiente"}</td>
-      <td>${s ? new Date(s.fecha).toLocaleDateString("es-MX") : "—"}</td></tr>`;
+      <td>${s ? new Date(s.fecha).toLocaleDateString("es-MX") : "—"}</td>
+      <td>${s ? `<button type="button" class="btn btn-outline btn-sm" onclick="mjhtToggleSemblanzaTexto('${a.id}')">Ver</button>` : ""}</td>
+    </tr>`;
+    // Fila extra, oculta por default, con el texto completo que registró —
+    // así Rubí puede leer lo que cada quien fue escribiendo sin salir de
+    // esta tabla, no solo ver si ya terminó o no.
+    const filaTexto = s
+      ? `<tr id="semblanza-texto-${a.id}" style="display:none;"><td colspan="5" style="white-space:pre-wrap;background:var(--gris-fondo,#f7f7f7);">${mjhtEscapeHTML(s.texto || "")}</td></tr>`
+      : "";
+    return filaPrincipal + filaTexto;
   }).join("");
   return `<div class="table-wrap"><table>
-    <thead><tr><th>ID</th><th>Nombre</th><th>Estado</th><th>Última actualización</th></tr></thead>
+    <thead><tr><th>ID</th><th>Nombre</th><th>Estado</th><th>Última actualización</th><th></th></tr></thead>
     <tbody>${filas}</tbody>
   </table></div>`;
 }
+window.mjhtToggleSemblanzaTexto = function(id){
+  const fila = document.getElementById("semblanza-texto-"+id);
+  if(fila) fila.style.display = fila.style.display === "none" ? "" : "none";
+};
 
 /* ---------- 3. Semblanza de facilitadores ---------- */
 const LS_KEY_SEMBLANZAS_FACILITADORES = "mjht_semblanzas_facilitadores";
@@ -1190,6 +1204,44 @@ async function eliminarBibliografia(id){
   if(!resp.ok || !data.ok) throw new Error((data && data.error) || ("Error " + resp.status));
   return data;
 }
+async function actualizarModuloBibliografia(id, modulo){
+  return actualizarBibliografia(id, { modulo });
+}
+// Edita cualquier dato de una lectura ya guardada (título, autor, tipo,
+// liga, notas y/o módulo) sin tener que borrarla y volverla a escribir.
+async function actualizarBibliografia(id, cambios){
+  const resp = await fetch("/.netlify/functions/biblioteca-actualizar", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(Object.assign({ id }, cambios)),
+  });
+  const data = await resp.json().catch(()=>({}));
+  if(!resp.ok || !data.ok) throw new Error((data && data.error) || ("Error " + resp.status));
+  return data;
+}
+// "Lectura previa" por módulo — mismo patrón que tareas-submit/list.js:
+// una sola versión vigente por módulo, editable desde el portal de
+// Facilitador. Si nunca se ha guardado nada, cae al texto fijo de
+// assets/js/data.js (m.lectura).
+async function guardarLecturaPrevia(modulo, ponente, texto){
+  const resp = await fetch("/.netlify/functions/lectura-previa-submit", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ modulo, ponente, texto }),
+  });
+  const data = await resp.json().catch(()=>({}));
+  if(!resp.ok || !data.ok) throw new Error((data && data.error) || ("Error " + resp.status));
+  return data;
+}
+async function getLecturaPrevia(modulo){
+  try {
+    const resp = await fetch("/.netlify/functions/lectura-previa-list?modulo=" + encodeURIComponent(modulo));
+    const data = await resp.json().catch(()=>({}));
+    if(!resp.ok || !data.ok) throw new Error((data && data.error) || ("Error " + resp.status));
+    return (data.items || [])[0] || null;
+  } catch(e){
+    console.error("getLecturaPrevia:", e);
+    return null;
+  }
+}
 // Una fila de una lectura — usada tanto en la pestaña Biblioteca como
 // dentro de "Contenido" y en el panel de administradora.
 function mjhtBibliografiaItemHTML(x, opts){
@@ -1201,10 +1253,28 @@ function mjhtBibliografiaItemHTML(x, opts){
     ? `<a href="${mjhtEscapeHTML(x.liga)}" target="_blank" rel="noopener"><b>${titulo}</b></a>`
     : `<b>${titulo}</b>`;
   const notas = x.notas ? `<br><small style="color:var(--gris-claro);">${mjhtEscapeHTML(x.notas)}</small>` : "";
+  // Selector para mover la lectura a otro módulo (si quedó mal asignada) —
+  // mismo patrón que el selector de módulo en la tabla de materiales.
+  let moduloSel = "";
+  if(opts.conModulo && typeof MODULOS !== "undefined"){
+    const opciones = MODULOS.map(m=>{
+      const val = `${m.id} - ${m.tema}`;
+      const label = `${typeof m.id==="number"?"Módulo "+m.id:"Cierre"} · ${m.tema}`;
+      return `<option value="${val}"${val===x.modulo?" selected":""}>${label}</option>`;
+    }).join("");
+    moduloSel = ` <select style="display:inline-block;width:auto;margin-left:8px;font-size:.8rem;" onchange="mjhtCambiarModuloBibliografia('${x.id}', this.value)">${opciones}</select>`;
+  }
+  // Editar (título, autor, tipo, liga, notas) sin tener que borrar y volver
+  // a escribir — mismo patrón de prompts que mjhtEditarLigaMaterial.
+  const editarAttrs = [x.titulo, x.autor, x.tipo || "Libro", x.liga || "", x.notas || ""]
+    .map(v => mjhtEscapeHTML(v).replace(/'/g, "&#39;")).join("','");
+  const editar = opts.conEditar
+    ? ` <button type="button" class="btn btn-outline btn-sm" style="margin-left:8px;padding:2px 8px;" onclick="mjhtEditarBibliografia('${x.id}','${editarAttrs}')">✏️</button>`
+    : "";
   const borrar = opts.conBorrar
     ? ` <button type="button" class="btn btn-outline btn-sm" style="margin-left:8px;padding:2px 8px;" onclick="mjhtEliminarBibliografia(this,'${x.id}')">🗑️</button>`
     : "";
-  return `<li><span class="txt"><span class="tag" style="margin-right:6px;">${tipo}</span>${tituloHTML} — ${autor}${notas}</span>${borrar}</li>`;
+  return `<li><span class="txt"><span class="tag" style="margin-right:6px;">${tipo}</span>${tituloHTML} — ${autor}${notas}</span>${moduloSel}${editar}${borrar}</li>`;
 }
 // Lista de lecturas de UN módulo, para meter dentro del acordeón de
 // "Contenido" bajo "Lectura previa" (además del texto fijo que ya

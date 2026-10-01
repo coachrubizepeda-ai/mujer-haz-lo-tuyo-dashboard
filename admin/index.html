@@ -87,6 +87,8 @@
     <div class="callout">Igual que el resto del sitio, esto no es seguridad de grado bancario: las contraseñas se guardan en texto simple. Es suficiente para diferenciar a cada participante dentro de un diplomado cerrado — no lo uses para nada más delicado.</div>
     <div class="callout">Los botones "WhatsApp" y "Correo" abren el chat o tu programa de correo con el link, correo y contraseña ya escritos, y de paso descargan el flyer de esa persona a tu computadora — pero ni WhatsApp ni un link de correo dejan adjuntar imágenes automáticamente, así que el único paso manual es arrastrar (o adjuntar) el flyer que se acaba de descargar dentro de esa misma conversación o correo antes de enviar. El botón "Correo" abre tu programa de correo predeterminado (Mail, Outlook, o lo que tengas configurado en tu computadora) con el correo de la participante, el asunto y el mensaje ya listos.</div>
     <button type="button" class="btn btn-outline btn-sm" style="margin-bottom:14px;" onclick="mjhtCargarAccesosDesdeLista()">Cargar accesos desde la lista que compartiste (una sola vez)</button>
+    <button type="button" class="btn btn-primary btn-sm" style="margin-bottom:14px;" onclick="mjhtGuardarTodosLosAccesos()">Guardar todos los accesos de la tabla</button>
+    <div class="callout">El botón "Guardar" de cada fila solo guarda ESA fila — si llenaste varias y le diste clic solo a una, las demás no se guardaron todavía. Usa "Guardar todos los accesos de la tabla" para mandar de un solo clic lo que esté escrito en todas las filas.</div>
     <div id="accesos-asistentes-admin"></div>
     <div id="qr-temp" style="display:none;"></div>
     <canvas id="flyer-canvas" width="1080" height="1350" style="display:none;"></canvas>
@@ -115,15 +117,6 @@
     <div id="semblanzas-asistentes-admin"></div>
     <div class="callout">Esta vista se arma con lo que se ha guardado en ESTE navegador. Para ver los envíos hechos por otras personas desde SUS propios navegadores, revisa Netlify Forms → semblanzas.</div>
 
-    <!-- 3. SEMBLANZA DE FACILITADORES -->
-    <div class="section-head" style="margin-top:34px;">
-      <span class="eyebrow">Directorio de especialistas</span>
-      <h2>Semblanza de facilitadores</h2>
-      <p>Semblanza oficial de cada facilitador (assets/js/data.js) y, si aplica, la versión que enviaron desde "Mi semblanza" en su portal.</p>
-    </div>
-    <div id="semblanzas-facilitadores-admin"></div>
-    <div class="callout">Esta vista se arma con lo que se ha guardado en ESTE navegador. Para ver los envíos hechos por otras personas desde SUS propios navegadores, revisa Netlify Forms → semblanzas-ponentes.</div>
-
     <!-- 6. RETROALIMENTACIÓN DEL MÓDULO -->
     <div class="section-head" style="margin-top:34px;">
       <span class="eyebrow">Después de cada módulo</span>
@@ -134,15 +127,6 @@
     <select id="sel-retro-filtro-admin" style="max-width:360px;margin-bottom:16px;"><option value="">Todos los módulos</option></select>
     <div id="retro-resultados-admin"><div class="callout">Cargando…</div></div>
 
-    <!-- 7. MATERIALES DE FACILITADORES -->
-    <div class="section-head" style="margin-top:34px;">
-      <span class="eyebrow">Por módulo</span>
-      <h2>Contenido de facilitadores</h2>
-      <p>Presentación oficial de cada módulo, materiales que el facilitador compartió desde su portal, y espacio para que dejes tu recomendación (no modifica lo que subió el facilitador).</p>
-    </div>
-    <div id="materiales-facilitadores-admin"></div>
-    <div class="callout">La lista de materiales se arma con lo que se ha guardado en ESTE navegador. Para ver todos los envíos, revisa Netlify Forms → materiales-ponente.</div>
-
     <!-- 8. RESULTADOS DEL TEST: movido a su propia pestaña "Test Trimetrix" -->
     <div class="section-head" style="margin-top:34px;">
       <span class="eyebrow">Test Trimetrix</span>
@@ -150,14 +134,6 @@
     </div>
     <div class="callout">La subida y revisión de resultados del Test Trimetrix ahora tiene su propia pestaña — ve a <b>Test Trimetrix</b> en el menú de la izquierda.</div>
 
-    <!-- 10. COMENTARIOS DE FACILITADORES -->
-    <div class="section-head" style="margin-top:34px;">
-      <span class="eyebrow">Entre facilitadores</span>
-      <h2>Comentarios de facilitadores</h2>
-      <p>Misma lista que se ve en "Comentarios" dentro del portal de facilitadores.</p>
-    </div>
-    <div id="comentarios-facilitadores-admin"></div>
-    <div class="callout">Esta vista se arma con lo que se ha guardado en ESTE navegador. Para ver los envíos hechos por otras personas desde SUS propios navegadores, revisa Netlify Forms → comentario-facilitador.</div>
   </section>
 
   <!-- TEST TRIMETRIX -->
@@ -261,6 +237,33 @@
     </div>
     <div id="directorio-list" class="grid grid-2"></div>
 
+    <!-- SEMBLANZA DE FACILITADORES (antes vivía en "Resumen") -->
+    <div class="section-head" style="margin-top:34px;">
+      <span class="eyebrow">Directorio de especialistas</span>
+      <h2>Semblanza de facilitadores</h2>
+      <p>Semblanza oficial de cada facilitador (assets/js/data.js) y, si aplica, la versión que enviaron desde "Mi semblanza" en su portal.</p>
+    </div>
+    <div id="semblanzas-facilitadores-admin"></div>
+    <div class="callout">Esta vista se arma con lo que se ha guardado en ESTE navegador. Para ver los envíos hechos por otras personas desde SUS propios navegadores, revisa Netlify Forms → semblanzas-ponentes.</div>
+
+    <!-- CONTENIDO DE FACILITADORES (antes vivía en "Resumen") -->
+    <div class="section-head" style="margin-top:34px;">
+      <span class="eyebrow">Por módulo</span>
+      <h2>Contenido de facilitadores</h2>
+      <p>Presentación oficial de cada módulo, materiales que el facilitador compartió desde su portal, y espacio para que dejes tu recomendación (no modifica lo que subió el facilitador).</p>
+    </div>
+    <div id="materiales-facilitadores-admin"></div>
+    <div class="callout">La lista de materiales se arma con lo que se ha guardado en ESTE navegador. Para ver todos los envíos, revisa Netlify Forms → materiales-ponente.</div>
+
+    <!-- COMENTARIOS DE FACILITADORES (antes vivía en "Resumen") -->
+    <div class="section-head" style="margin-top:34px;">
+      <span class="eyebrow">Entre facilitadores</span>
+      <h2>Comentarios de facilitadores</h2>
+      <p>Misma lista que se ve en "Comentarios" dentro del portal de facilitadores.</p>
+    </div>
+    <div id="comentarios-facilitadores-admin"></div>
+    <div class="callout">Esta vista se arma con lo que se ha guardado en ESTE navegador. Para ver los envíos hechos por otras personas desde SUS propios navegadores, revisa Netlify Forms → comentario-facilitador.</div>
+
     <div class="section-head" style="margin-top:34px;">
       <span class="eyebrow">Grupo</span>
       <h2>Directorio de asistentes</h2>
@@ -297,7 +300,7 @@
     <form id="form-biblioteca" class="grid grid-2" style="align-items:end;">
       <div>
         <label>Módulo</label>
-        <select id="bib-modulo" required></select>
+        <select id="bib-modulo" required><option value="">Selecciona el módulo…</option></select>
       </div>
       <div>
         <label>Tipo</label>
@@ -459,7 +462,7 @@
   // ---------- Biblioteca (lecturas/libros/artículos por módulo) ----------
   const selBibModulo = document.getElementById("bib-modulo");
   if(selBibModulo){
-    selBibModulo.innerHTML = MODULOS.map(m=>`<option value="${m.id} - ${m.tema}">${typeof m.id==="number" ? "Módulo "+m.id+" — " : ""}${m.tema}</option>`).join("");
+    selBibModulo.innerHTML = '<option value="">Selecciona el módulo…</option>' + MODULOS.map(m=>`<option value="${m.id} - ${m.tema}">${typeof m.id==="number" ? "Módulo "+m.id+" — " : ""}${m.tema}</option>`).join("");
   }
   const bibAdminWrap = document.getElementById("biblioteca-admin-acc");
   function mjhtRenderBibliotecaAdmin(){
@@ -469,7 +472,7 @@
         const claveModulo = `${m.id} - ${m.tema}`;
         const propios = todos.filter(x=>x.modulo === claveModulo);
         const cuerpo = propios.length
-          ? `<ul class="checklist">${propios.map(x=>mjhtBibliografiaItemHTML(x, {conBorrar:true})).join("")}</ul>`
+          ? `<ul class="checklist">${propios.map(x=>mjhtBibliografiaItemHTML(x, {conBorrar:true, conModulo:true, conEditar:true})).join("")}</ul>`
           : `<p class="file-hint">Sin lecturas registradas todavía.</p>`;
         return `<div class="acc-item">
           <button class="acc-head" type="button">
@@ -495,6 +498,7 @@
       const tipo = document.getElementById("bib-tipo").value;
       const liga = document.getElementById("bib-liga").value.trim();
       const notas = document.getElementById("bib-notas").value.trim();
+      if(!modulo){ status.textContent = "Selecciona el módulo."; return; }
       if(!titulo || !autor){ status.textContent = "Falta título o autor."; return; }
       status.textContent = "Guardando…";
       guardarBibliografia(modulo, titulo, autor, tipo, liga, notas)
@@ -508,6 +512,29 @@
         .catch(err=>{ status.textContent = "No se pudo guardar: " + (err.message||err); });
     });
   }
+  // Mover una lectura a otro módulo, por si quedó mal asignada.
+  window.mjhtCambiarModuloBibliografia = function(id, nuevoModulo){
+    actualizarModuloBibliografia(id, nuevoModulo)
+      .then(()=> mjhtRenderBibliotecaAdmin())
+      .catch(err=> alert("No se pudo mover: " + (err.message||err)));
+  };
+  // Editar título/autor/tipo/liga/notas de una lectura ya guardada, sin
+  // tener que borrarla y volver a escribirla — mismo patrón que en el
+  // portal de Facilitador.
+  window.mjhtEditarBibliografia = function(id, titulo, autor, tipo, liga, notas){
+    const nuevoTitulo = prompt("Título:", titulo || "");
+    if(nuevoTitulo === null) return;
+    const nuevoAutor = prompt("Autor:", autor || "");
+    if(nuevoAutor === null) return;
+    const nuevaLiga = prompt("Liga (opcional, deja vacío si no tiene):", liga || "");
+    if(nuevaLiga === null) return;
+    const nuevasNotas = prompt("Notas (opcional):", notas || "");
+    if(nuevasNotas === null) return;
+    if(!nuevoTitulo.trim() || !nuevoAutor.trim()){ alert("Título y autor no pueden quedar vacíos."); return; }
+    actualizarBibliografia(id, { titulo: nuevoTitulo, autor: nuevoAutor, liga: nuevaLiga, notas: nuevasNotas })
+      .then(()=> mjhtRenderBibliotecaAdmin())
+      .catch(err=> alert("No se pudo guardar: " + (err.message||err)));
+  };
   // Mismo patrón de confirmación de 2 clics que "Mi módulo" (ver
   // mjhtEliminarMaterial): evita que Chrome/Safari ignore un
   // window.confirm() repetido y se pierda el borrado en silencio.
@@ -672,6 +699,31 @@
     } catch(e){
       if(statusEl) statusEl.textContent = "No se pudo guardar: " + (e.message || e);
     }
+  };
+  // Guarda de un solo clic lo que esté escrito en TODAS las filas de la
+  // tabla — para no depender de acordarse de darle "Guardar" fila por fila
+  // (si no, parece que se guardó todo y en realidad solo quedaron las
+  // filas donde sí se dio clic).
+  window.mjhtGuardarTodosLosAccesos = async function(){
+    if(typeof ASISTENTES === "undefined" || !ASISTENTES.length) return;
+    const statusEl = document.getElementById("accesos-status");
+    if(statusEl) statusEl.textContent = "Guardando todas las filas…";
+    let ok = 0, fallidos = [];
+    for(const a of ASISTENTES){
+      const emailEl = document.getElementById("acc-email-"+a.id);
+      if(!emailEl) continue; // la tabla no se ha dibujado todavía
+      const email = emailEl.value.trim();
+      const password = document.getElementById("acc-pass-"+a.id).value.trim();
+      const telefono = document.getElementById("acc-tel-"+a.id).value.trim();
+      if(!email && !password && !telefono) continue; // fila vacía, no hay nada que guardar
+      try {
+        await guardarAccesoParticipante(a.id, { email, password, telefono });
+        ok++;
+      } catch(e){ fallidos.push(a.nombre); }
+    }
+    if(statusEl) statusEl.textContent = fallidos.length
+      ? `Se guardaron ${ok} filas. Fallaron: ${fallidos.join(", ")}.`
+      : `¡Listo! Se guardaron las ${ok} filas con datos.`;
   };
   window.mjhtEnviarAccesoWhatsapp = async function(id){
     const asistente = (typeof ASISTENTES !== "undefined") ? ASISTENTES.find(a=>a.id===id) : null;

@@ -178,7 +178,10 @@ img{max-width:100%;display:block;}
 }
 
 .main-col{flex:1;min-width:0;}
-.main-col > .wrap{max-width:1120px;}
+/* Antes 1120px — dejaba mucho espacio muerto del lado derecho en pantallas
+   anchas (ver comentario de Rubí, sep-2026). 1440px aprovecha mejor el
+   ancho sin verse forzado en laptops normales (sigue centrado). */
+.main-col > .wrap{max-width:1440px;}
 
 .tab-panel{display:none;padding:36px 0 70px;animation:fade .25s ease;}
 .tab-panel.active{display:block;}
