@@ -353,7 +353,8 @@ td svg{width:16px;height:16px;vertical-align:-3px;}
 .acc-head .chev{transition:transform .2s;color:var(--gris-claro);flex:none;}
 .acc-item.open .chev{transform:rotate(180deg);}
 .acc-body{max-height:0;overflow:hidden;transition:max-height .28s ease;}
-.acc-item.open .acc-body{max-height:900px;}
+/* Antes 900px: al crecer el contenido (bibliografía, materiales, tarea en video) el final del módulo quedaba cortado y sin scroll. */
+.acc-item.open .acc-body{max-height:6000px;}
 .acc-item.perfil.open .acc-body{max-height:6000px;}
 .acc-body-inner{padding:0 20px 22px 72px;}
 .acc-body-inner h5{font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--gris-claro);margin:14px 0 6px;}
