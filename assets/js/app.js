@@ -848,6 +848,81 @@ window.mjhtToggleSemblanzaTexto = function(id){
   if(fila) fila.style.display = fila.style.display === "none" ? "" : "none";
 };
 
+// Entrega de tarea en video (ej. Módulo 6 "Comunicar con intención"): no
+// se sube ningún archivo al sitio — los videos se comparten por WhatsApp
+// y Rubí los organiza en Drive — aquí solo se guarda el ESTADO "ya los
+// envié" por asistente+módulo (netlify/functions/tarea-video-submit.js
+// y tarea-video-list.js), y por separado la liga de Drive que la admin
+// pega una vez organizados (tarea-video-liga-submit.js / -list.js).
+async function marcarTareaVideoEnviada(participanteId, nombre, modulo){
+  const resp = await fetch("/.netlify/functions/tarea-video-submit", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ participanteId, nombre, modulo }),
+  });
+  const data = await resp.json().catch(()=>({}));
+  if(!resp.ok || !data.ok) throw new Error((data && data.error) || "No se pudo guardar");
+  return data.registro;
+}
+async function getTareasVideo(modulo){
+  try {
+    const url = "/.netlify/functions/tarea-video-list" + (modulo ? "?modulo=" + encodeURIComponent(modulo) : "");
+    const resp = await fetch(url);
+    const data = await resp.json().catch(()=>({}));
+    if(!resp.ok || !data.ok) throw new Error((data && data.error) || "Error al leer entregas");
+    return data.items || [];
+  } catch(e){
+    console.error("getTareasVideo:", e);
+    return [];
+  }
+}
+async function guardarLigaTareaVideo(modulo, liga){
+  const resp = await fetch("/.netlify/functions/tarea-video-liga-submit", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ modulo, liga }),
+  });
+  const data = await resp.json().catch(()=>({}));
+  if(!resp.ok || !data.ok) throw new Error((data && data.error) || "No se pudo guardar la liga");
+  return data.registro;
+}
+async function getLigaTareaVideo(modulo){
+  try {
+    const url = "/.netlify/functions/tarea-video-liga-list" + (modulo ? "?modulo=" + encodeURIComponent(modulo) : "");
+    const resp = await fetch(url);
+    const data = await resp.json().catch(()=>({}));
+    if(!resp.ok || !data.ok) throw new Error((data && data.error) || "Error al leer la liga");
+    return data.items || [];
+  } catch(e){
+    console.error("getLigaTareaVideo:", e);
+    return [];
+  }
+}
+// Tabla para el admin: una fila por asistente y módulo con tarea en video
+// pendiente/entregada, igual de estilo que la de Semblanza.
+async function renderTareasVideoAdminHTML(){
+  if(typeof ASISTENTES === "undefined" || !ASISTENTES.length || typeof MODULOS === "undefined"){
+    return `<div class="callout">Todavía no has cargado el roster de asistentes.</div>`;
+  }
+  const modulosConTarea = MODULOS.filter(m=>m.tarea && /video/i.test(m.tarea));
+  if(!modulosConTarea.length){
+    return `<div class="callout">Ningún módulo tiene tarea en video configurada todavía (se detecta por la palabra "video" en el texto de la tarea, en data.js).</div>`;
+  }
+  const entregadas = await getTareasVideo();
+  const bloques = modulosConTarea.map(m=>{
+    const claveModulo = `${m.id} - ${m.tema}`;
+    const filas = ASISTENTES.map(a=>{
+      const e = entregadas.find(x=>x.participanteId===a.id && x.modulo===claveModulo);
+      return `<tr><td>${a.nombre}</td><td>${e ? "✅ Enviado" : "⏳ Pendiente"}</td><td>${e ? new Date(e.fecha).toLocaleDateString("es-MX") : "—"}</td></tr>`;
+    }).join("");
+    return `<div style="margin-bottom:18px;">
+      <h5>Módulo ${m.id} — ${m.tema}</h5>
+      <div class="table-wrap"><table><thead><tr><th>Asistente</th><th>Estado</th><th>Fecha</th></tr></thead><tbody>${filas}</tbody></table></div>
+    </div>`;
+  }).join("");
+  return bloques;
+}
+
 /* ---------- 3. Semblanza de facilitadores ---------- */
 const LS_KEY_SEMBLANZAS_FACILITADORES = "mjht_semblanzas_facilitadores";
 function getSemblanzasFacilitadores(){

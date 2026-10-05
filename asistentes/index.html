@@ -407,6 +407,7 @@
         <h5>Lectura previa</h5><p class="lectura-previa-texto" data-modulo="${claveModulo}" style="white-space:pre-wrap;">${m.lectura}</p>
         <div class="biblio-modulo-wrap" data-modulo="${claveModulo}"></div>
         <h5>Tarea</h5><p class="tarea-texto" data-modulo="${claveModulo}" style="white-space:pre-wrap;">${m.tarea}</p>
+        ${(m.tarea && /video/i.test(m.tarea)) ? `<div class="tarea-video-wrap" data-modulo="${claveModulo}" data-modulo-id="${m.id}"></div>` : ""}
         <div class="pres-oficial-wrap" data-modulo="${claveModulo}"><a class="btn btn-outline btn-sm pres-pendiente" title="Tu facilitador(a) aún no ha subido la presentación.">Presentación pendiente</a></div>
         ${socialChipsHTML(m.redes)}
         <h5 style="margin-top:14px;">Contenido compartido por tu facilitador(a)</h5>
@@ -437,6 +438,53 @@
         wrap.innerHTML = `<p class="file-hint">No se pudieron cargar los materiales (${err.message||err}).</p>`;
       });
     });
+
+  // Entrega de tarea en video: no se sube archivo, solo se marca "ya los
+  // envié" — los videos en sí se comparten por WhatsApp directamente con
+  // Rubí/el grupo (ver instrucciones en el texto). Si el módulo no tiene
+  // palabra "video" en la tarea, el wrap ni se crea (ver arriba).
+  (async ()=>{
+    const wraps = accWrap.querySelectorAll(".tarea-video-wrap");
+    if(!wraps.length) return;
+    const sesion = (typeof mjhtAsistenteActivo === "function") ? mjhtAsistenteActivo() : null;
+    const asistenteSesion = (sesion && sesion.participanteId && typeof ASISTENTES !== "undefined")
+      ? ASISTENTES.find(a=>a.id===sesion.participanteId) : null;
+    const entregadas = await getTareasVideo();
+    wraps.forEach(wrap=>{
+      const modulo = wrap.dataset.modulo;
+      if(!asistenteSesion){
+        wrap.innerHTML = `<div class="callout warn">Para marcar tu entrega, cierra sesión y vuelve a entrar con tu acceso personal.</div>`;
+        return;
+      }
+      const yaEnviada = entregadas.find(x=>x.participanteId===asistenteSesion.id && x.modulo===modulo);
+      if(yaEnviada){
+        wrap.innerHTML = `<div class="callout ok">✅ Ya enviaste tus videos de este módulo (${new Date(yaEnviada.fecha).toLocaleDateString("es-MX")}).</div>`;
+        return;
+      }
+      wrap.innerHTML = `<div class="callout">
+        📹 Envía tus 2 videos por WhatsApp (al grupo o directo a Rubí) y luego marca aquí que ya los enviaste.
+        <br><button type="button" class="btn btn-sm" style="margin-top:8px;" onclick="mjhtMarcarTareaVideo(this,'${modulo}')">✅ Ya envié mis videos</button>
+      </div>`;
+    });
+  })();
+
+  window.mjhtMarcarTareaVideo = function(btn, modulo){
+    const sesion = (typeof mjhtAsistenteActivo === "function") ? mjhtAsistenteActivo() : null;
+    const asistenteSesion = (sesion && sesion.participanteId && typeof ASISTENTES !== "undefined")
+      ? ASISTENTES.find(a=>a.id===sesion.participanteId) : null;
+    if(!asistenteSesion) return;
+    btn.disabled = true;
+    btn.textContent = "Guardando…";
+    marcarTareaVideoEnviada(asistenteSesion.id, asistenteSesion.nombre, modulo)
+      .then(()=>{
+        btn.closest(".tarea-video-wrap").innerHTML = `<div class="callout ok">✅ ¡Listo! Ya quedó registrado que enviaste tus videos.</div>`;
+      })
+      .catch(err=>{
+        btn.disabled = false;
+        btn.textContent = "✅ Ya envié mis videos";
+        alert("No se pudo guardar: " + (err.message || err));
+      });
+  };
 
   // Biblioteca (lecturas/libros/artículos por módulo) — pestaña dedicada
   // y también un bloque extra dentro de "Contenido" bajo "Lectura previa".

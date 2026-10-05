@@ -301,6 +301,11 @@
       <div id="lectura-previa-vigente" class="file-hint" style="margin-top:10px;"></div>
     </div>
     <div class="card">
+      <h3 style="margin-top:0;">📹 Entregas de tarea en video</h3>
+      <p class="file-hint" style="margin-top:-6px;">Solo aparece si la tarea de este módulo pide video. Las asistentes envían sus videos por WhatsApp (no se suben al sitio) y Rubí los organiza en Drive — aquí ves quién ya entregó y, en cuanto Rubí pegue la liga, un botón para verlos.</p>
+      <div id="tareas-video-facilitador-wrap"><p class="file-hint">Selecciona un módulo arriba.</p></div>
+    </div>
+    <div class="card">
       <h3 style="margin-top:0;">📚 Bibliografía recomendada de tu módulo</h3>
       <p class="file-hint" style="margin-top:-6px;">Libros o artículos que quieras recomendar para tu módulo. Aparecen al instante en "Biblioteca" y en "Contenido" para las asistentes — usa el módulo que elegiste arriba.</p>
       <form id="form-bib-ponente" class="grid grid-2" style="align-items:end;">
@@ -801,6 +806,8 @@
       if(propio) selModuloMateriales.value = `${propio.id} - ${propio.tema}`;
       refrescarBitacoraMateriales();
       if(typeof refrescarBibliografiaPonente === "function") refrescarBibliografiaPonente();
+      if(typeof refrescarLecturaPrevia === "function") refrescarLecturaPrevia();
+      if(typeof refrescarTareasVideoFacilitador === "function") refrescarTareasVideoFacilitador();
     });
     selModuloMateriales.addEventListener("change", refrescarBitacoraMateriales);
   }
@@ -857,6 +864,43 @@
     }
   }
   if(selModuloMateriales) selModuloMateriales.addEventListener("change", refrescarLecturaPrevia);
+
+  // Entregas de tarea en video: solo se muestra algo si la tarea del
+  // módulo seleccionado menciona "video" (ver data.js → m.tarea). Lista
+  // quién ya marcó "ya envié mis videos" y, en cuanto Rubí pegue la liga
+  // de Drive (desde su portal), un botón para verlos.
+  const tareasVideoFacilitadorWrap = document.getElementById("tareas-video-facilitador-wrap");
+  async function refrescarTareasVideoFacilitador(){
+    if(!tareasVideoFacilitadorWrap) return;
+    const modulo = selModuloMateriales ? selModuloMateriales.value : "";
+    if(!modulo){
+      tareasVideoFacilitadorWrap.innerHTML = `<p class="file-hint">Selecciona un módulo arriba.</p>`;
+      return;
+    }
+    const m = (typeof MODULOS !== "undefined") ? MODULOS.find(x=>`${x.id} - ${x.tema}` === modulo) : null;
+    if(!m || !m.tarea || !/video/i.test(m.tarea)){
+      tareasVideoFacilitadorWrap.innerHTML = `<p class="file-hint">La tarea de este módulo no pide video.</p>`;
+      return;
+    }
+    tareasVideoFacilitadorWrap.innerHTML = `<p class="file-hint">Cargando…</p>`;
+    try {
+      const [entregadas, ligas] = await Promise.all([getTareasVideo(modulo), getLigaTareaVideo(modulo)]);
+      const liga = ligas[0];
+      const listaAsistentes = (typeof ASISTENTES !== "undefined") ? ASISTENTES : [];
+      const filas = listaAsistentes.map(a=>{
+        const e = entregadas.find(x=>x.participanteId===a.id);
+        return `<li>${a.nombre} — ${e ? "✅ Enviado (" + new Date(e.fecha).toLocaleDateString("es-MX") + ")" : "⏳ Pendiente"}</li>`;
+      }).join("");
+      tareasVideoFacilitadorWrap.innerHTML = `
+        <ul style="margin:0 0 10px 18px;padding:0;">${filas || "<li>No hay asistentes cargadas.</li>"}</ul>
+        ${liga ? `<a class="btn btn-primary btn-sm" href="${liga.liga}" target="_blank" rel="noopener">Ver videos en Drive</a>` : `<p class="file-hint">Rubí todavía no ha pegado la liga de Drive con los videos organizados.</p>`}
+      `;
+    } catch(err){
+      tareasVideoFacilitadorWrap.innerHTML = `<div class="callout">No se pudo cargar (${err.message||err}).</div>`;
+    }
+  }
+  if(selModuloMateriales) selModuloMateriales.addEventListener("change", refrescarTareasVideoFacilitador);
+
   window.mjhtGuardarLecturaPrevia = function(){
     const modulo = selModuloMateriales ? selModuloMateriales.value : "";
     const statusEl = document.getElementById("lectura-previa-status");
@@ -1339,12 +1383,19 @@
   // X o LinkedIn) justo debajo del campo principal de ese tipo — cada botón
   // "+ Agregar otro..." llama esto con su propio nombre de campo.
   window.mjhtAgregarLigaTipo = function(baseName, containerId, placeholder){
+    // Cada liga extra lleva su propio título (igual que la principal) —
+    // si no, en "Contenido" solo aparece "Escuchar podcast" / "Abrir liga"
+    // y no se distingue cuál es cuál.
     const wrap = document.createElement("div");
+    wrap.className = "liga-extra-item";
     wrap.style.display = "flex";
     wrap.style.gap = "8px";
-    wrap.style.alignItems = "center";
-    wrap.style.marginTop = "8px";
-    wrap.innerHTML = `<input type="text" name="${baseName}_extra[]" placeholder="${placeholder}" style="flex:1;margin:0;">
+    wrap.style.alignItems = "flex-start";
+    wrap.style.marginTop = "10px";
+    wrap.innerHTML = `<div style="flex:1;">
+        <input type="text" class="liga-extra-titulo" placeholder="Título (opcional, pero se ve mejor)" style="margin:0 0 6px;">
+        <input type="text" name="${baseName}_extra[]" placeholder="${placeholder}" style="margin:0;">
+      </div>
       <button type="button" class="btn btn-ghost btn-sm" onclick="this.parentElement.remove()">Quitar</button>`;
     document.getElementById(containerId).appendChild(wrap);
   };
@@ -1395,7 +1446,16 @@
       }
       formMateriales.querySelectorAll(`input[name="${name}_extra[]"]`).forEach(extraLink=>{
         const valExtra = extraLink.value.trim();
-        if(valExtra) tareas.push(mjhtCompartirMaterialLiga(modulo, ponente, valExtra));
+        if(!valExtra) return;
+        const tituloExtraEl = extraLink.parentElement.querySelector(".liga-extra-titulo");
+        const tituloExtra = tituloExtraEl ? tituloExtraEl.value.trim() : "";
+        tareas.push(mjhtCompartirMaterialLiga(modulo, ponente, valExtra, false, tituloExtra));
+        if(tituloExtra && (name === "link_spotify" || name === "link_youtube" || name === "link_web")){
+          bibliografiaAuto.push({
+            titulo: tituloExtra, liga: valExtra,
+            tipo: name === "link_spotify" ? "Podcast" : name === "link_youtube" ? "Video" : "Liga",
+          });
+        }
       });
     });
 

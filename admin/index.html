@@ -117,6 +117,26 @@
     <div id="semblanzas-asistentes-admin"></div>
     <div class="callout">Esta vista se arma con lo que se ha guardado en ESTE navegador. Para ver los envíos hechos por otras personas desde SUS propios navegadores, revisa Netlify Forms → semblanzas.</div>
 
+    <!-- TAREAS EN VIDEO -->
+    <div class="section-head" style="margin-top:34px;">
+      <span class="eyebrow">Tareas que piden video</span>
+      <h2>Tareas en video</h2>
+      <p>Los videos NO se suben al sitio — cada asistente los envía por WhatsApp y aquí solo marca "ya los envié". Tú los organizas en Drive y pegas la liga abajo para que el facilitador(a) los vea.</p>
+    </div>
+    <form id="form-liga-tarea-video" style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin-bottom:12px;">
+      <div style="flex:1;min-width:220px;">
+        <label>Módulo</label>
+        <select id="sel-modulo-tarea-video" required><option value="">Selecciona el módulo…</option></select>
+      </div>
+      <div style="flex:2;min-width:260px;">
+        <label>Liga de Drive con los videos ya organizados</label>
+        <input type="url" id="input-liga-tarea-video" placeholder="https://drive.google.com/…" required>
+      </div>
+      <button type="submit" class="btn btn-primary btn-sm">Guardar liga</button>
+    </form>
+    <p id="liga-tarea-video-status" class="form-msg"></p>
+    <div id="tareas-video-admin"></div>
+
     <!-- 6. RETROALIMENTACIÓN DEL MÓDULO -->
     <div class="section-head" style="margin-top:34px;">
       <span class="eyebrow">Después de cada módulo</span>
@@ -629,6 +649,45 @@
     .then(html=>{ document.getElementById("materiales-facilitadores-admin").innerHTML = html; })
     .catch(err=>{ document.getElementById("materiales-facilitadores-admin").innerHTML = `<div class="callout">No se pudieron cargar los materiales (${err.message||err}).</div>`; });
   document.getElementById("comentarios-facilitadores-admin").innerHTML = renderComentariosFacilitadoresHTML(getComentariosFacilitadores());
+
+  // ---------- Tareas en video (sin subir archivo — solo estado + liga de Drive) ----------
+  const modulosConTareaVideo = (typeof MODULOS !== "undefined") ? MODULOS.filter(m=>m.tarea && /video/i.test(m.tarea)) : [];
+  const selModuloTareaVideo = document.getElementById("sel-modulo-tarea-video");
+  if(selModuloTareaVideo){
+    selModuloTareaVideo.innerHTML = '<option value="">Selecciona el módulo…</option>' + modulosConTareaVideo.map(m=>
+      `<option value="${m.id} - ${m.tema}">${typeof m.id==="number"?"Módulo "+m.id:"Cierre"} · ${m.tema}</option>`
+    ).join("");
+  }
+  function mjhtRefrescarTareasVideoAdmin(){
+    const wrap = document.getElementById("tareas-video-admin");
+    if(!wrap) return;
+    wrap.innerHTML = `<p class="file-hint">Cargando…</p>`;
+    renderTareasVideoAdminHTML()
+      .then(html=>{ wrap.innerHTML = html; })
+      .catch(err=>{ wrap.innerHTML = `<div class="callout">No se pudieron cargar (${err.message||err}).</div>`; });
+  }
+  mjhtRefrescarTareasVideoAdmin();
+  const formLigaTareaVideo = document.getElementById("form-liga-tarea-video");
+  if(formLigaTareaVideo){
+    formLigaTareaVideo.addEventListener("submit", (e)=>{
+      e.preventDefault();
+      const modulo = selModuloTareaVideo.value;
+      const liga = document.getElementById("input-liga-tarea-video").value.trim();
+      const status = document.getElementById("liga-tarea-video-status");
+      if(!modulo){ if(status){ status.textContent = "Selecciona el módulo."; status.className = "form-msg show err"; } return; }
+      const btn = formLigaTareaVideo.querySelector("button[type=submit]");
+      btn.disabled = true;
+      guardarLigaTareaVideo(modulo, liga)
+        .then(()=>{
+          if(status){ status.textContent = "¡Liga guardada! El facilitador(a) ya puede verla en su portal."; status.className = "form-msg show ok"; }
+          formLigaTareaVideo.reset();
+        })
+        .catch(err=>{
+          if(status){ status.textContent = "No se pudo guardar (" + (err.message||err) + ")."; status.className = "form-msg show err"; }
+        })
+        .finally(()=>{ btn.disabled = false; });
+    });
+  }
 
   // ---------- Acceso a la plataforma (login individual de participantes) ----------
   // Guarda correo/contraseña/celular de cada participante en Netlify Blobs
