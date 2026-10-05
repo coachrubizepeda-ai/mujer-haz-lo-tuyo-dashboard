@@ -641,6 +641,13 @@
   // nada, sin avisar por qué. Ahora es un confirmar de dos clics sobre el
   // propio botón: el primer clic solo arma el borrado (se pone en rojo y
   // dice "¿Seguro?"), el segundo clic (dentro de 4 segundos) sí elimina.
+  // Refresca AMBAS vistas de materiales: "Mi módulo" y la bitácora de la
+  // pestaña "Compartir contenido" (antes solo la primera, y en la segunda el
+  // botón se quedaba en "Eliminando…" aunque ya se hubiera borrado).
+  function mjhtRefrescarMateriales(){
+    selPonente.dispatchEvent(new Event("change"));
+    if(typeof refrescarBitacoraMateriales === "function") refrescarBitacoraMateriales();
+  }
   window.mjhtEliminarMaterial = function(btn, id){
     if(btn.dataset.confirmando !== "1"){
       btn.dataset.confirmando = "1";
@@ -659,7 +666,7 @@
     btn.disabled = true;
     btn.textContent = "Eliminando…";
     eliminarMaterialCompartido(id)
-      .then(()=> selPonente.dispatchEvent(new Event("change")))
+      .then(()=> mjhtRefrescarMateriales())
       .catch(err=>{
         alert("No se pudo eliminar: " + (err.message||err));
         btn.disabled = false;
@@ -670,7 +677,7 @@
   };
   window.mjhtCambiarModuloMaterial = function(id, nuevoModulo){
     actualizarModuloMaterialCompartido(id, nuevoModulo)
-      .then(()=> selPonente.dispatchEvent(new Event("change")))
+      .then(()=> mjhtRefrescarMateriales())
       .catch(err=> alert("No se pudo actualizar: " + (err.message||err)));
   };
   // Editar título y/o liga de un material tipo "liga" ya compartido (ej. si
@@ -706,7 +713,7 @@
   };
   window.mjhtMarcarPresentacion = function(id, modulo, valor){
     marcarPresentacionMaterial(id, modulo, valor)
-      .then(()=> selPonente.dispatchEvent(new Event("change")))
+      .then(()=> mjhtRefrescarMateriales())
       .catch(err=> alert("No se pudo actualizar: " + (err.message||err)));
   };
 
