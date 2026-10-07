@@ -216,7 +216,7 @@
     <div class="section-head">
       <span class="eyebrow">Tu presentación</span>
       <h2>Compartir contenido</h2>
-      <p>Sube tu presentación en PDF, un .zip (por ejemplo, con las skills que las participantes deban instalar), o comparte cualquier liga que le sirva al grupo: página web, podcast, video, red social. Rubí lo publica en tu módulo para las asistentes.</p>
+      <p>Sube tu presentación en PDF, una hoja de Excel, un Word, un .zip (por ejemplo, con las skills que las participantes deban instalar), o comparte cualquier liga que le sirva al grupo: página web, podcast, video, red social. Rubí lo publica en tu módulo para las asistentes.</p>
     </div>
     <div class="card">
       <form name="materiales-ponente" method="POST" data-netlify="true" netlify-honeypot="bot-field" enctype="multipart/form-data">
@@ -231,8 +231,8 @@
             <select name="modulo" id="sel-modulo-materiales" required><option value="">Selecciona el módulo…</option></select>
           </div>
         </div>
-        <label>Sube tu(s) presentación(es) o archivo(s) (PDF, PPT, ZIP, etc.)</label>
-        <input type="file" name="archivo" accept=".pdf,.ppt,.pptx,.key,.zip">
+        <label>Sube tu(s) presentación(es) o archivo(s) (PDF, PPT, Excel, Word, ZIP, etc.)</label>
+        <input type="file" name="archivo" accept=".pdf,.ppt,.pptx,.key,.zip,.xls,.xlsx,.csv,.doc,.docx">
         <label class="check-row" style="margin-top:8px;"><input type="checkbox" name="es_presentacion" id="chk-presentacion-materiales"><span>📌 Este archivo es <b>la presentación oficial</b> de este módulo</span></label>
         <div id="pdfs-extra"></div>
         <button type="button" class="btn btn-outline btn-sm" style="margin:6px 0 4px;" onclick="mjhtAgregarPDF()">+ Agregar otro archivo</button>
@@ -1382,7 +1382,7 @@
     wrap.style.gap = "8px";
     wrap.style.alignItems = "center";
     wrap.style.marginTop = "8px";
-    wrap.innerHTML = `<input type="file" name="archivo_extra[]" accept=".pdf,.ppt,.pptx,.key,.zip" style="flex:1;margin:0;">
+    wrap.innerHTML = `<input type="file" name="archivo_extra[]" accept=".pdf,.ppt,.pptx,.key,.zip,.xls,.xlsx,.csv,.doc,.docx" style="flex:1;margin:0;">
       <button type="button" class="btn btn-ghost btn-sm" onclick="this.parentElement.remove()">Quitar</button>`;
     document.getElementById("pdfs-extra").appendChild(wrap);
   };
