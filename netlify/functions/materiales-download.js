@@ -45,7 +45,11 @@ exports.handler = async (event) => {
       return { statusCode: 404, body: "No se encontró ese archivo" };
     }
     const filename = (info.metadata && info.metadata.filename) || "material";
-    const disposition = qs.dl ? "attachment" : "inline";
+    // Solo PDF se puede ver dentro del navegador; el resto (Excel, Word,
+    // CSV, ZIP, PPT, Keynote) se descarga directo para que no abra una
+    // pestaña en blanco.
+    const extArchivo = String(filename).split(".").pop().toLowerCase();
+    const disposition = (qs.dl || extArchivo !== "pdf") ? "attachment" : "inline";
 
     return {
       statusCode: 200,
