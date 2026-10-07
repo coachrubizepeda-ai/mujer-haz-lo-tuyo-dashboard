@@ -1424,11 +1424,11 @@
     const chkPresentacionMateriales = document.getElementById("chk-presentacion-materiales");
     const esPresentacionMateriales = chkPresentacionMateriales && chkPresentacionMateriales.checked;
     if(fileInput && fileInput.files && fileInput.files[0]){
-      tareas.push(mjhtCompartirMaterialArchivo(modulo, ponente, fileInput.files[0], esPresentacionMateriales));
+      tareas.push(()=> mjhtCompartirMaterialArchivo(modulo, ponente, fileInput.files[0], esPresentacionMateriales));
     }
     formMateriales.querySelectorAll('input[name="archivo_extra[]"]').forEach(extraInput=>{
       if(extraInput.files && extraInput.files[0]){
-        tareas.push(mjhtCompartirMaterialArchivo(modulo, ponente, extraInput.files[0]));
+        tareas.push(()=> mjhtCompartirMaterialArchivo(modulo, ponente, extraInput.files[0]));
       }
     });
     // Los tipos "podcast" y "video" pueden llevar título (para que no se
@@ -1443,7 +1443,7 @@
       const campoTitulo = formMateriales.querySelector(`[name="${name}_titulo"]`);
       const titulo = campoTitulo ? campoTitulo.value.trim() : "";
       if(val){
-        tareas.push(mjhtCompartirMaterialLiga(modulo, ponente, val, false, titulo));
+        tareas.push(()=> mjhtCompartirMaterialLiga(modulo, ponente, val, false, titulo));
         if(titulo && (name === "link_spotify" || name === "link_youtube" || name === "link_web")){
           bibliografiaAuto.push({
             titulo, liga: val,
@@ -1456,7 +1456,7 @@
         if(!valExtra) return;
         const tituloExtraEl = extraLink.parentElement.querySelector(".liga-extra-titulo");
         const tituloExtra = tituloExtraEl ? tituloExtraEl.value.trim() : "";
-        tareas.push(mjhtCompartirMaterialLiga(modulo, ponente, valExtra, false, tituloExtra));
+        tareas.push(()=> mjhtCompartirMaterialLiga(modulo, ponente, valExtra, false, tituloExtra));
         if(tituloExtra && (name === "link_spotify" || name === "link_youtube" || name === "link_web")){
           bibliografiaAuto.push({
             titulo: tituloExtra, liga: valExtra,
@@ -1472,7 +1472,9 @@
     btn.disabled = true;
     msg.textContent = "Subiendo…"; msg.style.color = "";
     const bibliografiaFallos = [];
-    Promise.all(tareas)
+    // En serie (no en paralelo): cada envío lee y reescribe el mismo índice
+    // en el servidor y, en paralelo, unos pisaban a otros.
+    tareas.reduce((p, t)=> p.then(t), Promise.resolve())
       .then(()=> Promise.all(bibliografiaAuto.map(b=>
         guardarBibliografia(modulo, b.titulo, ponente ? `Compartido por ${ponente}` : "Compartido por el facilitador", b.tipo, b.liga, "")
           .catch(err=>{ bibliografiaFallos.push(b.titulo + ": " + (err.message||err)); })
