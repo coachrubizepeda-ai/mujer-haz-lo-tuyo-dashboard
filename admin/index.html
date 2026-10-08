@@ -638,7 +638,10 @@
   window.mjhtRerenderAsistenciaAdmin();
 
   // ---------- Resumen ejecutivo: secciones 1 a 10 (ver assets/js/app.js) ----------
-  document.getElementById("registro-asistentes-admin").innerHTML = renderRegistroAsistentesHTML();
+  document.getElementById("registro-asistentes-admin").innerHTML = `<p class="file-hint">Cargando…</p>`;
+  renderRegistroAsistentesAdminHTML()
+    .then(html=>{ document.getElementById("registro-asistentes-admin").innerHTML = html; })
+    .catch(err=>{ document.getElementById("registro-asistentes-admin").innerHTML = `<div class="callout">No se pudieron cargar los registros (${err.message||err}).</div>`; });
   document.getElementById("semblanzas-asistentes-admin").innerHTML = `<p class="file-hint">Cargando…</p>`;
   renderSemblanzasAsistentesHTML()
     .then(html=>{ document.getElementById("semblanzas-asistentes-admin").innerHTML = html; })

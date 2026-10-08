@@ -90,10 +90,8 @@
       <p>Regístrate una sola vez al inicio del diplomado. Esta información le sirve a la coordinación para tu certificado, tu kit de bienvenida y la logística de cada sesión.</p>
     </div>
     <div class="card">
-      <form name="registro-asistentes" method="POST" data-netlify="true" netlify-honeypot="bot-field" id="form-registro-asistentes">
-        <input type="hidden" name="form-name" value="registro-asistentes">
+      <form name="registro-asistentes" id="form-registro-asistentes">
         <input type="hidden" name="participante_id" id="input-participante-id-registro">
-        <p class="hp-field"><label>No llenar: <input name="bot-field"></label></p>
         <div class="form-msg"></div>
         <label>¿Quién eres? *</label>
         <select id="sel-nombre-registro" required><option value="">Selecciona tu nombre…</option></select>
@@ -125,6 +123,7 @@
         <textarea name="comentarios" id="input-comentarios-registro" placeholder="Opcional"></textarea>
         <button class="btn btn-primary" type="submit">Enviar mi registro</button>
       </form>
+      <div id="registro-guardado" style="margin-top:14px;"></div>
     </div>
   </section>
 
@@ -137,6 +136,7 @@
     </div>
     <div class="card">
       <div id="semblanza-estado" class="form-msg"></div>
+      <div id="semblanza-guardada"></div>
       <form name="semblanzas">
         <label>Nombre *</label>
         <select name="nombre" id="sel-nombre-semblanza" required><option value="">Selecciona tu nombre…</option></select>
@@ -653,7 +653,7 @@
       if(existente && existente.texto){
         document.getElementById("input-semblanza").value = existente.texto;
         if(semblanzaEstado){
-          semblanzaEstado.textContent = "Última actualización: " + new Date(existente.fecha).toLocaleDateString("es-MX") + ". Puedes seguir editando abajo.";
+          semblanzaEstado.textContent = "✅ Tu semblanza ha sido guardada y enviada. Última actualización: " + new Date(existente.fecha).toLocaleDateString("es-MX") + ". Puedes seguir editando abajo.";
           semblanzaEstado.className = "form-msg show ok";
         }
       }
@@ -671,8 +671,9 @@
     const btn = formSemblanza.querySelector("button[type=submit]");
     btn.disabled = true;
     guardarSemblanzaAsistente(id, nombre, texto)
-      .then(()=>{
-        if(msg){ msg.textContent = "¡Guardado! Puedes volver cuando quieras a seguir editándola."; msg.className = "form-msg show ok"; }
+      .then((reg)=>{
+        if(msg){ msg.textContent = "¡Listo! Tu semblanza ha sido guardada y enviada. Puedes volver cuando quieras a seguir editándola."; msg.className = "form-msg show ok"; }
+        if(semblanzaEstado){ semblanzaEstado.textContent = "✅ Tu semblanza ha sido guardada y enviada el " + new Date().toLocaleDateString("es-MX") + "."; semblanzaEstado.className = "form-msg show ok"; }
       })
       .catch((err)=>{
         if(msg){ msg.textContent = "No se pudo guardar (" + (err.message||err) + "). Intenta de nuevo."; msg.className = "form-msg show err"; }
@@ -734,7 +735,7 @@
   }
   selNombreRegistro.addEventListener("change", ()=>{
     const a = (typeof ASISTENTES !== "undefined") ? ASISTENTES.find(x=>x.id===selNombreRegistro.value) : null;
-    const overrides = (typeof getRegistroOverrides === "function" ? getRegistroOverrides() : {})[selNombreRegistro.value] || {};
+    const overrides = {};
     document.getElementById("input-participante-id-registro").value = a ? a.id : "";
     document.getElementById("input-nombre-registro").value = a ? a.nombre : "";
     document.getElementById("input-empresa-registro").value = overrides.empresa || (a && a.empresa) || "";
@@ -744,17 +745,63 @@
     document.getElementById("input-redes-registro").value = overrides.redes_sociales || "";
     document.getElementById("input-comentarios-registro").value = overrides.comentarios || "";
   });
-  formRegistroAsistentes.addEventListener("submit", ()=>{
+  // Registro con backend real: se guarda en el servidor (visible para la
+  // administradora y para ella misma desde cualquier dispositivo). El
+  // formulario NO se vacía al enviar: se queda con lo que escribió y abajo
+  // se muestra lo que quedó guardado.
+  const registroGuardadoWrap = document.getElementById("registro-guardado");
+  async function mostrarRegistroGuardado(id){
+    if(!registroGuardadoWrap) return null;
+    const r = await getRegistroAsistente(id);
+    registroGuardadoWrap.innerHTML = renderMiRegistroGuardadoHTML(r);
+    return r;
+  }
+  function rellenarFormRegistro(r){
+    if(!r) return;
+    const set = (idEl, v)=>{ const el = document.getElementById(idEl); if(el && v) el.value = v; };
+    set("input-nombre-registro", r.nombre); set("input-email-registro", r.email);
+    set("input-empresa-registro", r.empresa); set("input-cargo-registro", r.cargo);
+    set("input-telefono-registro", r.telefono); set("input-redes-registro", r.redes_sociales);
+    set("input-comentarios-registro", r.comentarios);
+    if(r.entero && formRegistroAsistentes.entero) formRegistroAsistentes.entero.value = r.entero;
+  }
+  async function precargarRegistroGuardado(){
     const id = selNombreRegistro.value;
-    if(!id || typeof guardarRegistroOverride !== "function") return;
-    guardarRegistroOverride(id, {
-      empresa: formRegistroAsistentes.empresa.value.trim(),
-      cargo: formRegistroAsistentes.cargo.value.trim(),
-      telefono: formRegistroAsistentes.telefono.value.trim(),
-      email: formRegistroAsistentes.email.value.trim(),
-      redes_sociales: formRegistroAsistentes.redes_sociales.value.trim(),
-      comentarios: formRegistroAsistentes.comentarios.value.trim()
-    });
+    if(!id){ if(registroGuardadoWrap) registroGuardadoWrap.innerHTML = ""; return; }
+    const r = await mostrarRegistroGuardado(id);
+    rellenarFormRegistro(r);
+  }
+  selNombreRegistro.addEventListener("change", precargarRegistroGuardado);
+  precargarRegistroGuardado();
+
+  formRegistroAsistentes.addEventListener("submit", (e)=>{
+    e.preventDefault();
+    const msg = formRegistroAsistentes.querySelector(".form-msg");
+    const id = selNombreRegistro.value;
+    if(!id){ msg.textContent = "Selecciona tu nombre."; msg.className = "form-msg show err"; return; }
+    const btn = formRegistroAsistentes.querySelector("button[type=submit]");
+    btn.disabled = true;
+    msg.textContent = "Enviando…"; msg.className = "form-msg show";
+    guardarRegistroAsistente(id, {
+      nombre: formRegistroAsistentes.nombre.value,
+      email: formRegistroAsistentes.email.value,
+      empresa: formRegistroAsistentes.empresa.value,
+      cargo: formRegistroAsistentes.cargo.value,
+      telefono: formRegistroAsistentes.telefono.value,
+      entero: formRegistroAsistentes.entero ? formRegistroAsistentes.entero.value : "",
+      redes_sociales: formRegistroAsistentes.redes_sociales.value,
+      comentarios: formRegistroAsistentes.comentarios.value,
+    })
+      .then((r)=>{
+        msg.textContent = "¡Listo! Tu registro fue guardado y enviado.";
+        msg.className = "form-msg show ok";
+        registroGuardadoWrap.innerHTML = renderMiRegistroGuardadoHTML(r);
+      })
+      .catch((err)=>{
+        msg.textContent = "No se pudo enviar (" + (err.message||err) + "). Intenta de nuevo.";
+        msg.className = "form-msg show err";
+      })
+      .finally(()=>{ btn.disabled = false; });
   });
 </script>
 </body>

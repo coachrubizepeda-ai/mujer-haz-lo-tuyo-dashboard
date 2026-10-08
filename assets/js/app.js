@@ -707,16 +707,67 @@ function asistenteConOverrides(a){
   });
   return merged;
 }
-function renderRegistroAsistentesHTML(){
+// Registro de asistentes con backend real (Netlify Blobs, ver
+// netlify/functions/registro-submit.js y registro-list.js). Reemplaza el
+// guardado solo-en-este-navegador: ahora el registro de cada asistente
+// llega a la administradora y la asistente lo ve desde cualquier dispositivo.
+async function getRegistrosAsistentes(){
+  const resp = await fetch("/.netlify/functions/registro-list", { cache: "no-store" });
+  const data = await resp.json().catch(()=>({}));
+  if(!resp.ok || !data.ok) throw new Error((data && data.error) || "Error al leer registros");
+  return data.todos || {};
+}
+async function getRegistroAsistente(participanteId){
+  if(!participanteId) return null;
+  try {
+    const resp = await fetch("/.netlify/functions/registro-list?participanteId=" + encodeURIComponent(participanteId), { cache: "no-store" });
+    const data = await resp.json();
+    if(!resp.ok || !data.ok) throw new Error(data.error || "Error al leer el registro");
+    return data.registro || null;
+  } catch(e){
+    console.error("getRegistroAsistente:", e);
+    return null;
+  }
+}
+async function guardarRegistroAsistente(participanteId, campos){
+  const resp = await fetch("/.netlify/functions/registro-submit", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(Object.assign({ participanteId }, campos)),
+  });
+  const data = await resp.json().catch(()=>({}));
+  if(!resp.ok || !data.ok) throw new Error((data && data.error) || "No se pudo guardar el registro");
+  return data.registro;
+}
+// Tarjeta con lo que la asistente ya envió (para que lo vea guardado).
+function renderMiRegistroGuardadoHTML(r){
+  if(!r) return "";
+  const fila = (t, v)=> v ? `<p style="margin:4px 0;"><b>${t}:</b> ${mjhtEscapeHTML(v)}</p>` : "";
+  return `<div class="callout ok"><b>✅ Tu registro fue guardado y enviado</b> el ${new Date(r.fecha).toLocaleDateString("es-MX")}. Esto es lo que recibimos (puedes corregirlo arriba y volver a enviarlo):
+    ${fila("Nombre", r.nombre)}${fila("Correo", r.email)}${fila("Teléfono / WhatsApp", r.telefono)}${fila("Empresa / negocio", r.empresa)}${fila("Cargo / rol", r.cargo)}${fila("Cómo te enteraste", r.entero)}${fila("Redes sociales", r.redes_sociales)}${fila("Comentarios", r.comentarios)}
+  </div>`;
+}
+// Vista del admin: roster base + lo que cada asistente envió desde su portal.
+function renderRegistroAsistentesHTML(){ return `<p class="file-hint">Cargando…</p>`; }
+async function renderRegistroAsistentesAdminHTML(){
   if(typeof ASISTENTES === "undefined" || !ASISTENTES.length){
     return `<div class="callout">Todavía no has cargado el roster de asistentes en <code>assets/js/roster.js</code>.</div>`;
   }
+  const enviados = await getRegistrosAsistentes();
   const filas = ASISTENTES.map(a0=>{
-    const a = asistenteConOverrides(a0);
-    return `<tr><td><b>${a.id}</b></td><td>${a.nombre}</td><td>${a.cargo || "—"}</td><td>${a.empresa || "—"}</td><td>${a.telefono || "—"}</td><td>${a.email || "—"}</td></tr>`;
+    const r = enviados[a0.id];
+    const a = Object.assign({}, a0);
+    if(r){ ["empresa","cargo","telefono","email"].forEach(c=>{ if(r[c]) a[c] = r[c]; }); }
+    return `<tr>
+      <td><b>${a.id}</b></td><td>${a.nombre}</td>
+      <td>${r ? "✅ Enviado " + new Date(r.fecha).toLocaleDateString("es-MX") : "⏳ Pendiente"}</td>
+      <td>${a.cargo || "—"}</td><td>${a.empresa || "—"}</td><td>${a.telefono || "—"}</td><td>${a.email || "—"}</td>
+      <td>${r && r.entero ? mjhtEscapeHTML(r.entero) : "—"}</td>
+      <td>${r && r.redes_sociales ? mjhtEscapeHTML(r.redes_sociales) : "—"}</td>
+      <td style="white-space:pre-wrap;">${r && r.comentarios ? mjhtEscapeHTML(r.comentarios) : "—"}</td>
+    </tr>`;
   }).join("");
   return `<div class="table-wrap"><table>
-    <thead><tr><th>ID</th><th>Nombre</th><th>Cargo</th><th>Empresa</th><th>Teléfono</th><th>Email</th></tr></thead>
+    <thead><tr><th>ID</th><th>Nombre</th><th>Registro</th><th>Cargo</th><th>Empresa</th><th>Teléfono</th><th>Email</th><th>Cómo se enteró</th><th>Redes</th><th>Comentarios</th></tr></thead>
     <tbody>${filas}</tbody>
   </table></div>`;
 }
